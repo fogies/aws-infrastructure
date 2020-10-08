@@ -1,0 +1,12 @@
+---
+
+- name: Confirm Docker Installation and Non-Sudo Availability
+  hosts: 127.0.0.1
+  connection: local
+  
+  vars:
+  
+  tasks:
+    - name: Confirm Docker Installation
+      command: 
+        cmd: docker version

@@ -1,0 +1,73 @@
+---
+
+- name: Install Docker and Configure for Non-Sudo Availability
+  hosts: 127.0.0.1
+  connection: local
+  
+  vars:
+    versions:
+      ubuntu: focal
+
+  tasks:
+    #
+    # Install Docker
+    #
+    
+    - name: Add Docker Repository Key
+      become: yes
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+    
+    - name: Add Docker Repository
+      become: yes
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu {{ versions.ubuntu }} stable
+    
+    - name: Install Docker
+      become: yes
+      apt:
+        update_cache: yes
+        pkg:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        
+    #
+    # Configure non-sudo access for user ubuntu.
+    #
+        
+    - name: Create Docker Group
+      become: yes
+      group:
+        name: ubuntu
+
+    - name: Add to Docker Group
+      become: yes
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    #
+    # Start Docker
+    #
+    
+    - name: Start Docker
+      become: yes
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    #
+    # Confirm Docker is accessible via sudo.
+    #
+    
+    - name: Confirm Sudo Docker Installation
+      become: yes
+      command: 
+        cmd: docker version
+        
+    #
+    # Packer will now need restart the machine to apply group for non-sudo access.
+    #   

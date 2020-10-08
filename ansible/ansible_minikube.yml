@@ -1,0 +1,78 @@
+---
+
+- name: Install Minikube with Docker Driver
+  hosts: 127.0.0.1
+  connection: local
+  
+  vars:
+    versions:
+      minikube: v1.13.0
+      kubectl: v1.19.2
+  
+  tasks:
+    #
+    # Install Minikube
+    #
+    
+    - name: Download Minikube
+      become: yes
+      get_url:
+        url: https://storage.googleapis.com/minikube/releases/{{ versions.minikube }}/minikube-linux-amd64
+        dest: /usr/local/bin/minikube
+        mode: 0755
+
+    - name: Confirm Minikube Installation
+      command: 
+        cmd: minikube version
+        
+    - name: Configure Minikube to use Docker
+      command: 
+        cmd: minikube config set driver docker
+        
+    #
+    # Install Kubectl
+    #
+
+    - name: Download Kubectl
+      become: yes
+      get_url:
+        url: https://storage.googleapis.com/kubernetes-release/release/{{ versions.kubectl }}/bin/linux/amd64/kubectl
+        dest: /usr/local/bin/kubectl
+        mode: 0755
+
+    - name: Confirm Kubectl Installation
+      command: 
+        cmd: kubectl version --client
+        
+    #
+    # Create a Service for Minikube
+    #
+    
+    - name: Create Minikube Service
+      become: yes
+      copy: 
+        content: |
+                 [Unit]
+                 Requires=docker.service
+                 After=docker.service
+
+                 [Service]
+                 User=ubuntu
+                 Type=oneshot
+                 RemainAfterExit=yes
+                 ExecStartPre=/usr/bin/docker info
+                 ExecStart=/usr/local/bin/minikube start
+                 ExecStop=/usr/local/bin/minikube stop
+                 
+                 [Install]
+                 WantedBy=multi-user.target
+        dest: /etc/systemd/system/minikube.service
+        mode: 0664
+      
+    - name: Enable and Start Minikube Service
+      become: yes
+      systemd:
+        daemon_reload: yes
+        name: minikube
+        state: started
+        enabled: yes        

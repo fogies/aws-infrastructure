@@ -1,0 +1,18 @@
+# Python Environment
+/.venv/
+
+# IDE Configuration
+/.idea/
+
+# Packer and Terraform Binaries
+/bin/
+
+# Terraform Local State
+.terraform
+*.tfstate
+*.tfstate.backup
+
+# Temporary Files for Communicating State
+/ami_minikube/manifest.json
+/ami_minikube/manifest.json.lock
+/terraform_packernetwork/packernetwork.pkrvars.hcl
