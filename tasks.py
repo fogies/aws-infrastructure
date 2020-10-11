@@ -2,6 +2,18 @@ from invoke import task
 
 
 @task
+def initialize_packer_network(context):
+    """
+    Initialize Terraform within PackerNetwork.
+    """
+    with context.cd('terraform_packernetwork'):
+        print('Initializing Terraform')
+        context.run(command='..\\bin\\terraform.exe init')
+
+
+@task(
+    pre=[initialize_packer_network]
+)
 def create_packer_network(context):
     """
     Create the network used by Packer.
@@ -11,7 +23,9 @@ def create_packer_network(context):
         context.run(command='..\\bin\\terraform.exe apply -auto-approve -no-color')
 
 
-@task
+@task(
+    pre=[initialize_packer_network]
+)
 def destroy_packer_network(context):
     """
     Destroy the network used by Packer.
