@@ -17,6 +17,9 @@ variable "allow_ssh_from_anywhere" {
   default = false
 }
 
+/*
+ * Tags to apply to created resources.
+ */
 variable "tags" {
   type = map
 

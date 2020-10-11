@@ -1,3 +1,6 @@
+/*
+ * List of IDs of created security groups.
+ */
 output "security_group_ids" {
   value = compact(list(
     var.allow_egress_to_anywhere ? aws_security_group.allow_egress_to_anywhere[0].id : 0,
