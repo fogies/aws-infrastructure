@@ -15,4 +15,4 @@
 # Temporary Files for Communicating State
 /ami_minikube/manifest.json
 /ami_minikube/manifest.json.lock
-/terraform_packernetwork/packernetwork.pkrvars.hcl
+/terraform_vpc_packer/vpc_packer.pkrvars.hcl
