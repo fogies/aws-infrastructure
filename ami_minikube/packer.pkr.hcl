@@ -1,38 +1,43 @@
-# Our AWS Source
-source "amazon-ebs" "ubuntu-minikube" {
+/*
+ * Configuration of the AMI.
+ */
+source "amazon-ebs" "minikube" {
   # Name of the output AMI
   ami_name = "ami-minikube-{{timestamp}}"
   
-  # Build in US East 1 with a t3.medium
-  region = "us-east-1"
-  instance_type = "t3.medium"
+  # Configure AWS variables
+  region = var.aws_region
+  instance_type = var.aws_instance_type
   
-  # Build from a recent Ubuntu 20 image
+  # Filter an image to use as the base of the build
   source_ami_filter {
     filters = {
-      name =  "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
-	  # name = "ubuntu-minimal/images/hvm-ssd/ubuntu-focal-20.04-amd64-minimal-*"
+      name = var.source_ami_filter_name
     }
-    owners = ["099720109477"]
+    owners = var.source_ami_filter_owners
     most_recent = true
   }
   
-  # Configured over SSH using temporary credentials
+  # Configured over SSH
   communicator = "ssh"
   ssh_username = "ubuntu"
   
-  # Build in VPC and Subnet provided as variables
+  # Build in a VPC and Subnet provided as variables
   vpc_id = var.vpc_packer_vpc_id
   subnet_id = var.vpc_packer_subnet_id
 }
 
-# Build on that source
+/*
+ * Steps to provision the AMI.
+ */
 build {
   sources = [
-    "source.amazon-ebs.ubuntu-minikube"
+    "source.amazon-ebs.minikube"
   ]
 
-  # Apply any updates
+  /*
+   * Apply any updates
+   */
   provisioner "shell" {
     inline = [
       "sudo apt-get --quiet --assume-yes update",
@@ -42,8 +47,10 @@ build {
 	# Allow retries because of apt state errors
 	max_retries = 5
   }
-  
-  # Install Ansible, available as a package in Ubuntu 20
+
+  /*
+   * Install Ansible, available as a package in Ubuntu 20
+   */
   provisioner "shell" {
     inline = [
       "sudo apt-get --quiet --assume-yes update",
@@ -54,7 +61,9 @@ build {
 	max_retries = 5
   }
 
-  # Install Docker
+  /*
+   * Install Docker
+   */
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_docker.yml"
 
@@ -62,7 +71,9 @@ build {
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
   }
 
-  # Reboot to apply group permissions for non-sudo Docker access
+  /*
+   * Reboot to apply group permissions for non-sudo Docker access
+   */
   provisioner "shell" {
     inline = [
 	  "sudo reboot",
@@ -72,7 +83,9 @@ build {
 	expect_disconnect = true
   }
 
-  # Confirm non-sudo Docker access
+  /*
+   * Confirm non-sudo Docker access
+   */
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_docker_confirm.yml"
 	
@@ -84,7 +97,9 @@ build {
 	max_retries = 10
   }
 
-  # Install Minikube
+  /*
+   * Install Minikube
+   */
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_minikube.yml"
 
@@ -92,7 +107,9 @@ build {
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
   }
 
-  # Install Helm
+  /*
+   * Install Helm
+   */
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_helm.yml"
 
@@ -100,7 +117,9 @@ build {
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
   }
 
-  # Output manifest for recovering resulting AMI
+  /*
+   * Output manifest for recovering resulting AMI
+   */
   post-processor "manifest" {
     output = "manifest.json"
   }
