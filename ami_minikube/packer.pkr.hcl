@@ -57,6 +57,9 @@ build {
   # Install Docker
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_docker.yml"
+
+    # Disable color
+    command = "PYTHONUNBUFFERED=1 ansible-playbook"
   }
 
   # Reboot to apply group permissions for non-sudo Docker access
@@ -73,6 +76,9 @@ build {
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_docker_confirm.yml"
 	
+    # Disable color
+    command = "PYTHONUNBUFFERED=1 ansible-playbook"
+
 	# Pause and retries to allow for reboot
 	pause_before = "5s"
 	max_retries = 10
@@ -81,6 +87,17 @@ build {
   # Install Minikube
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_minikube.yml"
+
+    # Disable color
+    command = "PYTHONUNBUFFERED=1 ansible-playbook"
+  }
+
+  # Install Helm
+  provisioner "ansible-local" {
+    playbook_file = "../ansible/ansible_helm.yml"
+
+    # Disable color
+    command = "PYTHONUNBUFFERED=1 ansible-playbook"
   }
 
   # Output manifest for recovering resulting AMI

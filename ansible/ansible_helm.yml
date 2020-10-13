@@ -1,0 +1,39 @@
+---
+
+- name: Install Helm
+  hosts: 127.0.0.1
+  connection: local
+
+  vars:
+    versions:
+      helm: v3.3.4
+
+  tasks:
+    #
+    # Install Helm
+    #
+
+    - name: Create Temporary Directory
+      tempfile:
+        state: directory
+      register: tempdir
+
+    - name: Download Helm Installer
+      get_url:
+        url: https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+        dest: "{{ tempdir.path }}/get_helm.sh"
+        mode: 0700
+
+    - name: Install Helm
+      become: yes
+      command:
+        cmd: "{{ tempdir.path }}/get_helm.sh --version {{ versions.helm }}"
+
+    - name: Delete Temporary Directory
+      file:
+        path: "{{ tempdir.path }}"
+        state: absent
+
+    - name: Confirm Helm Installation
+      command:
+        cmd: helm version
