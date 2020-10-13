@@ -1,7 +1,6 @@
 /*
  * Explicit configuration of providers.
  */
-
 terraform {
   required_providers {
     aws = {
@@ -27,7 +26,6 @@ terraform {
  * Tags to apply to resources:
  * - Generate a random vpc_packer_id to include in tags.
  */
-
 resource "random_uuid" "vpc_packer_id" {
 }
 
@@ -61,6 +59,7 @@ module "vpc" {
   map_public_ip_on_launch = true
 
   tags = merge(
+    var.tags,
     local.module_tags,
     {
     },
