@@ -25,22 +25,18 @@ terraform {
 
 /*
  * Tags to apply to resources:
- * - Generate a random packernetwork_build_id to include in tags.
+ * - Generate a random vpc_packer_id to include in tags.
  */
 
-resource "random_uuid" "packernetwork_build_id" {
+resource "random_uuid" "vpc_packer_id" {
 }
 
 locals {
-  packernetwork_build_id = random_uuid.packernetwork_build_id.result
+  vpc_packer_id = format("vpc-packer-%s", random_uuid.vpc_packer_id.result)
 
-  project_tags = {
-    terraform = true
-
-    packernetwork          = true
-    packernetwork_build_id = local.packernetwork_build_id
-
-    packernetwork_project = var.packernetwork_project
+  module_tags = {
+    terraform     = true
+    vpc_packer_id = local.vpc_packer_id
   }
 }
 
@@ -65,7 +61,7 @@ module "vpc" {
   map_public_ip_on_launch = true
 
   tags = merge(
-    local.project_tags,
+    local.module_tags,
     {
     },
   )
@@ -75,9 +71,9 @@ module "vpc" {
  * Output the ID of VPC and Subnet for use by Packer.
  */
 resource "local_file" "packer_variables" {
-  filename = "packernetwork.pkrvars.hcl"
+  filename = "vpc_packer.pkrvars.hcl"
   content  = <<-EOT
-    packernetwork_vpc_id = "${module.vpc.vpc_id}"
-    packernetwork_subnet_id = "${module.vpc.subnet_id}"
+    vpc_packer_vpc_id = "${module.vpc.vpc_id}"
+    vpc_packer_subnet_id = "${module.vpc.subnet_id}"
   EOT
 }

@@ -22,8 +22,8 @@ source "amazon-ebs" "ubuntu-minikube" {
   ssh_username = "ubuntu"
   
   # Build in VPC and Subnet provided as variables
-  vpc_id = var.packernetwork_vpc_id
-  subnet_id = var.packernetwork_subnet_id
+  vpc_id = var.vpc_packer_vpc_id
+  subnet_id = var.vpc_packer_subnet_id
 }
 
 # Build on that source
@@ -105,4 +105,3 @@ build {
     output = "manifest.json"
   }
 }
-

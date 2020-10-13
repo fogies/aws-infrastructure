@@ -37,7 +37,7 @@ def destroy(context):
 
 class vpc_packer:
     """
-    Guard object for creating and destroying the network used by Packer.
+    Guard object for creating and destroying the VPC used by Packer.
     """
 
     def __init__(self, context):

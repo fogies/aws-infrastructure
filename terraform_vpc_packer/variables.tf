@@ -22,6 +22,6 @@ variable "aws_instance_type" {
  * Project name to include in tags applied to created resources.
  */
 
-variable "packernetwork_project" {
+variable "vpc_packer_project" {
   default = "ami_minikube"
 }

@@ -1,7 +1,7 @@
-variable "packernetwork_vpc_id" {
+variable "vpc_packer_vpc_id" {
   type = string
 }
 
-variable "packernetwork_subnet_id" {
+variable "vpc_packer_subnet_id" {
   type = string
 }
