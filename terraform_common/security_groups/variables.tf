@@ -3,17 +3,17 @@ variable "vpc_id" {
 }
 
 variable "allow_egress_to_anywhere" {
-  type =    bool
+  type    = bool
   default = false
 }
 
 variable "allow_http_from_anywhere" {
-  type =    bool
+  type    = bool
   default = false
 }
 
 variable "allow_ssh_from_anywhere" {
-  type =    bool
+  type    = bool
   default = false
 }
 

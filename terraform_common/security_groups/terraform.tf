@@ -38,10 +38,10 @@ resource "aws_security_group" "allow_egress_to_anywhere" {
 
   egress {
     description = "Allow Egress to Anywhere"
-	from_port = 0
-	to_port = 0
-	protocol = "-1"
-	cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   lifecycle {
@@ -72,18 +72,18 @@ resource "aws_security_group" "allow_http_from_anywhere" {
 
   ingress {
     description = "Allow HTTP from Anywhere"
-	from_port = 80
-	to_port = 80
-	protocol = "tcp"
-	cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
     description = "Allow HTTPS from Anywhere"
-	from_port = 443
-	to_port = 443
-	protocol = "tcp"
-	cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   lifecycle {
@@ -114,10 +114,10 @@ resource "aws_security_group" "allow_ssh_from_anywhere" {
 
   ingress {
     description = "Allow SSH from Anywhere"
-	from_port = 22
-	to_port = 22
-	protocol = "tcp"
-	cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   lifecycle {

@@ -5,19 +5,19 @@
 terraform {
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "~> 3.9.0"
     }
     local = {
-      source = "hashicorp/local"
+      source  = "hashicorp/local"
       version = "~> 1.4.0"
     }
     random = {
-      source = "hashicorp/random"
+      source  = "hashicorp/random"
       version = "~> 2.3.0"
     }
     tls = {
-      source = "hashicorp/tls"
+      source  = "hashicorp/tls"
       version = "~> 2.2.0"
     }
   }
@@ -32,13 +32,13 @@ resource "random_uuid" "packernetwork_build_id" {
 }
 
 locals {
-  packernetwork_build_id        = random_uuid.packernetwork_build_id.result
+  packernetwork_build_id = random_uuid.packernetwork_build_id.result
 
   project_tags = {
     terraform = true
 
-    packernetwork                 = true
-    packernetwork_build_id        = local.packernetwork_build_id
+    packernetwork          = true
+    packernetwork_build_id = local.packernetwork_build_id
 
     packernetwork_project = var.packernetwork_project
   }
