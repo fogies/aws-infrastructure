@@ -11,9 +11,9 @@ def build(context):
         with context.cd('packer_ami_minikube'):
             print('Building AMI Minikube')
             context.run(
-                command='{} build -color=false -var-file={} .'.format(
+                command='{} build {} -var-file={} .'.format(
                     '..\\bin\\packer.exe',
+                    '-color=false',
                     '..\\terraform_vpc_packer\\vpc_packer.pkrvars.hcl'
-                ),
-                echo=True
+                )
             )
