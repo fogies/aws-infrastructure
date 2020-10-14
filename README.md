@@ -18,6 +18,8 @@ Requires [Terraform](https://www.terraform.io/) for managing AWS infrastructure.
     
   - Assumes Terraform CLI is available in path.
 
+    - Temporarily assumes `\bin\terraform.exe`.
+
 Requires [Packer](https://www.packer.io/) for creating Amazon Machine Images (AMIs).
 
   - Download Packer CLI:
@@ -25,6 +27,8 @@ Requires [Packer](https://www.packer.io/) for creating Amazon Machine Images (AM
     <https://www.packer.io/downloads>
     
   - Assumes Packer CLI is available in path. 
+  
+    - Temporarily assumes `\bin\packer.exe`.
   
 Makes extensive use of [Ansible](https://www.ansible.com/) in configuring machines during image creation.
 
