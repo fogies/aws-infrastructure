@@ -19,7 +19,7 @@ def create(context):
     Create the VPC used by Packer.
     """
     with context.cd('terraform_vpc_packer'):
-        print('Creating Packer Network')
+        print('Creating VPC Packer')
         context.run(command='..\\bin\\terraform.exe apply -auto-approve -no-color')
 
 
@@ -31,7 +31,7 @@ def destroy(context):
     Destroy the VPC used by Packer.
     """
     with context.cd('terraform_vpc_packer'):
-        print('Destroying Packer Network')
+        print('Destroying VPC Packer')
         context.run(command='..\\bin\\terraform.exe destroy -auto-approve -no-color')
 
 
