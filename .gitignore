@@ -13,6 +13,6 @@
 *.tfstate.backup
 
 # Temporary Files for Communicating State
-/ami_minikube/manifest.json
-/ami_minikube/manifest.json.lock
+/packer_ami_minikube/manifest.json
+/packer_ami_minikube/manifest.json.lock
 /terraform_vpc_packer/vpc_packer.pkrvars.hcl

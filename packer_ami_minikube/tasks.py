@@ -8,7 +8,7 @@ def build(context):
     Build the AMI Minikube.
     """
     with vpc_packer(context=context):
-        with context.cd('ami_minikube'):
+        with context.cd('packer_ami_minikube'):
             print('Building AMI Minikube')
             context.run(
                 command='{} build -color=false -var-file={} .'.format(
