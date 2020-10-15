@@ -15,4 +15,5 @@
 # Temporary Files for Communicating State
 /packer_ami_minikube/manifest.json
 /packer_ami_minikube/manifest.json.lock
+/terraform_minikube/id_rsa*
 /terraform_vpc_packer/vpc_packer.pkrvars.hcl
