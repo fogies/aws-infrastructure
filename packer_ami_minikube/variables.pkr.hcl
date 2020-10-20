@@ -14,4 +14,7 @@ variable "source_ami_filter_owners" {
 variable "source_ami_filter_name" {
   # Filter to Ubuntu 20.04
   default = "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
+
+  # Filter to Ubuntu 20.04 Minimal
+  # default = "ubuntu-minimal/images/hvm-ssd/ubuntu-focal-20.04-amd64-minimal-*"
 }
