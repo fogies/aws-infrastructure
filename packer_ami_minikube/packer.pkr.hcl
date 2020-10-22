@@ -17,6 +17,14 @@ source "amazon-ebs" "minikube" {
     owners = var.source_ami_filter_owners
     most_recent = true
   }
+
+  # Create an additional volume for Docker images and data
+  launch_block_device_mappings {
+    device_name = "/dev/sdf"
+    volume_size = 10
+    volume_type = "gp2"
+    delete_on_termination = true
+  }
   
   # Configured over SSH
   communicator = "ssh"
@@ -59,6 +67,16 @@ build {
 
 	# Allow retries because of apt state errors
 	max_retries = 5
+  }
+
+  /*
+   * Configure Volume for Docker Storage
+   */
+  provisioner "ansible-local" {
+    playbook_file = "../ansible/ansible_docker_volume.yml"
+
+    # Disable color
+    command = "PYTHONUNBUFFERED=1 ansible-playbook"
   }
 
   /*

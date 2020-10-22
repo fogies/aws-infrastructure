@@ -1,0 +1,36 @@
+---
+
+#
+# Based on https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html
+#
+
+- name: Mount Volume for Docker Storage
+  hosts: 127.0.0.1
+  connection: local
+
+  vars:
+    # If this is not reliable, could run a Python script to find the unassigned block device
+    device_name: nvme1n1
+
+  tasks:
+    #
+    # Create filesystem
+    #
+
+    - name: Create Filesystem
+      become: yes
+      filesystem:
+        fstype: xfs
+        dev: /dev/{{ device_name }}
+
+    #
+    # Mount to /var/lib/docker
+    #
+
+    - name: Mount /var/lib/docker
+      become: yes
+      mount:
+        src: /dev/{{ device_name }}
+        path: /var/lib/docker
+        fstype: xfs
+        state: mounted
