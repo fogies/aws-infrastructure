@@ -65,14 +65,3 @@ module "vpc" {
     },
   )
 }
-
-/*
- * Output the ID of VPC and Subnet for use by Packer.
- */
-resource "local_file" "packer_variables" {
-  filename = "vpc_packer.pkrvars.hcl"
-  content  = <<-EOT
-    vpc_packer_vpc_id = "${module.vpc.vpc_id}"
-    vpc_packer_subnet_id = "${module.vpc.subnet_id}"
-  EOT
-}

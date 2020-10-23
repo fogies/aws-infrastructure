@@ -54,7 +54,7 @@ def ssh(context):
                 '-no-color',
                 'ip'
             ),
-            hide="stdout"
+            hide='stdout'
         )
         ip = result.stdout.strip()
 
@@ -65,7 +65,7 @@ def ssh(context):
                 '-no-color',
                 'identity_file'
             ),
-            hide="stdout"
+            hide='stdout'
         )
         identity_file = result.stdout.strip()
 
@@ -98,7 +98,7 @@ def ssh_port_forward(context, port=8000, local_port=None):
                 '-no-color',
                 'ip'
             ),
-            hide="stdout"
+            hide='stdout'
         )
         ip = result.stdout.strip()
 
@@ -109,7 +109,7 @@ def ssh_port_forward(context, port=8000, local_port=None):
                 '-no-color',
                 'identity_file'
             ),
-            hide="stdout"
+            hide='stdout'
         )
         identity_file = result.stdout.strip()
 
