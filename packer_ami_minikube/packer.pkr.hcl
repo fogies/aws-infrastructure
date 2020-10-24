@@ -20,7 +20,13 @@ source "amazon-ebs" "minikube" {
 
   # Create an additional volume for Docker images and data
   launch_block_device_mappings {
+    # This will be replaced with an NVMe name
+    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
+    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html
+    #
+    # Access AWS Volume ID with: lsblk -o +SERIAL
     device_name = "/dev/sdf"
+
     volume_size = 10
     volume_type = "gp2"
     delete_on_termination = true
