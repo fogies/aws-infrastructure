@@ -6,12 +6,15 @@ from invoke import Collection
 
 ns = Collection()
 
-ns.add_task(create)
-ns.add_task(destroy)
+# ns.add_task(initialize)
+# ns.add_task(create)
+# ns.add_task(destroy)
 
 ns.configure({
-    'working_dir': 'terraform_vpc_packer',
-    'bin_dir': '../bin'
+    'terraform_vpc_packer': {
+        'working_dir': 'terraform_vpc_packer',
+        'bin_dir': '../bin'
+    }
 })
 
 del Collection

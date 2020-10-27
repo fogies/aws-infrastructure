@@ -1,21 +1,24 @@
 from invoke import task
-from terraform_vpc_packer import initialize as vpc_packer_initialize
-from terraform_vpc_packer import vpc_packer
+import terraform_vpc_packer
+import os
 
 
-@task(
-    pre=[vpc_packer_initialize]
-)
+@task(pre=[terraform_vpc_packer.initialize])
 def build(context):
     """
     Build the AMI Minikube.
     """
-    with vpc_packer(context=context) as vpc_packer_output:
-        with context.cd('packer_ami_minikube'):
+
+    config = context.config.packer_ami_minikube
+    working_dir = os.path.normpath(config.working_dir)
+    bin_packer = os.path.normpath(os.path.join(config.bin_dir, 'packer.exe'))
+
+    with terraform_vpc_packer.vpc_packer(context=context) as vpc_packer_output:
+        with context.cd(working_dir):
             print('Building AMI Minikube')
             context.run(
                 command='{} {} {} {} {} {}'.format(
-                    '..\\bin\\packer.exe',
+                    bin_packer,
                     'build',
                     '-color=false',
                     '-var "vpc_packer_vpc_id={}"'.format(vpc_packer_output.vpc_id),

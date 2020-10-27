@@ -1,27 +1,17 @@
-from invoke import task
 from collections import namedtuple
+from invoke import task
 import os
-
-
-_terraform_initialized = False
-"""Manual de-duplication of initialize."""
 
 
 @task
 def initialize(context):
     """
     Initialize Terraform.
-
-    Pre-tasks do not inherit the context of the task that invokes them,
-    so we explicitly pass context and manually de-duplicate initialization.
     """
 
-    global _terraform_initialized
-    if _terraform_initialized:
-        return
-
-    working_dir = os.path.normpath(context.config.working_dir)
-    bin_terraform = os.path.normpath(os.path.join(context.config.bin_dir, 'terraform.exe'))
+    config = context.config.terraform_vpc_packer
+    working_dir = os.path.normpath(config.working_dir)
+    bin_terraform = os.path.normpath(os.path.join(config.bin_dir, 'terraform.exe'))
 
     with context.cd(working_dir):
         print('Initializing Terraform')
@@ -34,19 +24,16 @@ def initialize(context):
             hide='stdout'
         )
 
-    _terraform_initialized = True
 
-
-@task
+@task(pre=[initialize])
 def create(context):
     """
     Create the VPC used by Packer.
     """
 
-    initialize(context)
-
-    working_dir = os.path.normpath(context.config.working_dir)
-    bin_terraform = os.path.normpath(os.path.join(context.config.bin_dir, 'terraform.exe'))
+    config = context.config.terraform_vpc_packer
+    working_dir = os.path.normpath(config.working_dir)
+    bin_terraform = os.path.normpath(os.path.join(config.bin_dir, 'terraform.exe'))
 
     with context.cd(working_dir):
         print('Creating VPC Packer')
@@ -86,16 +73,15 @@ def create(context):
         )
 
 
-@task
+@task(pre=[initialize])
 def destroy(context):
     """
     Destroy the VPC used by Packer.
     """
 
-    initialize(context)
-
-    working_dir = os.path.normpath(context.config.working_dir)
-    bin_terraform = os.path.normpath(os.path.join(context.config.bin_dir, 'terraform.exe'))
+    config = context.config.terraform_vpc_packer
+    working_dir = os.path.normpath(config.working_dir)
+    bin_terraform = os.path.normpath(os.path.join(config.bin_dir, 'terraform.exe'))
 
     with context.cd(working_dir):
         print('Destroying VPC Packer')
@@ -111,6 +97,8 @@ def destroy(context):
 class vpc_packer:
     """
     Guard object for creating and destroying the VPC used by Packer.
+
+    Also requires invocation of initialize.
     """
 
     vpc_id = None
