@@ -1,36 +1,58 @@
 from invoke import task
 from collections import namedtuple
+import os
+
+
+_terraform_initialized = False
+"""Manual de-duplication of initialize."""
 
 
 @task
 def initialize(context):
     """
     Initialize Terraform.
+
+    Pre-tasks do not inherit the context of the task that invokes them,
+    so we explicitly pass context and manually de-duplicate initialization.
     """
-    with context.cd('terraform_vpc_packer'):
+
+    global _terraform_initialized
+    if _terraform_initialized:
+        return
+
+    working_dir = os.path.normpath(context.config.working_dir)
+    bin_terraform = os.path.normpath(os.path.join(context.config.bin_dir, 'terraform.exe'))
+
+    with context.cd(working_dir):
         print('Initializing Terraform')
         context.run(
             command='{} {} {}'.format(
-                '..\\bin\\terraform.exe',
+                bin_terraform,
                 'init',
                 '-no-color'
             ),
             hide='stdout'
         )
 
+    _terraform_initialized = True
 
-@task(
-    pre=[initialize]
-)
+
+@task
 def create(context):
     """
     Create the VPC used by Packer.
     """
-    with context.cd('terraform_vpc_packer'):
+
+    initialize(context)
+
+    working_dir = os.path.normpath(context.config.working_dir)
+    bin_terraform = os.path.normpath(os.path.join(context.config.bin_dir, 'terraform.exe'))
+
+    with context.cd(working_dir):
         print('Creating VPC Packer')
         context.run(
             command='{} {} {}'.format(
-                '..\\bin\\terraform.exe',
+                bin_terraform,
                 'apply',
                 '-auto-approve -no-color'
             ),
@@ -38,7 +60,7 @@ def create(context):
 
         result = context.run(
             command='{} {} {} {}'.format(
-                '..\\bin\\terraform.exe',
+                bin_terraform,
                 'output',
                 '-no-color',
                 'vpc_id'
@@ -49,7 +71,7 @@ def create(context):
 
         result = context.run(
             command='{} {} {} {}'.format(
-                '..\\bin\\terraform.exe',
+                bin_terraform,
                 'output',
                 '-no-color',
                 'subnet_id'
@@ -64,18 +86,22 @@ def create(context):
         )
 
 
-@task(
-    pre=[initialize]
-)
+@task
 def destroy(context):
     """
     Destroy the VPC used by Packer.
     """
-    with context.cd('terraform_vpc_packer'):
+
+    initialize(context)
+
+    working_dir = os.path.normpath(context.config.working_dir)
+    bin_terraform = os.path.normpath(os.path.join(context.config.bin_dir, 'terraform.exe'))
+
+    with context.cd(working_dir):
         print('Destroying VPC Packer')
         context.run(
             command='{} {} {}'.format(
-                '..\\bin\\terraform.exe',
+                bin_terraform,
                 'destroy',
                 '-auto-approve -no-color'
             ),
@@ -85,8 +111,6 @@ def destroy(context):
 class vpc_packer:
     """
     Guard object for creating and destroying the VPC used by Packer.
-
-    Tasks that use this will also need a pre-task for initialize.
     """
 
     vpc_id = None
