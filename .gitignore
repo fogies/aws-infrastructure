@@ -4,15 +4,15 @@
 # IDE Configuration
 /.idea/
 
-# Packer and Terraform Binaries
+# Binaries (e.g., Helm, Packer, Terraform)
 /bin/
 
 # Terraform Local State
 .terraform
 *.tfstate
 *.tfstate.backup
+*.tfstate.lock.info
 
 # Temporary Files for Communicating State
 /packer_ami_minikube/manifest.json
 /packer_ami_minikube/manifest.json.lock
-/terraform_minikube/id_rsa*
