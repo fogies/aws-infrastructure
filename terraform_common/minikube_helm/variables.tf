@@ -19,6 +19,20 @@ variable "aws_instance_type" {
 }
 
 /*
+ * Name for this instance of Minikube Helm.
+ */
+variable "instance_name" {
+  type = string
+}
+
+/*
+ * For created tasks, existing context within task hierarchy.
+ */
+variable "tasks_config_context" {
+  type = string
+}
+
+/*
  * Tags to apply to created resources.
  */
 variable "tags" {

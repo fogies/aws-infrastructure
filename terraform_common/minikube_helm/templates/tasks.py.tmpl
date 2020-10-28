@@ -1,0 +1,72 @@
+from invoke import task
+import os
+
+from ..tasks import initialize
+
+
+@task(
+    pre=[initialize]
+)
+def ssh(context):
+    """
+    SSH into our Minikube instance.
+    """
+    print('Creating SSH Session')
+
+    config = context.config.${tasks_config_context}
+
+    working_dir = os.path.normpath(config.working_dir)
+    identity_file = os.path.normpath(config.${instance_name}.instance_identity_file)
+    ip = config.${instance_name}.instance_ip
+
+    with context.cd(working_dir):
+        context.run(
+            command='{} {} {} {} {}'.format(
+                'start',
+                'ssh',
+                '-l ubuntu',
+                '-i {}'.format(identity_file),
+                ip
+            ),
+            disown=True
+        )
+
+
+@task(
+    pre=[initialize]
+)
+def ssh_port_forward(context, port, local_port=None):
+    """
+    SSH into our Minikube instance.
+    """
+    print('Creating SSH Session to Forward Port')
+
+    config = context.config.${tasks_config_context}
+
+    working_dir = os.path.normpath(config.working_dir)
+    identity_file = os.path.normpath(config.${instance_name}.instance_identity_file)
+    ip = config.${instance_name}.instance_ip
+
+    with context.cd(working_dir):
+        remote_port = port
+        if local_port is None:
+            local_port = remote_port
+
+        context.run(
+            command='{} {} {} {} {} {} {}'.format(
+                'start',
+                'ssh',
+                '-l ubuntu',
+                '-i {}'.format(identity_file),
+                '-L localhost:{}:localhost:{}'.format(local_port, remote_port),
+                ip,
+                '"' + ' && '.join([
+                    'echo \\"Forwarding {}:{}\\"'.format(ip, remote_port),
+                    'echo',
+                    'echo \\"Connect via localhost:{}\\"'.format(local_port),
+                    'echo',
+                    'sleep infinity'
+                ]) + '"'
+            ),
+            disown=True
+        )

@@ -50,7 +50,7 @@ provider "aws" {
  * Simple VPC with single Subnet in single Availability Zone.
  */
 module "vpc" {
-  source = "../terraform_common/vpc_simple"
+  source = "../vpc_simple"
 
   aws_availability_zone = var.aws_availability_zone
 
@@ -69,7 +69,7 @@ module "vpc" {
  * Security groups for our instance.
  */
 module "instance_security_groups" {
-  source = "../terraform_common/security_groups"
+  source = "../security_groups"
 
   vpc_id = module.vpc.vpc_id
 
@@ -89,7 +89,7 @@ module "instance_security_groups" {
  * ID of the AMI we want.
  */
 module "ami_minikube" {
-  source = "../terraform_common/ami_minikube"
+  source = "../ami_minikube"
 }
 
 /*
@@ -137,9 +137,67 @@ resource "aws_instance" "minikube" {
 }
 
 /*
+ * Create and ignore a .minikube_helm directory with created state.
+ */
+resource "local_file" "gitignore" {
+  filename = format(
+    "%s/%s",
+    var.instance_name,
+    ".gitignore"
+  )
+
+  content = <<-EOT
+    /*
+  EOT
+}
+
+/*
  * An identify file for SSH access.
  */
 resource "local_file" "instance_key_private" {
-  filename          = format("id_rsa_%s", replace(aws_instance.minikube.public_ip, ".", "_"))
+  filename = format(
+    "%s/id_rsa_%s",
+    var.instance_name,
+    replace(aws_instance.minikube.public_ip, ".", "_")
+  )
+
   sensitive_content = tls_private_key.instance_key_pair.private_key_pem
+}
+
+/*
+ * A set of tasks for interacting with the instance.
+ */
+resource "local_file" "python_tasks" {
+  filename = format(
+    "%s/%s",
+    var.instance_name,
+    "tasks.py"
+  )
+
+  content = templatefile(
+    "${path.module}/templates/tasks.py.tmpl",
+    {
+        instance_name = var.instance_name,
+
+        tasks_config_context = var.tasks_config_context,
+    }
+  )
+}
+
+resource "local_file" "python_init" {
+  filename = format(
+    "%s/%s",
+    var.instance_name,
+    "__init__.py"
+  )
+
+  content = templatefile(
+    "${path.module}/templates/__init__.py.tmpl",
+    {
+        instance_name = var.instance_name,
+
+        instance_ip = aws_instance.minikube.public_ip
+        instance_identity_file = local_file.instance_key_private.filename
+    }
+  )
 }

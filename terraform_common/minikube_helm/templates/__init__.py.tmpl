@@ -1,0 +1,19 @@
+# Support Invoke discovery of tasks
+from .tasks import *
+
+# Collection configured for expected use
+from invoke import Collection
+
+ns = Collection()
+
+ns.add_task(ssh)
+ns.add_task(ssh_port_forward)
+
+ns.configure({
+    '${instance_name}': {
+        'instance_ip': '${instance_ip}',
+        'instance_identity_file': '${instance_identity_file}'
+    }
+})
+
+del Collection

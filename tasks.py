@@ -1,21 +1,16 @@
 from invoke import Collection
 
 import packer_ami_minikube
-import terraform_minikube
+import terraform_minikube_helm_example
 import terraform_vpc_packer
-
 
 ns = Collection()
 
-ns.add_collection(packer_ami_minikube, name='ami-minikube')
+ns.add_collection(packer_ami_minikube.ns, name='ami-minikube')
 ns.configure(packer_ami_minikube.ns.configuration())
 
-ns_terraform_minikube = Collection()
-ns_terraform_minikube.add_task(terraform_minikube.create)
-ns_terraform_minikube.add_task(terraform_minikube.destroy)
-ns_terraform_minikube.add_task(terraform_minikube.ssh)
-ns_terraform_minikube.add_task(terraform_minikube.ssh_port_forward)
-ns.add_collection(ns_terraform_minikube, name='minikube')
+ns.add_collection(terraform_minikube_helm_example.ns, name='minikube-helm-example')
+ns.configure(terraform_minikube_helm_example.ns.configuration())
 
-ns.add_collection(terraform_vpc_packer, name='vpc-packer')
+ns.add_collection(terraform_vpc_packer.ns, name='vpc-packer')
 ns.configure(terraform_vpc_packer.ns.configuration())
