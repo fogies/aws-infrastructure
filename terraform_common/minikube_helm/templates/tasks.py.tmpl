@@ -1,5 +1,6 @@
 from invoke import task
 import os
+from ruamel.yaml import YAML
 
 from ..tasks import initialize
 
@@ -9,7 +10,7 @@ from ..tasks import initialize
 )
 def ssh(context):
     """
-    SSH into our Minikube instance.
+    Open SSH session in our Minikube instance.
     """
     print('Creating SSH Session')
 
@@ -37,7 +38,7 @@ def ssh(context):
 )
 def ssh_port_forward(context, port, local_port=None):
     """
-    SSH into our Minikube instance.
+    Forward a port from Minikube instance.
     """
     print('Creating SSH Session to Forward Port')
 
@@ -69,4 +70,76 @@ def ssh_port_forward(context, port, local_port=None):
                 ]) + '"'
             ),
             disown=True
+        )
+
+
+@task
+def install_chart(context, chart_name):
+    """
+    Install a chart in our Minikube instance.
+    """
+    print('Packaging and Installing Chart')
+
+    config = context.config.${tasks_config_context}
+    working_dir = os.path.normpath(config.working_dir)
+    bin_helm = os.path.normpath(os.path.join(config.bin_dir, 'helm.exe'))
+    helm_charts_dir = os.path.normpath(config.helm_charts_dir)
+    identity_file = os.path.normpath(config.${instance_name}.instance_identity_file)
+    ip = config.${instance_name}.instance_ip
+
+    with context.cd(working_dir):
+        # Build the helm chart
+        context.run(
+            command=' '.join([
+                bin_helm,
+                'package',
+                os.path.join(helm_charts_dir, chart_name)
+            ]),
+            hide='stdout'
+        )
+
+        # Obtain the file name for the chart we just built
+        yaml = YAML(typ='safe')
+        chart_config_path = os.path.normpath(os.path.join(
+            working_dir, helm_charts_dir, chart_name, 'Chart.yaml'
+        ))
+        with open(chart_config_path) as f:
+            chart_config = yaml.load(f)
+            helm_chart_file = '{}-{}.tgz'.format(chart_config['name'], chart_config['version'])
+
+        # Ensure a staging directory exists
+        context.run(
+            command=' '.join([
+                'ssh',
+                '-l ubuntu',
+                '-i {}'.format(identity_file),
+                ip,
+                '"' + ' && '.join([
+                    'mkdir -p .minikube_helm_staging'
+                ]) + '"'
+            ]),
+        )
+
+        # Upload the chart into our staging directory
+        context.run(
+            command=' '.join([
+                'scp',
+                '-q',
+                '-i {}'.format(identity_file),
+                helm_chart_file,
+                'ubuntu@{}:~/.minikube_helm_staging'.format(ip)
+            ]),
+        )
+
+        # Apply the chart
+        context.run(
+            command=' '.join([
+                'ssh',
+                '-l ubuntu',
+                '-i {}'.format(identity_file),
+                ip,
+                '"' + ' && '.join([
+                    'helm upgrade -i {} ~/.minikube_helm_staging/{}'.format(chart_name, helm_chart_file)
+                ]) + '"'
+            ]),
         )

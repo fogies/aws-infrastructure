@@ -12,7 +12,8 @@ ns.add_task(destroy)
 ns.configure({
     'terraform_minikube_helm_example': {
         'working_dir': 'terraform_minikube_helm_example',
-        'bin_dir': '../bin'
+        'bin_dir': '../bin',
+        'helm_charts_dir': '../helm',
     }
 })
 
