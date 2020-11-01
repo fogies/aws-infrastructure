@@ -14,8 +14,22 @@ variable "aws_availability_zone" {
   default = "us-east-1a"
 }
 
+/*
+ * Architecture of the AMI to use, must correspond to instance type.
+ */
+variable "ami_architecture" {
+  # Valid value is "amd64"
+  # TODO: "arm64" not supported pending Minikube docker driver
+  #       https://minikube.sigs.k8s.io/docs/drivers/docker/
+
+  type = string
+}
+
+/*
+ * Instance type to create.
+ */
 variable "aws_instance_type" {
-  default = "t3.medium"
+  type = string
 }
 
 /*

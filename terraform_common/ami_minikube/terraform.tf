@@ -23,7 +23,10 @@ locals {
   ami_minikube_owner_id = "732463742817"
 
   # Name by which to filter the AMI
-  ami_minikube_filter_name = "ami-minikube-*"
+  ami_minikube_filter_name = format(
+    "minikube-%s-*",
+    var.ami_architecture
+  )
 }
 
 /*

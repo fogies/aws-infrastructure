@@ -90,6 +90,8 @@ module "instance_security_groups" {
  */
 module "ami_minikube" {
   source = "../ami_minikube"
+
+  ami_architecture = var.ami_architecture
 }
 
 /*

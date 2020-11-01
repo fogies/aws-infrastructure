@@ -3,7 +3,7 @@
  */
 source "amazon-ebs" "minikube" {
   # Name of the output AMI
-  ami_name = "ami-minikube-{{timestamp}}"
+  ami_name = local.ami_name
   
   # Configure AWS variables
   region = var.aws_region
@@ -12,19 +12,21 @@ source "amazon-ebs" "minikube" {
   # Filter an image to use as the base of the build
   source_ami_filter {
     filters = {
-      name = var.source_ami_filter_name
+      name = local.source_ami_filter_name
     }
-    owners = var.source_ami_filter_owners
+    owners = local.source_ami_filter_owners
     most_recent = true
   }
 
   # Create an additional volume for Docker images and data
   launch_block_device_mappings {
     # This will be replaced with an NVMe name
-    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
-    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html
+    # - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html
+    # - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html
     #
-    # Access AWS Volume ID with: lsblk -o +SERIAL
+    # For future robustness, can access AWS Volume ID with:
+    # - lsblk -o +SERIAL
+    # - Would probably need to move creation of the device into a provisioner
     device_name = "/dev/sdf"
 
     volume_size = 10
@@ -126,6 +128,10 @@ build {
    */
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_minikube.yml"
+    extra_arguments = [
+      "--extra-vars",
+      "\"architecture=${ var.ami_architecture }\""
+    ]
 
     # Disable color
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
