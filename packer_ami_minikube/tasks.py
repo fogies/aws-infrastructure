@@ -42,6 +42,5 @@ def build(context):
                         '-var "vpc_packer_vpc_id={}"'.format(vpc_packer_output.vpc_id),
                         '-var "vpc_packer_subnet_id={}"'.format(vpc_packer_output.subnet_id),
                         '.'
-                    ]),
-                    echo=True
+                    ])
                 )
