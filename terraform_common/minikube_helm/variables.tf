@@ -29,6 +29,13 @@ variable "ami_architecture" {
  * Instance type to create.
  */
 variable "aws_instance_type" {
+  # Appropriate values are "t3.medium" (amd64) or larger
+  # Must correspond to vars.source_ami_filter_architecture
+  # Values with less than 4g of memory (i.e., "medium") cause Minikube configuration failures
+  #
+  # TODO: "arm64" not supported pending Minikube docker driver
+  #       https://minikube.sigs.k8s.io/docs/drivers/docker/
+
   type = string
 }
 
