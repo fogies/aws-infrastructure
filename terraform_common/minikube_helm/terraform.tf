@@ -23,19 +23,23 @@ terraform {
 }
 
 /*
- * Tags to apply to resources:
- * - Generate a random minikube_id to include in tags.
+ * Tags to apply to created resources.
+ */
+locals {
+  module_tags = {
+    terraform   = true
+    minikube_id = local.minikube_id
+  }
+}
+
+/*
+ * Generate a random minikube_id to include in tags.
  */
 resource "random_uuid" "minikube_id" {
 }
 
 locals {
   minikube_id = format("minikube-%s", random_uuid.minikube_id.result)
-
-  module_tags = {
-    terraform   = true
-    minikube_id = local.minikube_id
-  }
 }
 
 /*
@@ -144,7 +148,7 @@ resource "aws_instance" "minikube" {
 resource "local_file" "gitignore" {
   filename = format(
     "%s/%s",
-    var.instance_name,
+    var.instance_dir,
     ".gitignore"
   )
 
@@ -156,11 +160,18 @@ resource "local_file" "gitignore" {
 /*
  * An identify file for SSH access.
  */
+locals {
+  instance_key_private_filename = format(
+    "id_rsa_%s",
+    replace(aws_instance.minikube.public_ip, ".", "_")
+  )
+}
+
 resource "local_file" "instance_key_private" {
   filename = format(
-    "%s/id_rsa_%s",
-    var.instance_name,
-    replace(aws_instance.minikube.public_ip, ".", "_")
+    "%s/%s",
+    var.instance_dir,
+    local.instance_key_private_filename
   )
 
   sensitive_content = tls_private_key.instance_key_pair.private_key_pem
@@ -172,7 +183,7 @@ resource "local_file" "instance_key_private" {
 resource "local_file" "python_tasks" {
   filename = format(
     "%s/%s",
-    var.instance_name,
+    var.instance_dir,
     "tasks.py"
   )
 
@@ -189,17 +200,18 @@ resource "local_file" "python_tasks" {
 resource "local_file" "python_init" {
   filename = format(
     "%s/%s",
-    var.instance_name,
+    var.instance_dir,
     "__init__.py"
   )
 
   content = templatefile(
     "${path.module}/templates/__init__.py.tmpl",
     {
-        instance_name = var.instance_name,
+        instance_name = var.instance_name
 
+        instance_dir = var.instance_dir
         instance_ip = aws_instance.minikube.public_ip
-        instance_identity_file = local_file.instance_key_private.filename
+        instance_identity_file = local.instance_key_private_filename
     }
   )
 }

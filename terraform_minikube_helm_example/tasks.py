@@ -1,5 +1,6 @@
 from invoke import task
 import os
+import shutil
 
 
 @task
@@ -69,8 +70,8 @@ def destroy(context):
             )
         )
 
-        # Terraform will create but not automatically remove instance directories
-        if os.path.isdir('terraform_minikube_helm_example/instance_1'):
-            os.rmdir('terraform_minikube_helm_example/instance_1')
-        if os.path.isdir('terraform_minikube_helm_example/instance_2'):
-            os.rmdir('terraform_minikube_helm_example/instance_2')
+    # Terraform will create but not automatically remove instance directories
+    list_instance_dir = ['instance_1', 'instance_2']
+    for instance_dir_current in list_instance_dir:
+        if os.path.isdir(os.path.normpath(os.path.join(working_dir, instance_dir_current))):
+            shutil.rmtree(os.path.normpath(os.path.join(working_dir, instance_dir_current)))

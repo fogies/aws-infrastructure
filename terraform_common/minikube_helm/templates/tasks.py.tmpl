@@ -15,10 +15,14 @@ def ssh(context):
     print('Creating SSH Session')
 
     config = context.config.${tasks_config_context}
-
     working_dir = os.path.normpath(config.working_dir)
-    identity_file = os.path.normpath(config.${instance_name}.instance_identity_file)
-    ip = config.${instance_name}.instance_ip
+
+    instance_config = config.${instance_name}
+    identity_file = os.path.normpath(os.path.join(
+        instance_config.instance_dir,
+        instance_config.instance_identity_file)
+    )
+    ip = instance_config.instance_ip
 
     with context.cd(working_dir):
         context.run(
@@ -43,10 +47,14 @@ def ssh_port_forward(context, port, local_port=None):
     print('Creating SSH Session to Forward Port')
 
     config = context.config.${tasks_config_context}
-
     working_dir = os.path.normpath(config.working_dir)
-    identity_file = os.path.normpath(config.${instance_name}.instance_identity_file)
-    ip = config.${instance_name}.instance_ip
+
+    instance_config = config.${instance_name}
+    identity_file = os.path.normpath(os.path.join(
+        instance_config.instance_dir,
+        instance_config.instance_identity_file)
+    )
+    ip = instance_config.instance_ip
 
     with context.cd(working_dir):
         remote_port = port
@@ -84,8 +92,14 @@ def install_chart(context, chart_name):
     working_dir = os.path.normpath(config.working_dir)
     bin_helm = os.path.normpath(os.path.join(config.bin_dir, 'helm.exe'))
     helm_charts_dir = os.path.normpath(config.helm_charts_dir)
-    identity_file = os.path.normpath(config.${instance_name}.instance_identity_file)
-    ip = config.${instance_name}.instance_ip
+
+    instance_config = config.${instance_name}
+    instance_dir = os.path.normpath(instance_config.instance_dir)
+    identity_file = os.path.normpath(os.path.join(
+        instance_config.instance_dir,
+        instance_config.instance_identity_file)
+    )
+    ip = instance_config.instance_ip
 
     with context.cd(working_dir):
         # Build the helm chart
@@ -93,7 +107,9 @@ def install_chart(context, chart_name):
             command=' '.join([
                 bin_helm,
                 'package',
-                os.path.join(helm_charts_dir, chart_name)
+                os.path.normpath(os.path.join(helm_charts_dir, chart_name)),
+                '--dependency-update',
+                '--destination "{}"'.format(instance_dir)
             ]),
             hide='stdout'
         )
@@ -105,7 +121,7 @@ def install_chart(context, chart_name):
         ))
         with open(chart_config_path) as f:
             chart_config = yaml.load(f)
-            helm_chart_file = '{}-{}.tgz'.format(chart_config['name'], chart_config['version'])
+        helm_chart_file = '{}-{}.tgz'.format(chart_config['name'], chart_config['version'])
 
         # Ensure a staging directory exists
         context.run(
@@ -126,7 +142,7 @@ def install_chart(context, chart_name):
                 'scp',
                 '-q',
                 '-i {}'.format(identity_file),
-                helm_chart_file,
+                '"{}"'.format(os.path.normpath(os.path.join(instance_dir, helm_chart_file))),
                 'ubuntu@{}:~/.minikube_helm_staging'.format(ip)
             ]),
         )

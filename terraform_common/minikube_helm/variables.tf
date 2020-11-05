@@ -40,9 +40,16 @@ variable "aws_instance_type" {
 }
 
 /*
- * Name for this instance of Minikube Helm.
+ * Name for this instance.
  */
 variable "instance_name" {
+  type = string
+}
+
+/*
+ * Directory in which to generate files for this instance.
+ */
+variable "instance_dir" {
   type = string
 }
 
