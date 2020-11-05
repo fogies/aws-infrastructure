@@ -138,6 +138,16 @@ build {
   }
 
   /*
+   * Expose Minikube ports for HTTP/S access
+   */
+  provisioner "ansible-local" {
+    playbook_file = "../ansible/ansible_minikube_http_ports.yml"
+
+    # Disable color
+    command = "PYTHONUNBUFFERED=1 ansible-playbook"
+  }
+
+  /*
    * Install Helm
    */
   provisioner "ansible-local" {

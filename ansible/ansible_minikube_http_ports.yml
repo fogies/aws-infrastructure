@@ -1,0 +1,100 @@
+---
+
+- name: Configure Minikube Ports 80/443 for External HTTP/S Access
+  hosts: 127.0.0.1
+  connection: local
+
+  vars:
+
+  tasks:
+    #
+    # Enable IP Forwarding to Forward Ports to Minikube
+    #
+
+    - name: Enable IP Forwarding
+      become: yes
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: "1"
+        state: present
+        reload: yes
+
+    #
+    # Enable Routing on localhost to Forward Ports to Minikube
+    #
+
+    - name: Enable Routing on localhost
+      become: yes
+      sysctl:
+        name: net.ipv4.conf.all.route_localnet
+        value: "1"
+        state: present
+        reload: yes
+
+    #
+    # Create Script to Forward Ports
+    #
+    # Script will be run as user ubuntu, therefore requiring sudo to access iptables.
+    # Running the entire script as sudo causes "minikube ip" to fail.
+    #
+
+    - name: Create minikube-expose-http-ports Script
+      become: yes
+      copy:
+        content: |
+          #!/bin/bash
+
+          ports=(80 443)
+
+          # Identify our outgoing network device
+          networkinterface="$(ip route get "8.8.8.8" | grep -Po '(?<=(dev )).*(?= src| proto)')"
+
+          # Delete any existing rules we created
+          sudo iptables-save | grep -v "minikube-expose-http-ports" | sudo iptables-restore
+
+          # Direct incoming port traffic to Minikube
+          for port in "${ports[@]}"
+          do
+            sudo iptables -t nat -A PREROUTING -p tcp -i "$networkinterface" --dport "$port" -j DNAT --to "$(minikube ip)" -m comment --comment "minikube-expose-http-ports"
+          done
+
+          # Direct localhost port traffic to Minikube
+          for port in "${ports[@]}"
+          do
+            sudo iptables -t nat -A OUTPUT -m addrtype --src-type LOCAL --dst-type LOCAL -p tcp --dport "$port" -j DNAT --to "$(minikube ip)" -m comment --comment "minikube-expose-http-ports"
+          done
+          sudo iptables -t nat -A POSTROUTING -m addrtype --src-type LOCAL --dst-type UNICAST -j MASQUERADE -m comment --comment "minikube-expose-http-ports"
+        dest: /usr/local/bin/minikube-expose-http-ports
+        mode: 0755
+
+    #
+    # Create Service to Run Script after Minikube Starts
+    #
+
+    - name: Create Service for minikube-expose-http-ports
+      become: yes
+      copy:
+        content: |
+          [Unit]
+          Requires=minikube.service
+          After=minikube.service
+
+          [Service]
+          User=ubuntu
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStartPre=/usr/local/bin/minikube ip
+          ExecStart=/usr/local/bin/minikube-expose-http-ports
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/minikube-expose-http-ports.service
+        mode: 0664
+
+    - name: Enable and Start Service for minikube-expose-http-ports
+      become: yes
+      systemd:
+        daemon_reload: yes
+        name: minikube-expose-http-ports
+        state: started
+        enabled: yes
