@@ -1,9 +1,7 @@
-# Some useful explanation of ingress
-#
-# https://github.com/imixs/imixs-cloud/blob/master/doc/INGRESS.md
+# https://kubernetes.io/docs/concepts/services-networking/ingress/
 
-apiVersion: networking.k8s.io/v1beta1
-kind: Ingress
+apiVersion: 'networking.k8s.io/v1beta1'
+kind: 'Ingress'
 metadata:
   name: '{{ .Release.Name }}-nginx-ingress'
   labels:
@@ -13,7 +11,7 @@ spec:
   rules:
   - http:
       paths:
-      - path: /
+      - path: '/'
         backend:
           serviceName: '{{ .Release.Name }}-nginx-service'
           servicePort: 80

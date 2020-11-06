@@ -44,7 +44,8 @@
         content: |
           #!/bin/bash
 
-          ports=(80 443)
+          # TODO: Traefik Dashboard Ingress
+          ports=(80 443 8000 9000)
 
           # Identify our outgoing network device
           networkinterface="$(ip route get "8.8.8.8" | grep -Po '(?<=(dev )).*(?= src| proto)')"

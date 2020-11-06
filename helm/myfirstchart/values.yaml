@@ -1,6 +1,14 @@
 traefik:
   ports:
+    # TODO: Traefik Dashboard Ingress
+    traefik:
+      hostPort: 9000
+      expose: true
     web:
       hostPort: 80
     websecure:
       hostPort: 443
+
+jenkins:
+  master:
+    jenkinsUriPrefix: '/jenkins'
