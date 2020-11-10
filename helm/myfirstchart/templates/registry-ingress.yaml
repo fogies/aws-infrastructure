@@ -1,0 +1,24 @@
+# https://kubernetes.io/docs/concepts/services-networking/ingress/
+
+apiVersion: 'networking.k8s.io/v1beta1'
+kind: 'Ingress'
+metadata:
+  name: 'registry-ingress'
+  labels:
+    app: 'registry'
+
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: 'websecure'
+
+    traefik.ingress.kubernetes.io/router.tls: 'true'
+    traefik.ingress.kubernetes.io/router.tls.domains.0.main: 'registry.local'
+
+spec:
+  rules:
+  - host: 'registry.local'
+    http:
+      paths:
+      - path: '/'
+        backend:
+          serviceName: 'registry'
+          servicePort: 5000

@@ -1,0 +1,59 @@
+---
+
+- name: Configure Minikube Host for registry.local
+  hosts: 127.0.0.1
+  connection: local
+
+  vars:
+
+  tasks:
+    #
+    # Create Script to Add registry.local to Minikube /etc/hosts
+    #
+
+    - name: Create Script minikube-configure-registry
+      become: yes
+      copy:
+        content: |
+          #!/bin/bash
+
+          minikube ssh <<'EOSSH'
+          grep -v "registry.local" /etc/hosts > /tmp/minikube-configure-registry.hosts
+          sh -c 'echo "127.0.0.1 registry.local"' >> /tmp/minikube-configure-registry.hosts
+          sudo sh -c 'cat /tmp/minikube-configure-registry.hosts > /etc/hosts'
+          rm /tmp/minikube-configure-registry.hosts
+          EOSSH
+        dest: /usr/local/bin/minikube-configure-registry
+        mode: 0755
+
+    #
+    # Create Service to Run Script after Minikube Starts
+    #
+
+    - name: Create Service
+      become: yes
+      copy:
+        content: |
+          [Unit]
+          Requires=minikube.service
+          After=minikube.service
+
+          [Service]
+          User=ubuntu
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStartPre=/usr/local/bin/minikube ip
+          ExecStart=/usr/local/bin/minikube-configure-registry
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/minikube-configure-registry.service
+        mode: 0664
+
+    - name: Enable and Start Service
+      become: yes
+      systemd:
+        daemon_reload: yes
+        name: minikube-configure-registry
+        state: started
+        enabled: yes

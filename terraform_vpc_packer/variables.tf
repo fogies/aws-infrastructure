@@ -19,9 +19,11 @@ variable "aws_instance_type" {
 }
 
 /*
- * Project name to include in tags applied to created resources.
+ * Tags to apply to created resources.
  */
+variable "tags" {
+  type = map
 
-variable "packernetwork_project" {
-  default = "ami_minikube"
+  default = {
+  }
 }

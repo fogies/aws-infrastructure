@@ -1,48 +1,16 @@
-from invoke import task
+from invoke import Collection
 
+import packer_ami_minikube
+import terraform_minikube_helm_example
+import terraform_vpc_packer
 
-@task
-def create_packer_network(context):
-    """
-    Create the network used by Packer.
-    """
-    with context.cd('terraform_packernetwork'):
-        print('Creating Packer Network')
-        context.run(command='..\\bin\\terraform.exe apply -auto-approve -no-color')
+ns = Collection()
 
+ns.add_collection(packer_ami_minikube.ns, name='ami-minikube')
+ns.configure(packer_ami_minikube.ns.configuration())
 
-@task
-def destroy_packer_network(context):
-    """
-    Destroy the network used by Packer.
-    """
-    with context.cd('terraform_packernetwork'):
-        print('Destroying Packer Network')
-        context.run(command='..\\bin\\terraform.exe destroy -auto-approve -no-color')
+ns.add_collection(terraform_minikube_helm_example.ns, name='minikube-helm-example')
+ns.configure(terraform_minikube_helm_example.ns.configuration())
 
-
-class packer_network:
-    """
-    Guard object for creating and destroying the network used by Packer.
-    """
-
-    def __init__(self, context):
-        self.context = context
-
-    def __enter__(self):
-        create_packer_network(self.context)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        destroy_packer_network(self.context)
-
-
-@task
-def build_ami_minikube(context):
-    """
-    Build the AMI Minikube.
-    """
-    with packer_network(context=context):
-        with context.cd('ami_minikube'):
-            print('Building AMI Minikube')
-            context.run(command='..\\bin\\packer.exe build -color=false -var-file=..\\terraform_packernetwork\packernetwork.pkrvars.hcl .', echo=True)
+ns.add_collection(terraform_vpc_packer.ns, name='vpc-packer')
+ns.configure(terraform_vpc_packer.ns.configuration())

@@ -5,6 +5,10 @@
   connection: local
   
   vars:
+    # Expects
+    # architecture: "amd64"
+    # TODO: "arm64" not supported pending Minikube docker driver
+    #       https://minikube.sigs.k8s.io/docs/drivers/docker/
     versions:
       minikube: v1.13.0
       kubectl: v1.19.2
@@ -17,7 +21,7 @@
     - name: Download Minikube
       become: yes
       get_url:
-        url: https://storage.googleapis.com/minikube/releases/{{ versions.minikube }}/minikube-linux-amd64
+        url: https://storage.googleapis.com/minikube/releases/{{ versions.minikube }}/minikube-linux-{{ architecture }}
         dest: /usr/local/bin/minikube
         mode: 0755
 
@@ -36,7 +40,7 @@
     - name: Download Kubectl
       become: yes
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/{{ versions.kubectl }}/bin/linux/amd64/kubectl
+        url: https://storage.googleapis.com/kubernetes-release/release/{{ versions.kubectl }}/bin/linux/{{ architecture }}/kubectl
         dest: /usr/local/bin/kubectl
         mode: 0755
 
@@ -48,31 +52,31 @@
     # Create a Service for Minikube
     #
     
-    - name: Create Minikube Service
+    - name: Create Service for Minikube
       become: yes
       copy: 
         content: |
-                 [Unit]
-                 Requires=docker.service
-                 After=docker.service
+          [Unit]
+          Requires=docker.service
+          After=docker.service
 
-                 [Service]
-                 User=ubuntu
-                 Type=oneshot
-                 RemainAfterExit=yes
-                 ExecStartPre=/usr/bin/docker info
-                 ExecStart=/usr/local/bin/minikube start
-                 ExecStop=/usr/local/bin/minikube stop
-                 
-                 [Install]
-                 WantedBy=multi-user.target
+          [Service]
+          User=ubuntu
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStartPre=/usr/bin/docker info
+          ExecStart=/usr/local/bin/minikube start
+          ExecStop=/usr/local/bin/minikube stop
+
+          [Install]
+          WantedBy=multi-user.target
         dest: /etc/systemd/system/minikube.service
         mode: 0664
-      
-    - name: Enable and Start Minikube Service
+
+    - name: Enable and Start Service for Minikube
       become: yes
       systemd:
         daemon_reload: yes
         name: minikube
         state: started
-        enabled: yes        
+        enabled: yes
