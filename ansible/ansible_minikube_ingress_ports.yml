@@ -1,6 +1,6 @@
 ---
 
-- name: Configure Minikube Ports 80/443 for External HTTP/S Access
+- name: Configure Minikube Ports for Ingress
   hosts: 127.0.0.1
   connection: local
 
@@ -38,7 +38,7 @@
     # Running the entire script as sudo causes "minikube ip" to fail.
     #
 
-    - name: Create minikube-expose-http-ports Script
+    - name: Create Script minikube-configure-ingress-ports
       become: yes
       copy:
         content: |
@@ -51,28 +51,28 @@
           networkinterface="$(ip route get "8.8.8.8" | grep -Po '(?<=(dev )).*(?= src| proto)')"
 
           # Delete any existing rules we created
-          sudo iptables-save | grep -v "minikube-expose-http-ports" | sudo iptables-restore
+          sudo iptables-save | grep -v "minikube-configure-ingress-ports" | sudo iptables-restore
 
           # Direct incoming port traffic to Minikube
           for port in "${ports[@]}"
           do
-            sudo iptables -t nat -A PREROUTING -p tcp -i "$networkinterface" --dport "$port" -j DNAT --to "$(minikube ip)" -m comment --comment "minikube-expose-http-ports"
+            sudo iptables -t nat -A PREROUTING -p tcp -i "$networkinterface" --dport "$port" -j DNAT --to "$(minikube ip)" -m comment --comment "minikube-configure-ingress-ports"
           done
 
           # Direct localhost port traffic to Minikube
           for port in "${ports[@]}"
           do
-            sudo iptables -t nat -A OUTPUT -m addrtype --src-type LOCAL --dst-type LOCAL -p tcp --dport "$port" -j DNAT --to "$(minikube ip)" -m comment --comment "minikube-expose-http-ports"
+            sudo iptables -t nat -A OUTPUT -m addrtype --src-type LOCAL --dst-type LOCAL -p tcp --dport "$port" -j DNAT --to "$(minikube ip)" -m comment --comment "minikube-configure-ingress-ports"
           done
-          sudo iptables -t nat -A POSTROUTING -m addrtype --src-type LOCAL --dst-type UNICAST -j MASQUERADE -m comment --comment "minikube-expose-http-ports"
-        dest: /usr/local/bin/minikube-expose-http-ports
+          sudo iptables -t nat -A POSTROUTING -m addrtype --src-type LOCAL --dst-type UNICAST -j MASQUERADE -m comment --comment "minikube-configure-ingress-ports"
+        dest: /usr/local/bin/minikube-configure-ingress-ports
         mode: 0755
 
     #
     # Create Service to Run Script after Minikube Starts
     #
 
-    - name: Create Service for minikube-expose-http-ports
+    - name: Create Service
       become: yes
       copy:
         content: |
@@ -85,17 +85,17 @@
           Type=oneshot
           RemainAfterExit=yes
           ExecStartPre=/usr/local/bin/minikube ip
-          ExecStart=/usr/local/bin/minikube-expose-http-ports
+          ExecStart=/usr/local/bin/minikube-configure-ingress-ports
 
           [Install]
           WantedBy=multi-user.target
-        dest: /etc/systemd/system/minikube-expose-http-ports.service
+        dest: /etc/systemd/system/minikube-configure-ingress-ports.service
         mode: 0664
 
-    - name: Enable and Start Service for minikube-expose-http-ports
+    - name: Enable and Start Service
       become: yes
       systemd:
         daemon_reload: yes
-        name: minikube-expose-http-ports
+        name: minikube-configure-ingress-ports
         state: started
         enabled: yes

@@ -2,5 +2,8 @@ dependencies:
 - name: traefik
   repository: https://helm.traefik.io/traefik
   version: 9.8.4
-digest: sha256:ba1662c670f2d5a07a4d88cde089c4bf1807e633dfc086fc77b7249adb380730
-generated: "2020-11-05T07:36:23.1510728-08:00"
+- name: jenkins
+  repository: https://charts.jenkins.io
+  version: 2.17.0
+digest: sha256:6401306c6de7f8c42d46129225a79ad8a2b013d6780953ea79f0956aa59b2d44
+generated: "2020-11-06T07:03:16.3583391-08:00"

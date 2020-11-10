@@ -1,13 +1,28 @@
 traefik:
   ports:
+    web:
+      hostPort: 80
+
+    websecure:
+      hostPort: 443
+      tls:
+        enabled: true
+#        domains:
+#          # Our local
+#          - main: registry.local
+
     # TODO: Traefik Dashboard Ingress
     traefik:
       hostPort: 9000
       expose: true
-    web:
-      hostPort: 80
-    websecure:
-      hostPort: 443
+
+#  # Settings for debugging access
+#  logs:
+#    general:
+#      level: 'DEBUG'
+#
+#    access:
+#      enabled: true
 
 jenkins:
   master:

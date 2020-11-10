@@ -1,0 +1,23 @@
+apiVersion: 'apps/v1'
+kind: 'Deployment'
+metadata:
+  name: 'registry-deployment'
+  labels:
+    app: 'registry'
+
+spec:
+  # Currently only 1, scaling would require understanding how to keep it consistent
+  replicas: 1
+  selector:
+    matchLabels:
+      app: 'registry'
+  template:
+    metadata:
+      labels:
+        app: 'registry'
+    spec:
+      containers:
+        - name: 'registry'
+          image: 'registry:2.7.1'
+          ports:
+            - containerPort: 5000

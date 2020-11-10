@@ -138,10 +138,20 @@ build {
   }
 
   /*
-   * Expose Minikube ports for HTTP/S access
+   * Expose Minikube ports for ingress
    */
   provisioner "ansible-local" {
-    playbook_file = "../ansible/ansible_minikube_http_ports.yml"
+    playbook_file = "../ansible/ansible_minikube_ingress_ports.yml"
+
+    # Disable color
+    command = "PYTHONUNBUFFERED=1 ansible-playbook"
+  }
+
+  /*
+   * Configure Minikube for running the registry.
+   */
+  provisioner "ansible-local" {
+    playbook_file = "../ansible/ansible_minikube_registry.yml"
 
     # Disable color
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
