@@ -17,6 +17,8 @@ ns.configure({
     }
 })
 
+del Collection
+
 try:
     from . import instance_1 as instance_1
     ns.add_collection(instance_1.ns, name='instance_1')
@@ -34,5 +36,3 @@ try:
     })
 except (AttributeError, ImportError, SyntaxError):
     pass
-
-del Collection
