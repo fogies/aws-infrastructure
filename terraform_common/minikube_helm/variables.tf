@@ -1,17 +1,10 @@
 /*
- * Variables defining AWS basics.
+ * Availability zone in which to create instance.
  */
-
-variable "aws_profile" {
-  default = "default"
-}
-
-variable "aws_region" {
-  default = "us-east-1"
-}
-
 variable "aws_availability_zone" {
-  default = "us-east-1a"
+  # Typical value is "us-east-1a"
+
+  type = string
 }
 
 /*

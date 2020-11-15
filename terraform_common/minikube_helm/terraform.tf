@@ -43,14 +43,6 @@ locals {
 }
 
 /*
- * AWS Configuration.
- */
-provider "aws" {
-  profile = var.aws_profile
-  region  = var.aws_region
-}
-
-/*
  * Simple VPC with single Subnet in single Availability Zone.
  */
 module "vpc" {
