@@ -124,14 +124,34 @@ resource "aws_instance" "minikube" {
 
   key_name = aws_key_pair.instance_key_pair.id
 
-  associate_public_ip_address = true
-
   tags = merge(
     var.tags,
     local.module_tags,
     {
     },
   )
+}
+
+/*
+ * If we were not provided an elastic IP, create our own.
+ */
+resource "aws_eip" "eip" {
+  count = var.eip ? 0 : 1
+}
+
+/*
+ * Associate to our elastic IP, either as provided or as created.
+ */
+resource "aws_eip_association" "eip_association" {
+  instance_id = aws_instance.minikube.id
+  allocation_id = var.eip ? var.eip_id : aws_eip.eip[0].id
+}
+
+/*
+ * Our public IP is based on how we associated an EIP.
+ */
+locals {
+  instance_public_ip = var.eip ? var.eip_public_ip : aws_eip.eip[0].public_ip
 }
 
 /*
@@ -155,7 +175,9 @@ resource "local_file" "gitignore" {
 locals {
   instance_key_private_filename = format(
     "id_rsa_%s",
-    replace(aws_instance.minikube.public_ip, ".", "_")
+    replace(
+      local.instance_public_ip, ".", "_"
+    )
   )
 }
 
@@ -202,7 +224,7 @@ resource "local_file" "python_init" {
         instance_name = var.instance_name
 
         instance_dir = var.instance_dir
-        instance_ip = aws_instance.minikube.public_ip
+        instance_ip = local.instance_public_ip
         instance_identity_file = local.instance_key_private_filename
     }
   )

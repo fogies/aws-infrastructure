@@ -20,19 +20,25 @@ def ssh(context):
     instance_config = config.${instance_name}
     identity_file = os.path.normpath(os.path.join(
         instance_config.instance_dir,
-        instance_config.instance_identity_file)
-    )
+        instance_config.instance_identity_file
+    ))
+    hosts_file = os.path.normpath(os.path.join(
+        instance_config.instance_dir,
+        'known_hosts'
+    ))
     ip = instance_config.instance_ip
 
     with context.cd(working_dir):
         context.run(
-            command='{} {} {} {} {}'.format(
+            command=' '.join([
                 'start',
                 'ssh',
                 '-l ubuntu',
                 '-i {}'.format(identity_file),
+                '-o StrictHostKeyChecking=no',
+                '-o UserKnownHostsFile="{}"'.format(hosts_file),
                 ip
-            ),
+            ]),
             disown=True
         )
 
@@ -52,8 +58,12 @@ def ssh_port_forward(context, port, local_port=None):
     instance_config = config.${instance_name}
     identity_file = os.path.normpath(os.path.join(
         instance_config.instance_dir,
-        instance_config.instance_identity_file)
-    )
+        instance_config.instance_identity_file
+    ))
+    hosts_file = os.path.normpath(os.path.join(
+        instance_config.instance_dir,
+        'known_hosts'
+    ))
     ip = instance_config.instance_ip
 
     with context.cd(working_dir):
@@ -62,11 +72,13 @@ def ssh_port_forward(context, port, local_port=None):
             local_port = remote_port
 
         context.run(
-            command='{} {} {} {} {} {} {}'.format(
+            command=' '.join([
                 'start',
                 'ssh',
                 '-l ubuntu',
                 '-i {}'.format(identity_file),
+                '-o StrictHostKeyChecking=no',
+                '-o UserKnownHostsFile="{}"'.format(hosts_file),
                 '-L localhost:{}:localhost:{}'.format(local_port, remote_port),
                 ip,
                 '"' + ' && '.join([
@@ -76,7 +88,7 @@ def ssh_port_forward(context, port, local_port=None):
                     'echo',
                     'sleep infinity'
                 ]) + '"'
-            ),
+            ]),
             disown=True
         )
 
