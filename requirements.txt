@@ -1,2 +1,4 @@
+-e ./aws_infrastructure
+
 invoke~=1.4.1
 ruamel.yaml~=0.16.12
