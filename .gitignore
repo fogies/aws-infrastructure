@@ -1,6 +1,9 @@
 # Python Environment
 /.venv/
 
+# Python Packaging
+*.egg-info/
+
 # IDE Configuration
 /.idea/
 

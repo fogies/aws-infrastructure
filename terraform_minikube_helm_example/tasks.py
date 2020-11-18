@@ -1,6 +1,6 @@
 from invoke import task
 import os
-import task_templates
+import aws_infrastructure.task_templates
 
 
 CONFIG_KEY = 'terraform_minikube_helm_example'
@@ -37,6 +37,16 @@ def delete_empty_instance_dirs(context):
                 os.rmdir(instance_dir_path)
 
 
-init = task_templates.terraform.template_init(config_key=CONFIG_KEY)
-apply = task_templates.terraform.template_apply(config_key=CONFIG_KEY, init=init, post=[delete_empty_instance_dirs])
-destroy = task_templates.terraform.template_destroy(config_key=CONFIG_KEY, init=init, post=[delete_empty_instance_dirs])
+init = aws_infrastructure.task_templates.terraform.template_init(
+    config_key=CONFIG_KEY
+)
+apply = aws_infrastructure.task_templates.terraform.template_apply(
+    config_key=CONFIG_KEY,
+    init=init,
+    post=[delete_empty_instance_dirs]
+)
+destroy = aws_infrastructure.task_templates.terraform.template_destroy(
+    config_key=CONFIG_KEY,
+    init=init,
+    post=[delete_empty_instance_dirs]
+)
