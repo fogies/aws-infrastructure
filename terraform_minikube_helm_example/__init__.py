@@ -1,16 +1,15 @@
-# Support Invoke discovery of tasks
+from invoke import Collection
+
 from .tasks import *
 
 # Collection configured for expected use
-from invoke import Collection
-
 ns = Collection()
 
-ns.add_task(create)
+ns.add_task(apply)
 ns.add_task(destroy)
 
 ns.configure({
-    'terraform_minikube_helm_example': {
+    CONFIG_KEY: {
         'working_dir': 'terraform_minikube_helm_example',
         'bin_dir': '../bin',
         'helm_charts_dir': '../helm',

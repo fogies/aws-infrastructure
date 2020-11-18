@@ -1,27 +1,9 @@
 from invoke import task
 import os
+import task_templates
 
 
-@task
-def initialize(context):
-    """
-    Initialize Terraform.
-    """
-
-    config = context.config.terraform_minikube_helm_example
-    working_dir = os.path.normpath(config.working_dir)
-    bin_terraform = os.path.normpath(os.path.join(config.bin_dir, 'terraform.exe'))
-
-    with context.cd(working_dir):
-        print('Initializing Terraform')
-        context.run(
-            command='{} {} {}'.format(
-                bin_terraform,
-                'init',
-                '-no-color'
-            ),
-            hide="stdout"
-        )
+CONFIG_KEY = 'terraform_minikube_helm_example'
 
 
 @task
@@ -30,7 +12,7 @@ def delete_empty_instance_dirs(context):
     Delete any instance directories which are empty.
     """
 
-    config = context.config.terraform_minikube_helm_example
+    config = context.config[CONFIG_KEY]
     working_dir = os.path.normpath(config.working_dir)
 
     # Terraform will create but not automatically remove instance directories
@@ -55,49 +37,6 @@ def delete_empty_instance_dirs(context):
                 os.rmdir(instance_dir_path)
 
 
-@task(
-    pre=[initialize],
-    post=[delete_empty_instance_dirs]
-)
-def create(context):
-    """
-    Start a Minikube instance.
-    """
-
-    config = context.config.terraform_minikube_helm_example
-    working_dir = os.path.normpath(config.working_dir)
-    bin_terraform = os.path.normpath(os.path.join(config.bin_dir, 'terraform.exe'))
-
-    with context.cd(working_dir):
-        print('Creating Minikube')
-        context.run(
-            command='{} {} {}'.format(
-                bin_terraform,
-                'apply',
-                '-auto-approve -no-color'
-            )
-        )
-
-
-@task(
-    pre=[initialize],
-    post=[delete_empty_instance_dirs]
-)
-def destroy(context):
-    """
-    Destroy our Minikube instance.
-    """
-
-    config = context.config.terraform_minikube_helm_example
-    working_dir = os.path.normpath(config.working_dir)
-    bin_terraform = os.path.normpath(os.path.join(config.bin_dir, 'terraform.exe'))
-
-    with context.cd(working_dir):
-        print('Destroying Minikube')
-        context.run(
-            command='{} {} {}'.format(
-                bin_terraform,
-                'destroy',
-                '-auto-approve -no-color'
-            )
-        )
+init = task_templates.terraform.template_init(config_key=CONFIG_KEY)
+apply = task_templates.terraform.template_apply(config_key=CONFIG_KEY, init=init, post=[delete_empty_instance_dirs])
+destroy = task_templates.terraform.template_destroy(config_key=CONFIG_KEY, init=init, post=[delete_empty_instance_dirs])

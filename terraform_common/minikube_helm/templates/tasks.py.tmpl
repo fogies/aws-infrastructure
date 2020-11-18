@@ -2,15 +2,15 @@ from invoke import task
 import os
 from ruamel.yaml import YAML
 
-from ..tasks import initialize
+from ..tasks import init
 
 
 @task(
-    pre=[initialize]
+    pre=[init]
 )
 def ssh(context):
     """
-    Open SSH session in our Minikube instance.
+    Open an SSH session to the instance.
     """
     print('Creating SSH Session')
 
@@ -31,7 +31,7 @@ def ssh(context):
     with context.cd(working_dir):
         context.run(
             command=' '.join([
-                'start',
+                'start',  # Ensures Windows launches ssh outside cmd
                 'ssh',
                 '-l ubuntu',
                 '-i {}'.format(identity_file),
@@ -44,11 +44,11 @@ def ssh(context):
 
 
 @task(
-    pre=[initialize]
+    pre=[init]
 )
 def ssh_port_forward(context, port, local_port=None):
     """
-    Forward a port from Minikube instance.
+    Forward a port from the instance.
     """
     print('Creating SSH Session to Forward Port')
 
@@ -73,7 +73,7 @@ def ssh_port_forward(context, port, local_port=None):
 
         context.run(
             command=' '.join([
-                'start',
+                'start',  # Ensures Windows launches ssh outside cmd
                 'ssh',
                 '-l ubuntu',
                 '-i {}'.format(identity_file),
@@ -96,7 +96,7 @@ def ssh_port_forward(context, port, local_port=None):
 @task
 def install_chart(context, chart_name):
     """
-    Install a chart in our Minikube instance.
+    Install a chart in the instance.
     """
     print('Packaging and Installing Chart')
 
