@@ -1,17 +1,17 @@
-# Support Invoke discovery of tasks
+from invoke import Collection
+
 from .tasks import *
 
 # Collection configured for expected use
-from invoke import Collection
-
 ns = Collection()
 
-# ns.add_task(initialize)
-# ns.add_task(create)
+# ns.add_task(init)
+# ns.add_task(apply)
 # ns.add_task(destroy)
+# ns.add_task(output)
 
 ns.configure({
-    'terraform_vpc_packer': {
+    CONFIG_KEY: {
         'working_dir': 'terraform_vpc_packer',
         'bin_dir': '../bin'
     }

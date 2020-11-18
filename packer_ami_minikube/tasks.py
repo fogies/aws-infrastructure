@@ -2,18 +2,22 @@ from invoke import task
 import terraform_vpc_packer
 import os
 
+CONFIG_KEY = 'packer_ami_minikube'
 
-@task(pre=[terraform_vpc_packer.initialize])
+
+@task
 def build(context):
     """
     Build the AMI Minikube.
     """
 
-    config = context.config.packer_ami_minikube
+    config = context.config[CONFIG_KEY]
     working_dir = os.path.normpath(config.working_dir)
     bin_packer = os.path.normpath(os.path.join(config.bin_dir, 'packer.exe'))
 
-    with terraform_vpc_packer.vpc_packer(context=context) as vpc_packer_output:
+    with terraform_vpc_packer.vpc_packer(context=context) as vpc_packer:
+        vpc_packer_output = vpc_packer.output
+
         with context.cd(working_dir):
             print('Building AMI Minikube')
 
@@ -42,5 +46,5 @@ def build(context):
                         '-var "vpc_packer_vpc_id={}"'.format(vpc_packer_output.vpc_id),
                         '-var "vpc_packer_subnet_id={}"'.format(vpc_packer_output.subnet_id),
                         '.'
-                    ])
+                    ]),
                 )
