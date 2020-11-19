@@ -31,6 +31,14 @@ def template_init(
                     '-no-color',
                 ]),
             )
+            context.run(
+                command=' '.join([
+                    bin_terraform,
+                    'get',
+                    '-update',
+                    '-no-color',
+                ]),
+            )
 
     return init
 
@@ -39,6 +47,7 @@ def template_apply(
     *,
     config_key: str,
     init: task,
+    variables=None,
     pre: List[task] = None,
     post: List[task] = None
 ):
@@ -62,15 +71,21 @@ def template_apply(
         working_dir = os.path.normpath(config.working_dir)
         bin_terraform = os.path.normpath(os.path.join(config.bin_dir, 'terraform.exe'))
 
+        variables_dict = variables(context=context) if variables else {}
+
         with context.cd(working_dir):
             print('Terraform applying')
             context.run(
                 command=' '.join([
                     bin_terraform,
                     'apply',
+                    ' '.join([
+                        '-var "{}={}"'.format(key, value) for (key, value) in variables_dict.items()
+                    ]),
                     '-auto-approve',
                     '-no-color',
                 ]),
+                echo=True
             )
 
     return apply
@@ -80,6 +95,7 @@ def template_destroy(
     *,
     config_key: str,
     init: task,
+    variables=None,
     pre: List[task] = None,
     post: List[task] = None
 ):
@@ -103,12 +119,17 @@ def template_destroy(
         working_dir = os.path.normpath(config.working_dir)
         bin_terraform = os.path.normpath(os.path.join(config.bin_dir, 'terraform.exe'))
 
+        variables_dict = variables(context=context) if variables else {}
+
         with context.cd(working_dir):
             print('Terraform destroying')
             context.run(
                 command=' '.join([
                     bin_terraform,
                     'destroy',
+                    ' '.join([
+                        '-var "{}={}"'.format(key, value) for (key, value) in variables_dict.items()
+                    ]),
                     '-auto-approve',
                     '-no-color',
                 ]),
@@ -167,7 +188,7 @@ def template_output(
 
 def template_context_manager(
     *,
-    init: task = None,
+    init: task,
     apply: task = None,
     output: task = None,
     destroy: task = None
@@ -185,9 +206,9 @@ def template_context_manager(
             self._context = context
             self._output = None
 
+            init(self._context)
+
         def __enter__(self):
-            if init:
-                init(self._context)
             if apply:
                 apply(self._context)
 
