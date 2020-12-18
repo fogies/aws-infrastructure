@@ -1,0 +1,12 @@
+apiVersion: 'traefik.containo.us/v1alpha1'
+kind: 'Middleware'
+metadata:
+  name: 'enable-cors'
+  namespace: 'ingress-traefik'
+spec:
+  headers:
+    accessControlAllowOriginList:
+    - '*'
+    accessControlAllowCredentials: true
+    accessControlMaxAge: 600
+    addVaryHeader: true

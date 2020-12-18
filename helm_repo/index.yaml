@@ -1,0 +1,20 @@
+apiVersion: v1
+entries:
+  ingress:
+  - apiVersion: v2
+    created: "2020-12-18T11:16:01.5594621-08:00"
+    dependencies:
+    - name: traefik
+      repository: https://helm.traefik.io/traefik
+      version: ~9.11.0
+    - name: cert-manager
+      repository: https://charts.jetstack.io
+      version: ~1.0.4
+    description: Basic environment for ingress
+    digest: e94f58a8c81451fb6315c04b066d2f485129a0bd95790b5f3e627872331e18a9
+    name: ingress
+    type: application
+    urls:
+    - ingress-0.1.0.tgz
+    version: 0.1.0
+generated: "2020-12-18T11:16:01.5475195-08:00"

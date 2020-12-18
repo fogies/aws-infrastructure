@@ -1,0 +1,12 @@
+traefik:
+  ports:
+    web:
+      hostPort: 80
+
+    websecure:
+      hostPort: 443
+      tls:
+        enabled: true
+
+cert-manager:
+  installCRDs: true

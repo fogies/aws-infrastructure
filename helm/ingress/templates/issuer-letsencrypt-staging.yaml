@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: 'letsencrypt-staging'
+spec:
+  acme:
+    # Contact for expiring certificates and account issues
+    email: 'fogies-registrations@cs.washington.edu'
+
+    # Configure for the staging server
+    server: 'https://acme-staging-v02.api.letsencrypt.org/directory'
+    privateKeySecretRef:
+      # Secret resource used to store the account's private key.
+      name: 'issuer-account-key-staging'
+
+    # Add a single HTTP01 challenge solver
+    solvers:
+    - http01:
+        ingress:
+          class: traefik
