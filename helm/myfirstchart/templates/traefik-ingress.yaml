@@ -1,7 +1,0 @@
-# https://kubernetes.io/docs/concepts/services-networking/ingress/
-
-# TODO: Traefik Dashboard Ingress
-#
-# We cannot have a useful ingress on Traefik dashboard until we can prefix it
-#
-# https://github.com/traefik/traefik/issues/5853
