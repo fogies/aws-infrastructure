@@ -3,11 +3,22 @@ from invoke import task
 import os
 import ruamel.yaml
 
+import aws_infrastructure.task_templates.config
+
 import packer_ami_minikube
 import terraform_minikube_helm_example
 import terraform_vpc_packer
 
 ns = Collection()
+
+# Tasks in a 'tasks' collection
+
+ns_tasks = Collection()
+ns_tasks.add_task(aws_infrastructure.task_templates.config.template_config())
+ns.add_collection(ns_tasks, name='tasks')
+ns.configure(ns_tasks.configuration())
+
+# Tasks in each of our included packages
 
 ns.add_collection(packer_ami_minikube.ns, name='ami-minikube')
 ns.configure(packer_ami_minikube.ns.configuration())

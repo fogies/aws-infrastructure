@@ -1,4 +1,4 @@
-from invoke.tasks import task
+from invoke import task
 import json
 import os
 from typing import List
