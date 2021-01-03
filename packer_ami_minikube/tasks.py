@@ -1,14 +1,26 @@
+from invoke import Collection
 from invoke import task
 import terraform_vpc_packer
 import os
 
+# Key for configuration
 CONFIG_KEY = 'packer_ami_minikube'
+
+# Configure a collection
+ns = Collection('ami-minikube')
+
+ns.configure({
+    CONFIG_KEY: {
+        'working_dir': 'packer_ami_minikube',
+        'bin_dir': '../bin'
+    }
+})
 
 
 @task
 def build(context):
     """
-    Build the AMI Minikube.
+    Build the AMI.
     """
 
     config = context.config[CONFIG_KEY]
@@ -48,3 +60,7 @@ def build(context):
                         '.'
                     ]),
                 )
+
+
+# Add tasks to collection
+ns.add_task(build)
