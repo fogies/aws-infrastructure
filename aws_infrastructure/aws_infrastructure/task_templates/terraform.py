@@ -4,12 +4,12 @@ import os
 from typing import List
 
 
-def template_init(
+def task_init(
     *,
     config_key: str
 ):
     """
-    Template for a task to initialize Terraform and update any dependencies.
+    Create a task to initialize Terraform and update any dependencies.
     """
 
     @task
@@ -43,7 +43,7 @@ def template_init(
     return init
 
 
-def template_apply(
+def task_apply(
     *,
     config_key: str,
     init: task,
@@ -52,7 +52,7 @@ def template_apply(
     post: List[task] = None
 ):
     """
-    Template for a task to issue a Terraform apply.
+    Create a task to issue a Terraform apply.
     """
 
     pre_combined = [init]
@@ -91,7 +91,7 @@ def template_apply(
     return apply
 
 
-def template_destroy(
+def task_destroy(
     *,
     config_key: str,
     init: task,
@@ -100,7 +100,7 @@ def template_destroy(
     post: List[task] = None
 ):
     """
-    Template for a task to issue a Terraform destroy.
+    Create a task to issue a Terraform destroy.
     """
 
     pre_combined = [init]
@@ -138,7 +138,7 @@ def template_destroy(
     return destroy
 
 
-def template_output(
+def task_output(
     *,
     config_key: str,
     init: task,
@@ -147,7 +147,7 @@ def template_output(
     post: List[task] = None
 ):
     """
-    Template for a task to obtain Terraform output.
+    Create a task to obtain Terraform output.
     """
 
     pre_combined = [init]
@@ -194,7 +194,7 @@ def template_context_manager(
     destroy: task = None
 ):
     """
-    Template to create a context manager.
+    Create a context manager.
     """
 
     class context_manager:
@@ -204,7 +204,7 @@ def template_context_manager(
 
         def __init__(self, context):
             self._context = context
-            self._output = None
+            self._cached_output = None
 
             init(self._context)
 
@@ -220,9 +220,9 @@ def template_context_manager(
 
         @property
         def output(self):
-            if self._output is None:
-                self._output = output(self._context)
+            if self._cached_output is None:
+                self._cached_output = output(self._context)
 
-            return self._output
+            return self._cached_output
 
     return context_manager

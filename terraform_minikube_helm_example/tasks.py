@@ -37,15 +37,15 @@ def delete_empty_instance_dirs(context):
                 os.rmdir(instance_dir_path)
 
 
-init = aws_infrastructure.task_templates.terraform.template_init(
+init = aws_infrastructure.task_templates.terraform.task_init(
     config_key=CONFIG_KEY
 )
-apply = aws_infrastructure.task_templates.terraform.template_apply(
+apply = aws_infrastructure.task_templates.terraform.task_apply(
     config_key=CONFIG_KEY,
     init=init,
     post=[delete_empty_instance_dirs]
 )
-destroy = aws_infrastructure.task_templates.terraform.template_destroy(
+destroy = aws_infrastructure.task_templates.terraform.task_destroy(
     config_key=CONFIG_KEY,
     init=init,
     post=[delete_empty_instance_dirs]

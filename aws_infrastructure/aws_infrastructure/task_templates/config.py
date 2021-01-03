@@ -1,10 +1,11 @@
+from invoke import Collection
 from invoke import task
 import json
 
 
 class ConfigurationEncoder(json.JSONEncoder):
     """
-    Simple encoder
+    Simple encoder for displaying Invoke configuration.
     """
 
     def default(self, obj):
@@ -14,15 +15,15 @@ class ConfigurationEncoder(json.JSONEncoder):
         return str(obj)
 
 
-def template_config():
+def task_display():
     """
-    Template for a task to print the task configuration.
+    Create a task to display the Invoke configuration.
     """
 
     @task
-    def config(context):
+    def display(context):
         """
-        Print the task configuration.
+        Display the Invoke configuration.
         """
 
         # Split out Invoke's default configuration fields
@@ -41,22 +42,6 @@ def template_config():
             key: value for (key, value) in context.config.items() if key not in keys_internal
         }
 
-        # Print internal configuration
-        print('====================')
-        print('Invoke Configuration')
-        print('====================')
-        print(
-            json.dumps(
-                config_internal,
-                cls=ConfigurationEncoder,
-                indent=4,
-                sort_keys=True,
-            )
-        )
-
-        # Spacing between sections
-        print()
-
         # Print task configuration
         print('==================')
         print('Task Configuration')
@@ -70,4 +55,31 @@ def template_config():
             )
         )
 
-    return config
+        # Spacing between sections
+        print()
+
+        # Print internal configuration
+        print('====================')
+        print('Invoke Configuration')
+        print('====================')
+        print(
+            json.dumps(
+                config_internal,
+                cls=ConfigurationEncoder,
+                indent=4,
+                sort_keys=True,
+            )
+        )
+
+    return display
+
+
+def collection_config():
+    """
+    Create a default collection.
+    """
+
+    ns = Collection('config')
+    ns.add_task(task_display())
+
+    return ns
