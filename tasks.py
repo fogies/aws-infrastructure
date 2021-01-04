@@ -7,7 +7,7 @@ import aws_infrastructure.task_templates.config
 
 import packer_ami_minikube.tasks
 import terraform_minikube_helm_example
-import terraform_vpc_packer
+import terraform_vpc_packer.tasks
 
 # Build our task collection
 ns = Collection()
@@ -21,13 +21,18 @@ ns.configure(ns_config.configuration())
 ns.add_collection(packer_ami_minikube.tasks.ns)
 ns.configure(packer_ami_minikube.tasks.ns.configuration())
 
-# Tasks in each of our included packages
+# Tasks for vpc-packer
+#
+# Generally not included because they are primarily used by terraform_vpc_packer.tasks.vpc_packer,
+# but could be included for the sake of debugging the underlying tasks.
+include_tasks_vpc_packer = False
+if include_tasks_vpc_packer:
+    ns.add_collection(terraform_vpc_packer.tasks.ns)
+    ns.configure(terraform_vpc_packer.tasks.ns.configuration())
 
+# Tasks in each of our included packages
 ns.add_collection(terraform_minikube_helm_example.ns, name='minikube-helm-example')
 ns.configure(terraform_minikube_helm_example.ns.configuration())
-
-ns.add_collection(terraform_vpc_packer.ns, name='vpc-packer')
-ns.configure(terraform_vpc_packer.ns.configuration())
 
 ################################################################################
 # Helm tasks including here until a refactoring to better locate them
