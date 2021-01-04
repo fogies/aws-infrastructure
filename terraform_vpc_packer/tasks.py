@@ -15,6 +15,8 @@ ns.configure({
     }
 })
 
+
+# Define and import tasks
 init = aws_infrastructure.task_templates.terraform.task_init(
     config_key=CONFIG_KEY
 )
@@ -32,10 +34,12 @@ output = aws_infrastructure.task_templates.terraform.task_output(
     output_tuple_factory=namedtuple('terraform_vpc_packer', ['subnet_id', 'vpc_id'])
 )
 
+
 # Add tasks to collection
 ns.add_task(apply)
 ns.add_task(destroy)
 ns.add_task(output)
+
 
 # A context manager
 vpc_packer = aws_infrastructure.task_templates.terraform.template_context_manager(
