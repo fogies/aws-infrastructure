@@ -186,7 +186,7 @@ def task_output(
     return output
 
 
-def template_context_manager(
+def template_terraform_context_manager(
     *,
     init: task,
     apply: task = None,
@@ -197,7 +197,7 @@ def template_context_manager(
     Create a context manager.
     """
 
-    class context_manager:
+    class terraform_context_manager:
         """
         Context manager for initializing, creating, obtaining output from, and destroying a Terraform resource.
         """
@@ -225,4 +225,4 @@ def template_context_manager(
 
             return self._cached_output
 
-    return context_manager
+    return terraform_context_manager

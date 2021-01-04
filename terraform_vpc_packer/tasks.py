@@ -42,7 +42,7 @@ ns.add_task(output)
 
 
 # A context manager
-vpc_packer = aws_infrastructure.task_templates.terraform.template_context_manager(
+vpc_packer = aws_infrastructure.task_templates.terraform.template_terraform_context_manager(
     init=init,
     apply=apply,
     output=output,
