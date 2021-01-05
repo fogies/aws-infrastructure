@@ -1,38 +1,35 @@
-from invoke import Collection
-from invoke import task
 import os
-import ruamel.yaml
 
 import aws_infrastructure.task_templates.config
-
+from invoke import Collection
+from invoke import task
 import packer_ami_minikube.tasks
-import terraform_minikube_helm_example
+import ruamel.yaml
+import terraform_minikube_helm_example.tasks
 import terraform_vpc_packer.tasks
 
 # Build our task collection
 ns = Collection()
 
 # Tasks for Invoke configuration
-ns_config = aws_infrastructure.task_templates.config.collection_config()
+ns_config = aws_infrastructure.task_templates.config.create_tasks()
 ns.add_collection(ns_config)
 ns.configure(ns_config.configuration())
 
 # Tasks for ami-minikube
-ns.add_collection(packer_ami_minikube.tasks.ns)
-ns.configure(packer_ami_minikube.tasks.ns.configuration())
+ns_packer_ami_minikube = packer_ami_minikube.tasks.ns
+ns.add_collection(ns_packer_ami_minikube)
+ns.configure(ns_packer_ami_minikube.configuration())
+
+# Tasks for minikube-helm-example
+ns_terraform_minikube_helm_example = terraform_minikube_helm_example.tasks.ns
+ns.add_collection(ns_terraform_minikube_helm_example)
+ns.configure(ns_terraform_minikube_helm_example.configuration())
 
 # Tasks for vpc-packer
-#
-# Generally not included because they are primarily used by terraform_vpc_packer.tasks.vpc_packer,
-# but could be included for the sake of debugging the underlying tasks.
-include_tasks_vpc_packer = False
-if include_tasks_vpc_packer:
-    ns.add_collection(terraform_vpc_packer.tasks.ns)
-    ns.configure(terraform_vpc_packer.tasks.ns.configuration())
-
-# Tasks in each of our included packages
-ns.add_collection(terraform_minikube_helm_example.ns, name='minikube-helm-example')
-ns.configure(terraform_minikube_helm_example.ns.configuration())
+ns_terraform_vpc_packer = terraform_vpc_packer.tasks.ns
+ns.add_collection(ns_terraform_vpc_packer)
+ns.configure(ns_terraform_vpc_packer.configuration())
 
 ################################################################################
 # Helm tasks including here until a refactoring to better locate them

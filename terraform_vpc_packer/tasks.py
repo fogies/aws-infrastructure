@@ -1,6 +1,7 @@
-from invoke import Collection
 from collections import namedtuple
+
 import aws_infrastructure.task_templates
+from invoke import Collection
 
 # Key for configuration
 CONFIG_KEY = 'terraform_vpc_packer'
@@ -17,34 +18,22 @@ ns.configure({
 
 
 # Define and import tasks
-init = aws_infrastructure.task_templates.terraform.task_init(
-    config_key=CONFIG_KEY
-)
-apply = aws_infrastructure.task_templates.terraform.task_apply(
+terraform_tasks = aws_infrastructure.task_templates.terraform.create_tasks(
     config_key=CONFIG_KEY,
-    init=init
-)
-destroy = aws_infrastructure.task_templates.terraform.task_destroy(
-    config_key=CONFIG_KEY,
-    init=init
-)
-output = aws_infrastructure.task_templates.terraform.task_output(
-    config_key=CONFIG_KEY,
-    init=init,
     output_tuple_factory=namedtuple('terraform_vpc_packer', ['subnet_id', 'vpc_id'])
 )
 
 
 # Add tasks to collection
-ns.add_task(apply)
-ns.add_task(destroy)
-ns.add_task(output)
+# - Exclude for legibility, could be enabled for debugging.
+# for task_current in terraform_tasks.values():
+#     ns.add_task(task_current)
 
 
 # A context manager
-vpc_packer = aws_infrastructure.task_templates.terraform.template_terraform_context_manager(
-    init=init,
-    apply=apply,
-    output=output,
-    destroy=destroy
+vpc_packer = aws_infrastructure.task_templates.terraform.create_context_manager(
+    init=terraform_tasks.tasks.init,
+    apply=terraform_tasks.tasks.apply,
+    output=terraform_tasks.tasks.output,
+    destroy=terraform_tasks.tasks.destroy
 )

@@ -1,7 +1,9 @@
-from invoke import task
 import json
 import os
 from typing import List
+
+from invoke import Collection
+from invoke import task
 
 
 def task_init(
@@ -142,20 +144,16 @@ def task_output(
     *,
     config_key: str,
     init: task,
-    output_tuple_factory,
-    pre: List[task] = None,
-    post: List[task] = None
+    output_tuple_factory
 ):
     """
     Create a task to obtain Terraform output.
     """
 
     pre_combined = [init]
-    pre_combined.extend(pre or [])
 
     @task(
-        pre=pre_combined,
-        post=post
+        pre=pre_combined
     )
     def output(context):
         """
@@ -186,7 +184,58 @@ def task_output(
     return output
 
 
-def template_terraform_context_manager(
+def create_tasks(
+    *,
+    config_key: str,
+
+    variables=None,
+    apply_pre: List[task] = None,
+    apply_post: List[task] = None,
+    destroy_pre: List[task] = None,
+    destroy_post: List[task] = None,
+    output_tuple_factory=None,
+):
+    """
+    Create all of the tasks, re-using and passing parameters appropriately.
+    """
+
+    ns = Collection('terraform')
+
+    init = task_init(
+        config_key=config_key
+    )
+    ns.add_task(init)
+
+    apply = task_apply(
+        config_key=config_key,
+        init=init,
+        variables=variables,
+        pre=apply_pre,
+        post=apply_post
+    )
+    ns.add_task(apply)
+
+    destroy = task_destroy(
+        config_key=config_key,
+        init=init,
+        variables=variables,
+        pre=destroy_pre,
+        post=destroy_post
+    )
+    ns.add_task(destroy)
+
+    if output_tuple_factory:
+        output = task_output(
+            config_key=config_key,
+            init=init,
+            output_tuple_factory=output_tuple_factory
+        )
+        ns.add_task(output)
+
+    return ns
+
+
+def create_context_manager(
     *,
     init: task,
     apply: task = None,

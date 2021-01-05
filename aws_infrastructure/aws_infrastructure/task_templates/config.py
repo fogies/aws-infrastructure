@@ -1,6 +1,7 @@
+import json
+
 from invoke import Collection
 from invoke import task
-import json
 
 
 class ConfigurationEncoder(json.JSONEncoder):
@@ -74,9 +75,11 @@ def task_display():
     return display
 
 
-def collection_config():
+def create_tasks(
+    # *,
+):
     """
-    Create a default collection.
+    Create all of the tasks, re-using and passing parameters appropriately.
     """
 
     ns = Collection('config')

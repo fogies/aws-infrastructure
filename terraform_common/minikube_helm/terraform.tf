@@ -155,7 +155,7 @@ locals {
 }
 
 /*
- * Create and ignore a .minikube_helm directory with created state.
+ * Create and ignore a directory with created state.
  */
 resource "local_file" "gitignore" {
   filename = format(
@@ -192,38 +192,19 @@ resource "local_file" "instance_key_private" {
 }
 
 /*
- * A set of tasks for interacting with the instance.
+ * A configuration file to be loaded by Python tasks.
  */
-resource "local_file" "python_tasks" {
+resource "local_file" "python_config" {
   filename = format(
     "%s/%s",
     var.instance_dir,
-    "tasks.py"
+    "config.yaml"
   )
 
   content = templatefile(
-    "${path.module}/templates/tasks.py.tmpl",
+    "${path.module}/templates/config.yaml.tmpl",
     {
         instance_name = var.instance_name,
-
-        tasks_config_context = var.tasks_config_context,
-    }
-  )
-}
-
-resource "local_file" "python_init" {
-  filename = format(
-    "%s/%s",
-    var.instance_dir,
-    "__init__.py"
-  )
-
-  content = templatefile(
-    "${path.module}/templates/__init__.py.tmpl",
-    {
-        instance_name = var.instance_name
-
-        instance_dir = var.instance_dir
         instance_ip = local.instance_public_ip
         instance_identity_file = local.instance_key_private_filename
     }
