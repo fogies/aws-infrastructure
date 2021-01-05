@@ -1,3 +1,5 @@
+cert-manager: {}
+
 traefik:
   ports:
     web:
@@ -7,6 +9,3 @@ traefik:
       hostPort: 443
       tls:
         enabled: true
-
-cert-manager:
-  installCRDs: true

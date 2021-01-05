@@ -51,35 +51,42 @@ def helm_package(context):
     helm_repo_staging_dir = os.path.normpath(config.helm_repo_staging_dir)
     helm_repo_dir = os.path.normpath(config.helm_repo_dir)
 
-    # Information about the chart we're trying to package
-    path_chart = os.path.normpath(os.path.join(helm_charts_dir, 'ingress', 'Chart.yaml'))
-    with open(path_chart) as file_chart:
-        yaml_chart = ruamel.yaml.safe_load(file_chart)
+    # Package any chart which has a version that has not already been released
+    for entry_current in os.scandir(helm_charts_dir):
+        # Information about the chart that may need packaged
+        # Using the existence of Chart.yaml to infer this is actually a chart
+        path_chart = os.path.normpath(os.path.join(helm_charts_dir, entry_current.name, 'Chart.yaml'))
+        if os.path.exists(path_chart) and os.path.isfile(path_chart):
+            with open(path_chart) as file_chart:
+                yaml_chart = ruamel.yaml.safe_load(file_chart)
 
-    chart_name = yaml_chart['name']
-    chart_version = yaml_chart['version']
+            chart_name = yaml_chart['name']
+            chart_version = yaml_chart['version']
 
-    # Information about existing releases of that chart
-    chart_released = False
-    path_index = os.path.normpath(os.path.join(helm_repo_dir, 'index.yaml'))
-    if os.path.exists(path_index):
-        with open(path_index) as file_index:
-            yaml_index = ruamel.yaml.safe_load(file_index)
+            # Check existing releases of this same chart
+            chart_released = False
+            path_index = os.path.normpath(os.path.join(helm_repo_dir, 'index.yaml'))
+            # Beware there might not be any prior index may exist
+            if os.path.exists(path_index):
+                with open(path_index) as file_index:
+                    yaml_index = ruamel.yaml.safe_load(file_index)
 
-        for release_current in yaml_index['entries'][chart_name]:
-            if release_current['version'] == chart_version:
-                chart_released = True
+                # Beware the prior index might not include this chart
+                if chart_name in yaml_index['entries']:
+                    for release_current in yaml_index['entries'][chart_name]:
+                        if release_current['version'] == chart_version:
+                            chart_released = True
 
-    if not chart_released:
-        # Build the helm chart
-        context.run(
-            command=' '.join([
-                bin_helm,
-                'package',
-                os.path.normpath(os.path.join(helm_charts_dir, 'ingress')),
-                '--destination "{}"'.format(helm_repo_staging_dir)
-            ]),
-        )
+            # If the current version was not previously released, go ahead with packaging it into staging
+            if not chart_released:
+                context.run(
+                    command=' '.join([
+                        bin_helm,
+                        'package',
+                        os.path.normpath(os.path.join(helm_charts_dir, entry_current.name)),
+                        '--destination "{}"'.format(helm_repo_staging_dir)
+                    ]),
+                )
 
 
 @task
@@ -94,7 +101,7 @@ def helm_release(context):
     helm_repo_staging_dir = os.path.normpath(config.helm_repo_staging_dir)
     helm_repo_dir = os.path.normpath(config.helm_repo_dir)
 
-    # Build the release index
+    # Build the release index, updating based on content of staging directory
     context.run(
         command=' '.join([
             bin_helm,
@@ -105,21 +112,23 @@ def helm_release(context):
         ]),
     )
 
-    # Move into the repo
-    for file_current in os.listdir(helm_repo_staging_dir):
-        if file_current != '.gitignore':
-            path_current_repo = os.path.normpath(os.path.join(helm_repo_dir, file_current))
-            path_current_repo_staging = os.path.normpath(os.path.join(helm_repo_staging_dir, file_current))
+    # Move from staging into release
+    for entry_current in os.scandir(helm_repo_staging_dir):
+        if entry_current.name != '.gitignore':
+            path_current_repo = os.path.normpath(os.path.join(helm_repo_dir, entry_current.name))
+            path_current_repo_staging = os.path.normpath(os.path.join(helm_repo_staging_dir, entry_current.name))
 
+            # The index will already exist
             if os.path.exists(path_current_repo):
                 os.remove(path_current_repo)
+
             os.rename(path_current_repo_staging, path_current_repo)
 
 
 @task
 def helm_update(context):
     """
-    Update charts.
+    Update chart dependencies.
     """
 
     config = context.config[HELM_CONFIG_KEY]
