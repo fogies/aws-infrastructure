@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import List
 
 import aws_infrastructure.task_templates.terraform
@@ -31,23 +32,25 @@ def task_delete_empty_instance_dirs(
         # Look for these directories, delete them if they are effectively empty.
         for instance_dir_current in instance_dirs:
             instance_dir_path = os.path.normpath(os.path.join(working_dir, instance_dir_current))
-            if os.path.isdir(instance_dir_path):
-                # Some files may exist but can be safely deleted.
-                # Check if all existing files are known to be safe to delete.
+            if os.path.exists(instance_dir_path) and os.path.isdir(instance_dir_path):
+                # Some children may exist but can be safely deleted.
+                # Check if all existing children are known to be safe to delete.
                 # If so, delete everything. Otherwise, leave everything.
-                safe_to_delete_files = [
+                safe_to_delete_entries = [
                     'known_hosts',  # Created as part of SSH access
                 ]
 
                 # Determine if all existing files are safe to delete
-                existing_files = os.listdir(instance_dir_path)
-                unknown_files = list(set(existing_files) - set(safe_to_delete_files))
+                existing_entries = os.scandir(instance_dir_path)
+                unknown_entries = [
+                    entry_current
+                    for entry_current in existing_entries
+                    if entry_current.name not in safe_to_delete_entries
+                ]
 
                 # If everything is safe to delete, then go ahead with deletion
-                if len(unknown_files) == 0:
-                    for file_current in existing_files:
-                        os.remove(os.path.normpath(os.path.join(instance_dir_path, file_current)))
-                    os.rmdir(instance_dir_path)
+                if len(unknown_entries) == 0:
+                    shutil.rmtree(instance_dir_path)
 
     return delete_empty_instance_dirs
 
