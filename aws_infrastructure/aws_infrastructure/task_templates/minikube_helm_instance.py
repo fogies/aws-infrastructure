@@ -197,6 +197,7 @@ def task_helm_install_chart(
             )
 
             # Apply the chart
+            # Skip CRDs to require pattern of installing them separately
             context.run(
                 command=' '.join([
                     'ssh',
@@ -206,7 +207,14 @@ def task_helm_install_chart(
                     '-o UserKnownHostsFile="{}"'.format(hosts_file),
                     ip,
                     '"' + ' && '.join([
-                        'helm upgrade -i {} ~/.minikube_helm_staging/{}'.format(chart_name, helm_chart_file)
+                        ' '.join([
+                            'helm',
+                            'upgrade',
+                            '--install',
+                            '--skip-crds',
+                            chart_name,
+                            '~/.minikube_helm_staging/{}'.format(helm_chart_file)
+                        ])
                     ]) + '"'
                 ]),
             )
