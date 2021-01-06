@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-import aws_infrastructure.task_templates
+import aws_infrastructure.task_templates.terraform
 from invoke import Collection
 
 # Key for configuration
