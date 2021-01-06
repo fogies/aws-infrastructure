@@ -76,42 +76,24 @@ def create_tasks(
 
     # First create the top-level Terraform-related tasks
 
-    init = aws_infrastructure.task_templates.terraform.task_init(
-        config_key=config_key
-    )
-    ns.add_task(init)
-
-    apply = aws_infrastructure.task_templates.terraform.task_apply(
-        config_key=config_key,
-        init=init,
-        variables=variables,
-        pre=apply_pre,
-        post=apply_post
-    )
-    ns.add_task(apply)
-
     delete_empty_instance_dirs = task_delete_empty_instance_dirs(
         config_key=config_key
     )
     combined_destroy_post = [delete_empty_instance_dirs]
     combined_destroy_post.extend(destroy_post or [])
 
-    destroy = aws_infrastructure.task_templates.terraform.task_destroy(
+    terraform_tasks = aws_infrastructure.task_templates.terraform.create_tasks(
         config_key=config_key,
-        init=init,
         variables=variables,
-        pre=destroy_pre,
-        post=combined_destroy_post
+        apply_pre=apply_pre,
+        apply_post=apply_post,
+        destroy_pre=destroy_pre,
+        destroy_post=combined_destroy_post,
+        output_tuple_factory=output_tuple_factory
     )
-    ns.add_task(destroy)
 
-    if output_tuple_factory:
-        output = aws_infrastructure.task_templates.terraform.task_output(
-            config_key=config_key,
-            init=init,
-            output_tuple_factory=output_tuple_factory
-        )
-        ns.add_task(output)
+    for task_current in terraform_tasks.tasks.values():
+        ns.add_task(task_current)
 
     # Then create tasks associated with any active instances
     for instance_dir_current in instance_dirs:
