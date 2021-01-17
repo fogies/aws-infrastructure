@@ -43,4 +43,14 @@ entries:
     urls:
     - ingress-crd-0.1.0.tgz
     version: 0.1.0
-generated: "2021-01-05T12:31:09.2366791-08:00"
+  registry:
+  - apiVersion: v2
+    created: "2021-01-17T07:04:11.2469955-08:00"
+    description: Local Docker registry, available at registry.local:5000.
+    digest: f4451c1e1e6cfe6d5413bf698be695df2a40dce9734a427276c0b0ef9fe6a5da
+    name: registry
+    type: application
+    urls:
+    - registry-0.1.0.tgz
+    version: 0.1.0
+generated: "2021-01-17T07:04:11.2458611-08:00"
