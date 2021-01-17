@@ -10,6 +10,8 @@ Configures CRDs expected by the Ingress chart.
 
   <https://github.com/traefik/traefik-helm-chart/tree/master/traefik>
   
+## Requirements
+  
 Only one release may be installed, because this creates global resources that may conflict.
 
 ## Versions

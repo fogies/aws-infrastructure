@@ -148,7 +148,7 @@ build {
   }
 
   /*
-   * Configure Minikube for running the registry.
+   * Configure Minikube for running a Docker registry at registry.local.
    */
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_minikube_registry.yml"

@@ -9,8 +9,12 @@ Configures a basic ingress environment:
 - Configures Traefik using its chart:
 
   <https://github.com/traefik/traefik-helm-chart/tree/master/traefik>
+
+## Requirements
   
 Only one release may be installed, because this creates global resources that may conflict.
+
+Assumes prior installation of ingress-crd.
 
 ## Versions
 
