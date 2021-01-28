@@ -1,0 +1,32 @@
+jenkins:
+  # Configure based on:
+  # https://github.com/jenkinsci/helm-charts/blob/main/charts/jenkins/values.yaml
+
+  controller:
+    # Prefix under which Jenkins is served
+    jenkinsUriPrefix: '/jenkins'
+
+    # Run tasks on the controller
+    numExecutors: 1
+
+    # Include docker-workflow
+    additionalPlugins:
+      - docker-workflow:1.25
+
+  agent:
+    # Configure a pod template that includes a Docker client
+    podTemplates:
+      docker: |
+        - name: docker
+          label: docker
+          serviceAccount: jenkins
+          containers:
+            - name: docker
+              image: docker:20.10.2
+              command: "/bin/sh -c"
+              args: "cat"
+              ttyEnabled: true
+          volumes:
+            - hostPathVolume:
+                hostPath: /var/run/docker.sock
+                mountPath: /var/run/docker.sock

@@ -1,0 +1,14 @@
+apiVersion: v2
+type: application
+
+name: jenkins
+description: Configurable Jenkins instance.
+
+# Chart version, expected to follow Semantic Versioning <https://semver.org/>
+version: 0.1.0
+
+dependencies:
+  # Jenkins
+  - name: jenkins
+    version: ~3.1.2
+    repository: https://charts.jenkins.io
