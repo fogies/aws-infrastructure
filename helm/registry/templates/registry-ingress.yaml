@@ -12,7 +12,6 @@ metadata:
 
 spec:
   # Registry requires SSL protection. Generate a self-signed certificate.
-  # This
   tls:
   - hosts:
       - 'registry.local'
