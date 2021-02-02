@@ -60,7 +60,8 @@ def task_ssh(
 # TODO: Using a privileged local port on Windows requires ssh >= 7.9
 # https://github.com/PowerShell/Win32-OpenSSH/issues/1350
 # https://github.com/PowerShell/Win32-OpenSSH/releases
-# Could not easily determine how to get that installed for Windows
+# Could not easily determine how to get that installed for Windows.
+# Forwarding therefore only works for unprivileged ports.
 def task_ssh_port_forward(
     *,
     config_key: str,
