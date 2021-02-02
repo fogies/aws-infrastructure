@@ -81,7 +81,7 @@ build {
    * Configure Volume for Docker Storage
    */
   provisioner "ansible-local" {
-    playbook_file = "../ansible/ansible_docker_volume.yml"
+    playbook_file = "../ansible/ansible_docker_volume.yaml"
 
     # Disable color
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
@@ -91,7 +91,7 @@ build {
    * Install Docker
    */
   provisioner "ansible-local" {
-    playbook_file = "../ansible/ansible_docker.yml"
+    playbook_file = "../ansible/ansible_docker.yaml"
 
     # Disable color
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
@@ -113,7 +113,7 @@ build {
    * Confirm non-sudo Docker access
    */
   provisioner "ansible-local" {
-    playbook_file = "../ansible/ansible_docker_confirm.yml"
+    playbook_file = "../ansible/ansible_docker_confirm.yaml"
 	
     # Disable color
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
@@ -127,7 +127,7 @@ build {
    * Install Minikube
    */
   provisioner "ansible-local" {
-    playbook_file = "../ansible/ansible_minikube.yml"
+    playbook_file = "../ansible/ansible_minikube.yaml"
     extra_arguments = [
       "--extra-vars",
       "\"architecture=${ var.ami_architecture }\""
@@ -141,7 +141,7 @@ build {
    * Expose Minikube ports for ingress
    */
   provisioner "ansible-local" {
-    playbook_file = "../ansible/ansible_minikube_ingress_ports.yml"
+    playbook_file = "../ansible/ansible_minikube_ingress_ports.yaml"
 
     # Disable color
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
@@ -151,7 +151,7 @@ build {
    * Configure Minikube for running a Docker registry at registry.local.
    */
   provisioner "ansible-local" {
-    playbook_file = "../ansible/ansible_minikube_registry.yml"
+    playbook_file = "../ansible/ansible_minikube_registry.yaml"
 
     # Disable color
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
@@ -161,7 +161,7 @@ build {
    * Install Helm
    */
   provisioner "ansible-local" {
-    playbook_file = "../ansible/ansible_helm.yml"
+    playbook_file = "../ansible/ansible_helm.yaml"
 
     # Disable color
     command = "PYTHONUNBUFFERED=1 ansible-playbook"
