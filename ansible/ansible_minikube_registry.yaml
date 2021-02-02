@@ -10,6 +10,9 @@
     #
     # Create Script to Add registry.local to Minikube /etc/hosts
     #
+    # Previously had an issue with `minikube ssh` did not terminate on EOSSH.
+    # Using `--native-ssh=false` instead to work around whatever issue that might be.
+    #
 
     - name: Create Script minikube-configure-registry
       become: yes
@@ -17,7 +20,7 @@
         content: |
           #!/bin/bash
 
-          minikube ssh <<'EOSSH'
+          minikube ssh --native-ssh=false << 'EOSSH'
           grep -v "registry.local" /etc/hosts > /tmp/minikube-configure-registry.hosts
           sh -c 'echo "127.0.0.1 registry.local"' >> /tmp/minikube-configure-registry.hosts
           sudo sh -c 'cat /tmp/minikube-configure-registry.hosts > /etc/hosts'
