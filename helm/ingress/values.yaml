@@ -2,10 +2,22 @@ cert-manager: {}
 
 traefik:
   ports:
+    # Traefik defaults to ports 8000 and 8443 for web and websecure.
+    # We want to use 8000 for dashboard, so we override the default ports.
+
     web:
+      port: 8080
       hostPort: 80
 
     websecure:
+      port: 8443
       hostPort: 443
       tls:
         enabled: true
+
+    dashboard:
+      port: 8000
+      hostPort: 8000
+      exposedPort: 8000
+      protocol: TCP
+      expose: true

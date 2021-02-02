@@ -18,6 +18,10 @@ Assumes prior installation of ingress-crd.
 
 ## Versions
 
+### 0.3.0
+
+- Create a `dashboard` entrypoint on port 8000.
+
 ### 0.2.0
 
 - Refactor CRDs into separate chart ingress-crd.
