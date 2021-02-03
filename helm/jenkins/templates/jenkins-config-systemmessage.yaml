@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-config-systemmessage
+  namespace: jenkins
+  labels:
+    # Jenkins configuration loading requires this label
+    # TODO: Simplify to jenkins-config based on https://github.com/jenkinsci/helm-charts/issues/240
+    jenkins-jenkins-config: "true"
+data:
+  # TODO: Determine if we can present this warning more clearly (e.g., in a red alert box).
+  systemmessage.yaml: |
+    jenkins:
+      systemMessage: |
+        Jenkins is configured using Configuration as Code. Configuration via this dashboard may not persist.

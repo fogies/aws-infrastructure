@@ -3,12 +3,13 @@
 apiVersion: 'networking.k8s.io/v1beta1'
 kind: 'Ingress'
 metadata:
-  name: '{{ .Release.Name }}-ingress'
+  name: 'jenkins-ingress'
+  namespace: 'jenkins'
   labels:
-    app: '{{ .Release.Name }}'
+    app: 'jenkins'
 
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: 'web'
+    traefik.ingress.kubernetes.io/router.entrypoints: 'dashboard'
 
 spec:
   rules:
@@ -16,5 +17,5 @@ spec:
       paths:
       - path: '/jenkins'
         backend:
-          serviceName: '{{ .Release.Name }}'
+          serviceName: 'jenkins'
           servicePort: 8080

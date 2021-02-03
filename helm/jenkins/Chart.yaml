@@ -10,5 +10,6 @@ version: 0.1.0
 dependencies:
   # Jenkins
   - name: jenkins
-    version: ~3.1.2
+    # Prefer an exact version for general safety
+    version: 3.1.5
     repository: https://charts.jenkins.io

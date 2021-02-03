@@ -2,6 +2,10 @@ jenkins:
   # Configure based on:
   # https://github.com/jenkinsci/helm-charts/blob/main/charts/jenkins/values.yaml
 
+  # Define a global Jenkins instance
+  fullnameOverride: 'jenkins'
+  namespaceOverride: 'jenkins'
+
   controller:
     # Prefix under which Jenkins is served
     jenkinsUriPrefix: '/jenkins'
@@ -12,6 +16,9 @@ jenkins:
     # Include docker-workflow
     additionalPlugins:
       - docker-workflow:1.25
+        # https://docs.cloudbees.com/docs/admin-resources/latest/plugins/docker-workflow
+      - job-dsl:1.77
+        # https://jenkinsci.github.io/job-dsl-plugin/
 
   agent:
     # Configure a pod template that includes a Docker client
