@@ -30,7 +30,8 @@ source "amazon-ebs" "minikube" {
     device_name = "/dev/sdf"
 
     volume_size = 10
-    volume_type = "gp2"
+    volume_type = "gp3"
+    iops = 3000
     delete_on_termination = true
   }
   
