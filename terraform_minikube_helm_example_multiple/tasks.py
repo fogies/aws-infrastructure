@@ -2,18 +2,20 @@ import aws_infrastructure.task_templates.minikube_helm
 from invoke import Collection
 
 # Key for configuration
-CONFIG_KEY = 'terraform_minikube_helm_example'
+CONFIG_KEY = 'terraform_minikube_helm_example_multiple'
 
 # Configure a collection
-ns = Collection('minikube-helm-example')
+ns = Collection('minikube-helm-example-multiple')
 
 ns.configure({
     CONFIG_KEY: {
-        'working_dir': 'terraform_minikube_helm_example',
+        'working_dir': 'terraform_minikube_helm_example_multiple',
         'bin_dir': '../bin',
         'helm_charts_dir': '../helm_repo',
         'instance_dirs': [
-            'instance',
+            'instance_1',
+            'instance_2',
+            'instance_3',
         ],
     }
 })
@@ -37,12 +39,5 @@ for task_current in minikube_helm_tasks.tasks.values():
     ns.add_task(task_current)
 
 # Add child collections to our collection
-# - Promote tasks from the 'instance' collection to our collection
 for collection_current in minikube_helm_tasks.collections.values():
-    if collection_current.name == 'instance':
-        for task_current in collection_current.tasks.values():
-            ns.add_task(task_current)
-
-        continue
-
     ns.add_collection(collection_current)

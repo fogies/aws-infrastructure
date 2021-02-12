@@ -3,6 +3,7 @@ import aws_infrastructure.task_templates.helm
 from invoke import Collection
 import packer_ami_minikube.tasks
 import terraform_minikube_helm_example.tasks
+import terraform_minikube_helm_example_multiple.tasks
 import terraform_vpc_packer.tasks
 
 # Build our task collection
@@ -38,6 +39,11 @@ ns.configure(ns_packer_ami_minikube.configuration())
 ns_terraform_minikube_helm_example = terraform_minikube_helm_example.tasks.ns
 ns.add_collection(ns_terraform_minikube_helm_example)
 ns.configure(ns_terraform_minikube_helm_example.configuration())
+
+# Tasks for minikube-helm-example-multiple
+ns_terraform_minikube_helm_example_multiple = terraform_minikube_helm_example_multiple.tasks.ns
+ns.add_collection(ns_terraform_minikube_helm_example_multiple)
+ns.configure(ns_terraform_minikube_helm_example_multiple.configuration())
 
 # Tasks for vpc-packer
 ns_terraform_vpc_packer = terraform_vpc_packer.tasks.ns
