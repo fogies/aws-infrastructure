@@ -13,26 +13,72 @@ jenkins:
     # Run tasks on the controller
     numExecutors: 1
 
-    # Include docker-workflow
+    # Override the default plugins so we can control/upgrade versions independent of chart version
+    installPlugins:
+      - kubernetes:1.29.0
+      - workflow-aggregator:2.6
+      - git:4.5.2
+      - configuration-as-code:1.47
+
+    # Additional plugins beyond the defaults
     additionalPlugins:
       - docker-workflow:1.25
         # https://docs.cloudbees.com/docs/admin-resources/latest/plugins/docker-workflow
       - job-dsl:1.77
         # https://jenkinsci.github.io/job-dsl-plugin/
 
+    # Limit resource use to minimize impact on other services running on the same node.
+    #
+    # Controller resources are used by the primary, long-running controller.
+    resources:
+      requests:
+        cpu: "50m"        # Same as chart default
+        memory: "256Mi"   # Same as chart default
+      limits:
+        cpu: "500m"       # 50% of 1 CPU, Jenkins chart default is 2000m
+        memory: "1024Mi"  # Jenkins chart default is 4096Mi
+
   agent:
-    # Configure a pod template that includes a Docker client
+    # Limit resource use to minimize impact on other services running on the same node.
+    #
+    # Agent resources are used by default agents.
+    # Agents within a custom pod template will need to define their own limits in that pod template.
+    # Kept low because the controller will still be active and multiple agent containers can be active.
+    resources:
+        requests:
+          cpu: "50m"
+          memory: "256Mi"
+        limits:
+          cpu: "250m"     # 25% of 1 CPU, Jenkins chart default is 500m
+          memory: "512Mi" # Jenkins chart default
+
+    # Configure a pod template that includes a Docker client for our host Docker environment
     podTemplates:
       docker: |
         - name: docker
           label: docker
           serviceAccount: jenkins
           containers:
+            # Limit resource use to minimize impact on other services running on the same node.
+            #
+            # Include a jnlp container in the pod template so we can specify its resource limits.
+            # Otherwise default container will not have any resource limits.
+            # Kept low because the controller will still be active and multiple agent containers can be active.
+            - name: jnlp
+              image: "jenkins/inbound-agent:4.6-1"
+              resourceRequestCpu: 50m       # Same as agent.resources
+              resourceRequestMemory: 256Mi  # Same as agent.resources
+              resourceLimitCpu: "250m"      # Same as agent.resources
+              resourceLimitMemory: "512Mi"  # Same as agent.resources
             - name: docker
               image: docker:20.10.2
               command: "/bin/sh -c"
               args: "cat"
               ttyEnabled: true
+              resourceRequestCpu: 50m       # Same as agent.resources
+              resourceRequestMemory: 256Mi  # Same as agent.resources
+              resourceLimitCpu: "250m"      # Same as agent.resources
+              resourceLimitMemory: "512Mi"  # Same as agent.resources
           volumes:
             - hostPathVolume:
                 hostPath: /var/run/docker.sock
