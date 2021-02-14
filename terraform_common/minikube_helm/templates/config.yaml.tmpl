@@ -1,3 +1,6 @@
 instance_name: '${instance_name}'
 instance_ip: '${instance_ip}'
-instance_identity_file: '${instance_identity_file}'
+instance_user: '${instance_user}'
+instance_key: |
+  ${indent(2, chomp(instance_key))}
+instance_key_file: '${instance_key_file}'
