@@ -6,7 +6,9 @@
 
   vars:
     versions:
-      helm: v3.3.4
+      helm: v3.5.2
+      helmdiff: v3.1.3
+      helmfile: v0.138.4
 
   tasks:
     #
@@ -29,11 +31,34 @@
       command:
         cmd: "{{ tempdir.path }}/get_helm.sh --version {{ versions.helm }}"
 
+    - name: Confirm Helm Installation
+      command:
+        cmd: helm version
+
     - name: Delete Temporary Directory
       file:
         path: "{{ tempdir.path }}"
         state: absent
 
-    - name: Confirm Helm Installation
+    #
+    # Helmfile requires the helm diff plugin
+    #
+
+    - name: Install helm diff plugin
       command:
-        cmd: helm version
+        cmd: helm plugin install --version {{ versions.helmdiff }} https://github.com/databus23/helm-diff
+
+    #
+    # Install Helmfile
+    #
+
+    - name: Download Helmfile
+      become: yes
+      get_url:
+        url: https://github.com/roboll/helmfile/releases/download/{{ versions.helmfile }}/helmfile_linux_{{ architecture }}
+        dest: /usr/local/bin/helmfile
+        mode: 0755
+
+    - name: Confirm Helmfile Installation
+      command:
+        cmd: helmfile --version

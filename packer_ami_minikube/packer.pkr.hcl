@@ -163,6 +163,10 @@ build {
    */
   provisioner "ansible-local" {
     playbook_file = "../ansible/ansible_helm.yaml"
+    extra_arguments = [
+      "--extra-vars",
+      "\"architecture=${ var.ami_architecture }\""
+    ]
 
     # Disable color
     command = "PYTHONUNBUFFERED=1 ansible-playbook"

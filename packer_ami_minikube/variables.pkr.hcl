@@ -33,7 +33,7 @@ locals {
   # Ubuntu 20.04 for amd64 architecture
   # - "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
   #
-  # Ubuntu 20.04 for amd64 architecture
+  # Ubuntu 20.04 for arm64 architecture
   # - "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-arm64-server-*"
   #
   # Ubuntu Minimal 20.04 for amd64 architecture
