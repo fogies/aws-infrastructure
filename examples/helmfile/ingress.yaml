@@ -4,7 +4,8 @@ repositories:
   # When developing charts that will later be merged, it can be helpful to instead point at a branch:
   # - url: 'https://raw.githubusercontent.com/<account>/aws-infrastructure/<branch>/helm_repo/'
   - name: 'aws-infrastructure'
-    url: 'https://raw.githubusercontent.com/fogies/aws-infrastructure/main/helm_repo/'
+    # url: 'https://raw.githubusercontent.com/fogies/aws-infrastructure/main/helm_repo/'
+    url: 'https://raw.githubusercontent.com/jayfo/aws-infrastructure/jenkins/helm_repo/'
 
 releases:
   # ingress-crd contains the CRDs required by ingress
@@ -18,6 +19,11 @@ releases:
     version: '0.3.0'
     needs:
       - 'ingress-crd'
+
+# Prefer explicit management of CRDs via releases
+helmDefaults:
+  args:
+    - '--skip-crds'
 
 # Prefer explicit errors
 missingFileHandler: 'Error'

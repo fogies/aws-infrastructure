@@ -309,10 +309,12 @@ def task_helm_install(
                 )
 
             # Install the chart.
+            # Skip CRDs to require pattern of installing them separately.
             ssh_client.exec_command(command=' '.join([
                 'helm',
                 'upgrade',
                 '--install',
+                '--skip-crds',
                 helm_chart_name,
                 '~/.minikube_helm_staging/{}'.format(helm_chart_file_name)
             ]))
