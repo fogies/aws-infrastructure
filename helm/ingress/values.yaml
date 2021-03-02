@@ -1,11 +1,27 @@
 cert-manager: {}
+  # Configure based on:
+  # https://github.com/jetstack/cert-manager/blob/master/deploy/charts/cert-manager/values.yaml
 
 traefik:
+  # Configure based on:
+  # https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
+
   ports:
+    # Traefik defaults to ports 8000 and 8443 for web and websecure.
+    # We want to use 8000 for dashboard, so we override the port for web to be 8080.
     web:
+      port: 8080
       hostPort: 80
 
     websecure:
+      port: 8443
       hostPort: 443
       tls:
         enabled: true
+
+    dashboard:
+      port: 8000
+      hostPort: 8000
+      exposedPort: 8000
+      protocol: TCP
+      expose: true

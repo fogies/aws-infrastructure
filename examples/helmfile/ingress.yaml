@@ -1,0 +1,28 @@
+repositories:
+  # aws-infrastructure helm repository
+  #
+  # When developing charts that will later be merged, it can be helpful to instead point at a branch:
+  # - url: 'https://raw.githubusercontent.com/<account>/aws-infrastructure/<branch>/helm_repo/'
+  - name: 'aws-infrastructure'
+    url: 'https://raw.githubusercontent.com/fogies/aws-infrastructure/main/helm_repo/'
+
+releases:
+  # ingress-crd contains the CRDs required by ingress
+  - name: 'ingress-crd'
+    chart: 'aws-infrastructure/ingress-crd'
+    version: '0.1.0'
+
+  # ingress is then the actual ingress
+  - name: 'ingress'
+    chart: 'aws-infrastructure/ingress'
+    version: '0.3.0'
+    needs:
+      - 'ingress-crd'
+
+# Prefer explicit management of CRDs via releases
+helmDefaults:
+  args:
+    - '--skip-crds'
+
+# Prefer explicit errors
+missingFileHandler: 'Error'

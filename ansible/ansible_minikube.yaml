@@ -10,8 +10,8 @@
     # TODO: "arm64" not supported pending Minikube docker driver
     #       https://minikube.sigs.k8s.io/docs/drivers/docker/
     versions:
-      minikube: v1.13.0
-      kubectl: v1.19.2
+      minikube: v1.17.1
+      kubectl: v1.20.2
   
   tasks:
     #

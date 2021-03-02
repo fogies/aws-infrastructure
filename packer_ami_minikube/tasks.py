@@ -63,5 +63,5 @@ def build(context):
                 )
 
 
-# Add tasks to collection
+# Add tasks to our collection
 ns.add_task(build)

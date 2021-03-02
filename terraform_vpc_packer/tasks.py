@@ -24,7 +24,7 @@ terraform_tasks = aws_infrastructure.task_templates.terraform.create_tasks(
 )
 
 
-# Add tasks to collection
+# Add tasks to our collection
 # - Exclude for legibility, could be enabled for debugging.
 # for task_current in terraform_tasks.values():
 #     ns.add_task(task_current)

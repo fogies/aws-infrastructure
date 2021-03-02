@@ -2,6 +2,22 @@ apiVersion: v1
 entries:
   ingress:
   - apiVersion: v2
+    created: "2021-02-02T07:47:48.3848711-08:00"
+    dependencies:
+    - name: traefik
+      repository: https://helm.traefik.io/traefik
+      version: 9.12.3
+    - name: cert-manager
+      repository: https://charts.jetstack.io
+      version: 1.1.0
+    description: Basic environment for ingress, including cert-manager and Traefik.
+    digest: 71a2b124862c4e34e3943f18a0c4be89841059e6357652ec8096834c6ce40f0f
+    name: ingress
+    type: application
+    urls:
+    - ingress-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
     created: "2021-01-05T12:31:09.2486754-08:00"
     dependencies:
     - name: traefik
@@ -43,4 +59,14 @@ entries:
     urls:
     - ingress-crd-0.1.0.tgz
     version: 0.1.0
-generated: "2021-01-05T12:31:09.2366791-08:00"
+  registry:
+  - apiVersion: v2
+    created: "2021-01-17T07:04:11.2469955-08:00"
+    description: Local Docker registry, available at registry.local:5000.
+    digest: f4451c1e1e6cfe6d5413bf698be695df2a40dce9734a427276c0b0ef9fe6a5da
+    name: registry
+    type: application
+    urls:
+    - registry-0.1.0.tgz
+    version: 0.1.0
+generated: "2021-02-02T07:47:48.3719035-08:00"

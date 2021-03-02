@@ -72,13 +72,6 @@ variable "instance_dir" {
 }
 
 /*
- * For created tasks, existing context within task hierarchy.
- */
-variable "tasks_config_context" {
-  type = string
-}
-
-/*
  * Tags to apply to created resources.
  */
 variable "tags" {

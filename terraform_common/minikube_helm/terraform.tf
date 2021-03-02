@@ -206,7 +206,9 @@ resource "local_file" "python_config" {
     {
         instance_name = var.instance_name,
         instance_ip = local.instance_public_ip
-        instance_identity_file = local.instance_key_private_filename
+        instance_user = "ubuntu"
+        instance_key = tls_private_key.instance_key_pair.private_key_pem
+        instance_key_file = local.instance_key_private_filename
     }
   )
 }
