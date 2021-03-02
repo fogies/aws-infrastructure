@@ -15,11 +15,10 @@ resource "aws_eip" "ip" {
 }
 
 module "minikube_helm_instance" {
-  source = "../terraform_common/minikube_helm"
+  source = "../../terraform_common/minikube_helm"
 
   instance_name = "instance"
   instance_dir = "instance"
-  tasks_config_context = "terraform_minikube_helm_example"
 
   aws_availability_zone = "us-east-1a"
   ami_architecture = "amd64"

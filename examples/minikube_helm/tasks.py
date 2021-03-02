@@ -2,22 +2,21 @@ import aws_infrastructure.task_templates.minikube_helm
 from invoke import Collection
 
 # Key for configuration
-CONFIG_KEY = 'terraform_minikube_helm_example'
+CONFIG_KEY = 'examples_minikube_helm'
 
 # Configure a collection
-ns = Collection('minikube-helm-example')
+ns = Collection('minikube-helm')
 
 ns.configure({
     CONFIG_KEY: {
-        'working_dir': 'terraform_minikube_helm_example',
-        'bin_dir': '../bin',
-        'helm_charts_dir': '../helm_repo',
+        'working_dir': 'examples/minikube_helm',
+        'bin_dir': '../../bin',
+        'helm_charts_dir': '../../helm_repo',
         'instance_dirs': [
             'instance',
         ],
     }
 })
-
 
 # Define and import tasks
 minikube_helm_tasks = aws_infrastructure.task_templates.minikube_helm.create_tasks(
@@ -25,7 +24,6 @@ minikube_helm_tasks = aws_infrastructure.task_templates.minikube_helm.create_tas
     working_dir=ns.configuration()[CONFIG_KEY]['working_dir'],
     instance_dirs=ns.configuration()[CONFIG_KEY]['instance_dirs']
 )
-
 
 # Add tasks to our collection
 # - Exclude 'init' and 'output' for legibility, could be enabled for debugging.
