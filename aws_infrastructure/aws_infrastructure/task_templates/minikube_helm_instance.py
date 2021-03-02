@@ -224,14 +224,14 @@ def task_ssh_port_forward(
     return ssh_port_forward
 
 
-def task_helm_install_chart(
+def task_helm_install(
     *,
     config_key: str,
     instance_dir: str,
     instance_config
 ):
     @task
-    def helm_install_chart(context, helm_chart):
+    def helm_install(context, helm_chart):
         """
         Install a chart in the instance.
         """
@@ -288,7 +288,7 @@ def task_helm_install_chart(
         # Print the specific chart we will use
         print('Found matching chart at: {}'.format(helm_chart))
 
-        # Will need chart file separate from its path
+        # Will need chart file name separate from its path
         helm_chart_file_name = Path(helm_chart).name
 
         # Will need chart name separate from its version
@@ -309,12 +309,10 @@ def task_helm_install_chart(
                 )
 
             # Install the chart.
-            # Skip CRDs to require pattern of installing them separately.
             ssh_client.exec_command(command=' '.join([
                 'helm',
                 'upgrade',
                 '--install',
-                '--skip-crds',
                 helm_chart_name,
                 '~/.minikube_helm_staging/{}'.format(helm_chart_file_name)
             ]))
@@ -322,7 +320,55 @@ def task_helm_install_chart(
             # Remove the staging directory
             ssh_client.exec_command(command='rm -rf .minikube_helm_staging')
 
-    return helm_install_chart
+    return helm_install
+
+
+def task_helmfile_apply(
+    *,
+    config_key: str,
+    instance_dir: str,
+    instance_config
+):
+    @task
+    def helmfile_apply(context, helmfile):
+        """
+        Apply a helmfile in the instance.
+        """
+        print('Applying helmfile')
+
+        task_config = context.config[config_key]
+        working_dir = Path(task_config.working_dir)
+
+        # Connect via SSH
+        with ssh_client_context_manager(instance_config=instance_config) as ssh_client:
+            # Create a staging directory
+            ssh_client.exec_command(command='rm -rf .minikube_helm_staging')
+            ssh_client.exec_command(command='mkdir -p .minikube_helm_staging')
+
+            # Upload the helmfile
+            with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
+                sftp_client.client.chdir('.minikube_helm_staging')
+                sftp_client.client.put(
+                    localpath=Path(helmfile),
+                    remotepath=Path(helmfile).name,
+                )
+
+            # Apply the helmfile
+            #
+            # Use --skip-diff-on-install because:
+            # - Missing CRDs will cause helm diff to fail
+            # - helm diff output tends to be large for a new install
+            ssh_client.exec_command(command=' '.join([
+                'helmfile',
+                '--file ~/.minikube_helm_staging/{}'.format(Path(helmfile).name),
+                'apply',
+                '--skip-diff-on-install',
+            ]))
+
+            # Remove the staging directory
+            ssh_client.exec_command(command='rm -rf .minikube_helm_staging')
+
+    return helmfile_apply
 
 
 def create_tasks(
@@ -355,11 +401,18 @@ def create_tasks(
     )
     ns.add_task(ssh_port_forward)
 
-    helm_install_chart = task_helm_install_chart(
+    helm_install = task_helm_install(
         config_key=config_key,
         instance_dir=instance_dir,
         instance_config=yaml_config
     )
-    ns.add_task(helm_install_chart)
+    ns.add_task(helm_install)
+
+    helmfile_apply = task_helmfile_apply(
+        config_key=config_key,
+        instance_dir=instance_dir,
+        instance_config=yaml_config
+    )
+    ns.add_task(helmfile_apply)
 
     return ns
