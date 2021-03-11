@@ -1,6 +1,8 @@
 import io
 import os
 import re
+from typing import List
+from typing import Union
 
 from invoke import Collection
 from invoke import task
@@ -33,16 +35,28 @@ class ssh_client_context_manager:
         """
         return self._client
 
-    def exec_command(self, *, command: str):
+    def exec_command(self, *, command: Union[str, List[str]]):
         """
         Execute a command, print the command with its stdout and stderr.
         """
+
+        print('Command')
+        if isinstance(command, str):
+            # Single commands are just printed and passed through
+            print('  ' + command)
+        elif isinstance(command, List):
+            # Multiple commands are printed, then reformatted into a single command
+
+            for command_current in command:
+                print('  ' + command_current)
+
+            command = '\n'.join(command)
+        else:
+            raise ValueError
+
         stdin, stdout, stderr = self.client.exec_command(
             command=command
         )
-
-        print('Command')
-        print('  ' + command)
 
         line = stdout.readline()
         if line:
@@ -224,6 +238,83 @@ def task_ssh_port_forward(
     return ssh_port_forward
 
 
+def task_docker_build(
+    *,
+    config_key: str,
+    instance_dir: str,
+    instance_config
+):
+    @task
+    def docker_build(context, build_config):
+        """
+        Build a Docker image.
+        """
+        print('Building Docker image')
+
+        task_config = context.config[config_key]
+        working_dir = Path(task_config.working_dir)
+
+        # build_config must be a path to a file named build-config.yaml
+        if not (Path(build_config).is_file() and Path(build_config).name == 'build-config.yaml'):
+            print('No matching build-config.yaml found.')
+            return
+
+        # Print the specific chart we will use
+        print('Found matching build-config.yaml at: {}'.format(build_config))
+
+        # Load the config
+        with open(build_config) as file_config:
+            yaml_config = ruamel.yaml.safe_load(file_config)
+
+        # Connect via SSH
+        with ssh_client_context_manager(instance_config=instance_config) as ssh_client:
+            # Create a staging directory
+            ssh_client.exec_command(command=[
+                'rm -rf .minikube_helm_staging',
+                'mkdir -p .minikube_helm_staging'
+            ])
+
+            # Upload the Dockerfile.
+            # The configuration 'dockerfile' is a path relative to the location of the build config.
+            dockerfile = str(Path(Path(build_config).parent, yaml_config['dockerfile']))
+            with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
+                sftp_client.client.chdir('.minikube_helm_staging')
+                sftp_client.client.put(
+                    localpath=dockerfile,
+                    remotepath='Dockerfile',
+                )
+
+            ssh_client.exec_command(command=[
+                # Point the session Docker CLI at our Minikube Docker context
+                'eval $(minikube -p minikube docker-env)',
+                'cd .minikube_helm_staging',
+                ' '.join([
+                    'docker',
+                    'build',
+                    # Until we have a strategy for cache busting, always use no-cache
+                    '--no-cache',
+                    # List of build-arg parameters
+                    ' '.join([
+                        '--build-arg "{}={}"'.format(key_current, value_current)
+                        for (key_current, value_current)
+                        in yaml_config['args'].items()
+                    ]),
+                    # List of tag parameters
+                    ' '.join([
+                        '--tag "{}"'.format(tag_current)
+                        for tag_current
+                        in yaml_config['tags']
+                    ]),
+                    '.'
+                ])
+            ])
+
+            # Remove the staging directory
+            ssh_client.exec_command(command='rm -rf .minikube_helm_staging')
+
+    return docker_build
+
+
 def task_helm_install(
     *,
     config_key: str,
@@ -298,9 +389,12 @@ def task_helm_install(
         # Connect via SSH
         with ssh_client_context_manager(instance_config=instance_config) as ssh_client:
             # Create a staging directory
-            ssh_client.exec_command(command='rm -rf .minikube_helm_staging')
-            ssh_client.exec_command(command='mkdir -p .minikube_helm_staging')
+            ssh_client.exec_command(command=[
+                'rm -rf .minikube_helm_staging',
+                'mkdir -p .minikube_helm_staging'
+            ])
 
+            # Upload the chart file
             with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
                 sftp_client.client.chdir('.minikube_helm_staging')
                 sftp_client.client.put(
@@ -344,8 +438,10 @@ def task_helmfile_apply(
         # Connect via SSH
         with ssh_client_context_manager(instance_config=instance_config) as ssh_client:
             # Create a staging directory
-            ssh_client.exec_command(command='rm -rf .minikube_helm_staging')
-            ssh_client.exec_command(command='mkdir -p .minikube_helm_staging')
+            ssh_client.exec_command(command=[
+                'rm -rf .minikube_helm_staging',
+                'mkdir -p .minikube_helm_staging'
+            ])
 
             # Upload the helmfile
             with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
@@ -402,6 +498,13 @@ def create_tasks(
         instance_config=yaml_config
     )
     ns.add_task(ssh_port_forward)
+
+    docker_build = task_docker_build(
+        config_key=config_key,
+        instance_dir=instance_dir,
+        instance_config=yaml_config
+    )
+    ns.add_task(docker_build)
 
     helm_install = task_helm_install(
         config_key=config_key,
