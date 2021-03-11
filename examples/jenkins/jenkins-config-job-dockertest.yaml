@@ -1,0 +1,120 @@
+#
+# An exploration of a Jenkins job to build a Docker image.
+#
+# Authored to be installed as part of a Helm chart.
+#
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jenkins-config-job-dockertest
+  namespace: jenkins
+  labels:
+    # Jenkins configuration loading requires this label
+    # TODO: Simplify to jenkins-config based on https://github.com/jenkinsci/helm-charts/issues/240
+    jenkins-jenkins-config: "true"
+data:
+  # Jenkins CasC will attempt to find secrets in configuration.
+  # https://github.com/jenkinsci/configuration-as-code-plugin/blob/master/docs/features/secrets.adoc
+  #
+  # Any variable `${var}` therefore must be escaped as `^${var}`.
+  job-dockertest.yaml: |-
+    jobs:
+      - script: |
+          pipelineJob('dockertest') {
+            definition {
+              cps {
+                script('''
+                  pipeline {
+                    // We currently use a global agent.
+                    // Our stages have implicit dependencies that will be problematic
+                    // if stages are executed by different agents (e.g., contents of directories).
+                    agent { label 'docker' }
+
+                    stages {
+                      stage('Variables') {
+                        steps {
+                          script {
+                            IMAGE_NAME = 'docker-jekyll-site'
+                          }
+                        }
+                      }
+
+                      stage('Git') {
+                        steps {
+                          dir("^${IMAGE_NAME}") {
+                            checkout([
+                              $class: 'GitSCM',
+                              branches: [[name: '*/master']],
+                              doGenerateSubmoduleConfigurations: false,
+                              extensions: [],
+                              submoduleCfg: [],
+                              userRemoteConfigs: [[url: 'https://github.com/fogies/docker-jekyll-site/']]
+                            ])
+                          }
+
+                          dir('web-dub') {
+                            checkout([
+                              $class: 'GitSCM',
+                              branches: [[name: '*/master']],
+                              doGenerateSubmoduleConfigurations: false,
+                              extensions: [],
+                              submoduleCfg: [],
+                              userRemoteConfigs: [[url: 'https://github.com/uwdub/web-dub']]
+                            ])
+                          }
+                        }
+                      }
+
+                      stage('Build Variables') {
+                        steps {
+                          // Obtain BUILD_TIMESTAMP from a Jenkins variable, reformat it for build
+                          script {
+                            BUILD_TIMESTAMP = sh(
+                              returnStdout: true,
+                              script: "date -d @^${currentBuild.timeInMillis / 1000} +%Y%m%d.%H%M"
+                            ).trim()
+                          }
+
+                          // Obtain BUILD_VERSION from a file named VERSION in the same directory as the Dockerfile
+                          dir("^${IMAGE_NAME}") {
+                            script {
+                              BUILD_VERSION = sh(
+                                returnStdout: true,
+                                script: 'cat VERSION'
+                              ).trim()
+                            }
+                          }
+
+                          script {
+                            BUILD_IMAGE_TAG = "^${IMAGE_NAME}:^${BUILD_VERSION}_^${BUILD_TIMESTAMP}"
+                          }
+                        }
+                      }
+
+                      stage('Build') {
+                        steps {
+                          container('docker') {
+                            dir("^${IMAGE_NAME}") {
+                              sh "docker build --tag ^${BUILD_IMAGE_TAG} --cpu-period=100000 --cpu-quota=50000 ."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                '''.stripIndent())
+                sandbox(true)
+              }
+            }
+            properties {
+              disableConcurrentBuilds()
+              pipelineTriggers {
+                triggers {
+                  pollSCM {
+                    scmpoll_spec('H/5 * * * *')
+                  }
+                }
+              }
+            }
+          }
