@@ -20,7 +20,7 @@ setuptools.setup(
     install_requires=[
         'invoke>=1.5',
         'paramiko>=2.7.2',
-        'ruamel.yaml>=.17,<.18',
+        'ruamel.yaml>=0.17,<0.18',
         'semver>=3.0.0.dev2'
     ],
 )
