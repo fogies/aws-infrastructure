@@ -293,6 +293,8 @@ def task_docker_build(
                     'build',
                     # Until we have a strategy for cache busting, always use no-cache
                     '--no-cache',
+                    # Until we have a strategy for CPU usage, limit to 50%
+                    '--cpu-period=100000 --cpu-quota=50000',
                     # List of build-arg parameters
                     ' '.join([
                         '--build-arg "{}={}"'.format(key_current, value_current)
