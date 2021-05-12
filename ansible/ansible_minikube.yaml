@@ -5,14 +5,11 @@
   connection: local
   
   vars:
-    # Expects
-    # architecture: "amd64"
-    # TODO: "arm64" not supported pending Minikube docker driver
-    #       https://minikube.sigs.k8s.io/docs/drivers/docker/
-    versions:
-      minikube: v1.17.1
-      kubectl: v1.20.2
-  
+    # Expected from BUILD_CONFIG:
+    # - aws_instance_architecture
+    # - version_minikube
+    # - version_kubectl
+
   tasks:
     #
     # Install Minikube
@@ -21,7 +18,7 @@
     - name: Download Minikube
       become: yes
       get_url:
-        url: https://storage.googleapis.com/minikube/releases/{{ versions.minikube }}/minikube-linux-{{ architecture }}
+        url: https://storage.googleapis.com/minikube/releases/{{ version_minikube }}/minikube-linux-{{ aws_instance_architecture }}
         dest: /usr/local/bin/minikube
         mode: 0755
 
@@ -40,7 +37,7 @@
     - name: Download Kubectl
       become: yes
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/{{ versions.kubectl }}/bin/linux/{{ architecture }}/kubectl
+        url: https://storage.googleapis.com/kubernetes-release/release/{{ version_kubectl }}/bin/linux/{{ aws_instance_architecture }}/kubectl
         dest: /usr/local/bin/kubectl
         mode: 0755
 

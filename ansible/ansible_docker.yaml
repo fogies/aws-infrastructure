@@ -5,8 +5,8 @@
   connection: local
   
   vars:
-    versions:
-      ubuntu: focal
+    # Expected from BUILD_CONFIG:
+    # - version_ubuntu_name
 
   tasks:
     #
@@ -21,8 +21,8 @@
     - name: Add Docker Repository
       become: yes
       apt_repository:
-        repo: deb https://download.docker.com/linux/ubuntu {{ versions.ubuntu }} stable
-    
+        repo: deb https://download.docker.com/linux/ubuntu {{ version_ubuntu_name }} stable
+
     - name: Install Docker
       become: yes
       apt:
@@ -69,5 +69,5 @@
         cmd: docker version
         
     #
-    # Packer will now need restart the machine to apply group for non-sudo access.
+    # Packer will now need to restart the machine to apply group for non-sudo access.
     #   
