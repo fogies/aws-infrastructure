@@ -7,27 +7,22 @@ variable "aws_availability_zone" {
   type = string
 }
 
-/*
- * Architecture of the AMI to use, must correspond to instance type.
- */
-variable "ami_architecture" {
-  # Valid value is "amd64"
-  # TODO: "arm64" not supported pending Minikube docker driver
-  #       https://minikube.sigs.k8s.io/docs/drivers/docker/
+variable "ami_configuration" {
+  # Configuration of ami_minikube to use.
+  #
+  # Valid values are enumerated in ami_minikube.
+  #
+  # A corresponding value must be set for "aws_instance_type".
 
   type = string
 }
 
-/*
- * Instance type to create.
- */
 variable "aws_instance_type" {
-  # Appropriate values are "t3.medium" (amd64) or larger
-  # Must correspond to vars.source_ami_filter_architecture
-  # Values with less than 4g of memory (i.e., "medium") cause Minikube configuration failures
+  # Instance type in which to run ami_minikube.
   #
-  # TODO: "arm64" not supported pending Minikube docker driver
-  #       https://minikube.sigs.k8s.io/docs/drivers/docker/
+  # Typical values are "t3.medium" (amd64) or larger.
+  #
+  # A corresponding value must be set for "ami_configuration".
 
   type = string
 }

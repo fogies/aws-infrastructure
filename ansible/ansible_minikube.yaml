@@ -7,8 +7,9 @@
   vars:
     # Expected from BUILD_CONFIG:
     # - aws_instance_architecture
+    # - minikube_memory
+    # - version_kubernetes
     # - version_minikube
-    # - version_kubectl
 
   tasks:
     #
@@ -26,10 +27,18 @@
       command: 
         cmd: minikube version
         
-    - name: Configure Minikube to use Docker
+    - name: Configure Minikube Docker Driver
       command: 
         cmd: minikube config set driver docker
         
+    - name: Configure Minikube Memory
+      command:
+        cmd: minikube config set memory {{ minikube_memory }}
+
+    - name: Configure Kubenetes Version
+      command:
+        cmd: minikube config set kubernetes-version {{ version_kubernetes }}
+
     #
     # Install Kubectl
     #
@@ -37,7 +46,7 @@
     - name: Download Kubectl
       become: yes
       get_url:
-        url: https://storage.googleapis.com/kubernetes-release/release/{{ version_kubectl }}/bin/linux/{{ aws_instance_architecture }}/kubectl
+        url: https://storage.googleapis.com/kubernetes-release/release/{{ version_kubernetes }}/bin/linux/{{ aws_instance_architecture }}/kubectl
         dest: /usr/local/bin/kubectl
         mode: 0755
 

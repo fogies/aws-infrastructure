@@ -21,9 +21,6 @@ variable "aws_instance_type" {
   #
   # Typical value is 't3.medium' (amd64) or larger.
   # Typical value is 't4g.medium' (arm64) or larger.
-  #
-  # TODO: "arm64" not supported pending Minikube docker driver
-  #       https://minikube.sigs.k8s.io/docs/drivers/docker/
 
   type = string
 }
@@ -87,6 +84,8 @@ variable "version_helm" {
   # Version of helm to install.
   #
   # Format of a typical value resembles 'v3.5.2'.
+  #
+  # https://github.com/helm/helm/releases
 
   type = string
 }
@@ -95,6 +94,8 @@ variable "version_helmdiff" {
   # Version of helmdiff to install.
   #
   # Format of a typical value resembles 'v3.1.3'.
+  #
+  # https://github.com/databus23/helm-diff/releases
 
   type = string
 }
@@ -103,14 +104,20 @@ variable "version_helmfile" {
   # Version of helmfile to install.
   #
   # Format of a typical value resembles 'v0.138.4'.
+  #
+  # https://github.com/roboll/helmfile/releases
 
   type = string
 }
 
-variable "version_kubectl" {
-  # Version of kubectl to install.
+variable "version_kubernetes" {
+  # Version of Kubernetes kubectl to install.
   #
-  # Format of a typical value resembles 'v1.20.2'.
+  # Format of a typical value resembles 'v1.21.0'.
+  #
+  # https://kubernetes.io/releases/
+  #
+  # Should ensure compatibility with "version_minikube".
 
   type = string
 }
@@ -119,14 +126,24 @@ variable "version_minikube" {
   # Version of minikube to install.
   #
   # Format of a typical value resembles 'v1.17.1'.
+  #
+  # https://github.com/kubernetes/minikube/releases
 
   type = string
 }
 
 variable "version_ubuntu_name" {
-  # Name used by desired version of Ubuntu.
+  # Version name of Ubuntu.
   #
   # Typical value is 'focal'.
+
+  type = string
+}
+
+variable "version_ubuntu_number" {
+  # Version number of Ubuntu.
+  #
+  # Typical value is '20.04'.
 
   type = string
 }

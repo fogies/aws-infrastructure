@@ -13,9 +13,8 @@ ns.configure({
         'bin_dir': '../../bin',
         'helm_charts_dir': '../../helm_repo',
         'instance_dirs': [
-            'instance_1',
-            'instance_2',
-            'instance_3',
+            'amd64_medium',
+            'amd64_large',
         ],
     }
 })

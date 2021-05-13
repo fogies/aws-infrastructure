@@ -25,7 +25,7 @@ locals {
   # Name by which to filter the AMI
   ami_minikube_filter_name = format(
     "minikube-%s-*",
-    var.ami_architecture
+    var.configuration
   )
 }
 

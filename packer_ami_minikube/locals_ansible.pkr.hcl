@@ -19,7 +19,7 @@ local "ansible_extra_arguments" {
         "version_helm"="${ var.version_helm }",
         "version_helmdiff"="${ var.version_helmdiff }",
         "version_helmfile"="${ var.version_helmfile }",
-        "version_kubectl"="${ var.version_kubectl }",
+        "version_kubernetes"="${ var.version_kubernetes }",
         "version_minikube"="${ var.version_minikube }",
         "version_ubuntu_name"="${ var.version_ubuntu_name }",
       })
