@@ -113,7 +113,7 @@ variable "version_helmfile" {
 variable "version_kubernetes" {
   # Version of Kubernetes kubectl to install.
   #
-  # Format of a typical value resembles 'v1.21.0'.
+  # Format of a typical value resembles 'v1.21.1'.
   #
   # https://kubernetes.io/releases/
   #

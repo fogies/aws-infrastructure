@@ -26,7 +26,7 @@ BUILD_CONFIG_SHARED = {
     'version_helmfile': 'v0.139.3',
 
     # Version of Kubernetes to install.
-    'version_kubernetes': 'v1.21.0',
+    'version_kubernetes': 'v1.21.1',
 
     # Version of minikube to install.
     'version_minikube': 'v1.20.0',
@@ -77,7 +77,7 @@ BUILD_CONFIG_INSTANCES = {
         # Memory to allocate to Minikube.
         'minikube_memory': '6g',
     },
-    # TODO: arm64 currently fails due to lack of arm64 support in helmdiff
+    # TODO: arm64 fails due to lack of arm64 support in helmdiff installation
     #
     # 'arm64': {
     #     # Type of instance in which to build the image.
