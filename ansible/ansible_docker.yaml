@@ -61,11 +61,6 @@
         regexp: ^GRUB_CMDLINE_LINUX_DEFAULT=\"(.*)\"$
         replace: GRUB_CMDLINE_LINUX_DEFAULT="\1 cgroup_enable=memory swapaccount=1"
 
-    - name: Debug
-      debug: var=item
-      with_file:
-        - /etc/default/grub.d/50-cloudimg-settings.cfg
-
     - name: Update GRUB
       become: yes
       command:
