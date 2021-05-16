@@ -5,10 +5,11 @@
   connection: local
 
   vars:
-    versions:
-      helm: v3.5.2
-      helmdiff: v3.1.3
-      helmfile: v0.138.4
+    # Expected from BUILD_CONFIG:
+    # - aws_instance_architecture
+    # - version_helm
+    # - version_helmdiff
+    # - version_helmfile
 
   tasks:
     #
@@ -29,7 +30,7 @@
     - name: Install Helm
       become: yes
       command:
-        cmd: "{{ tempdir.path }}/get_helm.sh --version {{ versions.helm }}"
+        cmd: "{{ tempdir.path }}/get_helm.sh --version {{ version_helm }}"
 
     - name: Confirm Helm Installation
       command:
@@ -46,7 +47,7 @@
 
     - name: Install helm diff plugin
       command:
-        cmd: helm plugin install --version {{ versions.helmdiff }} https://github.com/databus23/helm-diff
+        cmd: helm plugin install --version {{ version_helmdiff }} https://github.com/databus23/helm-diff
 
     #
     # Install Helmfile
@@ -55,7 +56,7 @@
     - name: Download Helmfile
       become: yes
       get_url:
-        url: https://github.com/roboll/helmfile/releases/download/{{ versions.helmfile }}/helmfile_linux_{{ architecture }}
+        url: https://github.com/roboll/helmfile/releases/download/{{ version_helmfile }}/helmfile_linux_{{ aws_instance_architecture }}
         dest: /usr/local/bin/helmfile
         mode: 0755
 

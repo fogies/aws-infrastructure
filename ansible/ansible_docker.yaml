@@ -5,8 +5,8 @@
   connection: local
   
   vars:
-    versions:
-      ubuntu: focal
+    # Expected from BUILD_CONFIG:
+    # - version_ubuntu_name
 
   tasks:
     #
@@ -21,8 +21,8 @@
     - name: Add Docker Repository
       become: yes
       apt_repository:
-        repo: deb https://download.docker.com/linux/ubuntu {{ versions.ubuntu }} stable
-    
+        repo: deb https://download.docker.com/linux/ubuntu {{ version_ubuntu_name }} stable
+
     - name: Install Docker
       become: yes
       apt:
@@ -33,7 +33,7 @@
         - containerd.io
         
     #
-    # Configure non-sudo access for user ubuntu.
+    # Configure non-sudo access for user ubuntu. This will then require a reboot.
     #
         
     - name: Create Docker Group
@@ -47,6 +47,24 @@
         name: ubuntu
         groups: docker
         append: yes
+
+    #
+    # Configure cgroups required for Docker memory management. This will then require a reboot.
+    #
+    # https://fabianlee.org/2020/01/18/docker-placing-limits-on-container-memory-using-cgroups/
+    #
+
+    - name: Enable Docker Memory Managment
+      become: yes
+      replace:
+        path: /etc/default/grub.d/50-cloudimg-settings.cfg
+        regexp: ^GRUB_CMDLINE_LINUX_DEFAULT=\"(.*)\"$
+        replace: GRUB_CMDLINE_LINUX_DEFAULT="\1 cgroup_enable=memory swapaccount=1"
+
+    - name: Update GRUB
+      become: yes
+      command:
+        cmd: update-grub
 
     #
     # Start Docker
@@ -69,5 +87,5 @@
         cmd: docker version
         
     #
-    # Packer will now need restart the machine to apply group for non-sudo access.
+    # Packer will now need to restart the machine.
     #   

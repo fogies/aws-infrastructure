@@ -7,6 +7,10 @@ jenkins:
   namespaceOverride: 'jenkins'
 
   controller:
+    # A highly-insecure method to configure an admin account during testing
+    # adminUser: 'adminUser'
+    # adminPassword: 'adminPassword'
+
     # Prefix under which Jenkins is served
     jenkinsUriPrefix: '/jenkins'
 

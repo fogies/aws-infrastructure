@@ -7,17 +7,18 @@ terraform {
 }
 
 /*
- * Instance 1 of Minikube Helm.
+ * Instance amd64-medium.
  */
-module "minikube_helm_instance_1" {
+module "minikube_helm_instance_amd64_medium" {
   source = "../../terraform_common/minikube_helm"
 
-  instance_name = "instance_1"
-  instance_dir = "instance_1"
+  instance_name = "amd64_medium"
+  instance_dir = "amd64_medium"
 
   aws_availability_zone = "us-east-1a"
-  ami_architecture = "amd64"
   aws_instance_type = "t3.medium"
+
+  ami_configuration = "amd64-medium"
 
   eip = false
 
@@ -26,36 +27,18 @@ module "minikube_helm_instance_1" {
 }
 
 /*
- * Instance 2 of Minikube Helm.
+ * Instance amd64-large.
  */
-module "minikube_helm_instance_2" {
+module "minikube_helm_instance_amd64_large" {
   source = "../../terraform_common/minikube_helm"
 
-  instance_name = "instance_2"
-  instance_dir = "instance_2"
+  instance_name = "amd64_large"
+  instance_dir = "amd64_large"
 
   aws_availability_zone = "us-east-1a"
-  ami_architecture = "amd64"
-  aws_instance_type = "t3.medium"
+  aws_instance_type = "t3.large"
 
-  eip = false
-
-  tags = {
-  }
-}
-
-/*
- * Instance 3 of Minikube Helm.
- */
-module "minikube_helm_instance_3" {
-  source = "../../terraform_common/minikube_helm"
-
-  instance_name = "instance_3"
-  instance_dir = "instance_3"
-
-  aws_availability_zone = "us-east-1a"
-  ami_architecture = "amd64"
-  aws_instance_type = "t3.medium"
+  ami_configuration = "amd64-large"
 
   eip = false
 
