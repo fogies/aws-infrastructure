@@ -471,6 +471,22 @@ def task_helmfile_apply(
     return helmfile_apply
 
 
+def task_ip(
+    *,
+    config_key: str,
+    instance_dir: str,
+    instance_config
+):
+    @task
+    def ip(context):
+        """
+        Print the public IP of the instance.
+        """
+        print(instance_config['instance_ip'])
+
+    return ip
+
+
 def create_tasks(
     *,
     config_key: str,
@@ -521,5 +537,12 @@ def create_tasks(
         instance_config=yaml_config
     )
     ns.add_task(helmfile_apply)
+
+    ip = task_ip(
+        config_key=config_key,
+        instance_dir=instance_dir,
+        instance_config=yaml_config
+    )
+    ns.add_task(ip)
 
     return ns
