@@ -245,7 +245,7 @@ def task_docker_build(
     instance_config
 ):
     @task
-    def docker_build(context, build_config):
+    def docker_build(context, docker_config):
         """
         Build a Docker image.
         """
@@ -255,15 +255,15 @@ def task_docker_build(
         working_dir = Path(task_config.working_dir)
 
         # build_config must be a path to a file named build-config.yaml
-        if not (Path(build_config).is_file() and Path(build_config).name == 'build-config.yaml'):
-            print('No matching build-config.yaml found.')
+        if not (Path(docker_config).is_file() and Path(docker_config).name == 'docker-config.yaml'):
+            print('No matching docker-config.yaml found.')
             return
 
         # Print the specific chart we will use
-        print('Found matching build-config.yaml at: {}'.format(build_config))
+        print('Found matching docker-config.yaml at: {}'.format(docker_config))
 
         # Load the config
-        with open(build_config) as file_config:
+        with open(docker_config) as file_config:
             yaml_config = ruamel.yaml.safe_load(file_config)
 
         # Connect via SSH
@@ -276,7 +276,7 @@ def task_docker_build(
 
             # Upload the Dockerfile.
             # The configuration 'dockerfile' is a path relative to the location of the build config.
-            dockerfile = str(Path(Path(build_config).parent, yaml_config['dockerfile']))
+            dockerfile = str(Path(Path(docker_config).parent, yaml_config['dockerfile']))
             with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
                 sftp_client.client.chdir('.minikube_helm_staging')
                 sftp_client.client.put(

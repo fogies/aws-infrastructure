@@ -6,4 +6,4 @@ args:
   GIT_REPOSITORY_BRANCH: 'main'
 # List of tags to be applied to resulting image
 tags:
-  - 'build:config'
+  - 'web'
