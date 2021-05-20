@@ -1,9 +1,11 @@
-# Path to the Dockerfile relative to location of this build-config.yaml
+# Path to the Dockerfile relative to location of this docker-config.yaml
 dockerfile: 'Dockerfile'
+
 # Dictionary of args to be provided to Docker build
 args:
   GIT_REPOSITORY: 'https://github.com/uwscope/scope-web.git'
   GIT_REPOSITORY_BRANCH: 'main'
+
 # List of tags to be applied to resulting image
 tags:
   - 'web'

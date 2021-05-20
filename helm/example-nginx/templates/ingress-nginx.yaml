@@ -1,0 +1,22 @@
+# https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/
+# https://doc.traefik.io/traefik/routing/routers/
+
+apiVersion: 'traefik.containo.us/v1alpha1'
+kind: 'IngressRoute'
+
+metadata:
+  name: 'ingress-example-nginx'
+  labels:
+    app: 'ingress-example-nginx'
+
+spec:
+  entrypoints:
+    - 'web'
+  routes:
+    - kind: 'Rule'
+      match: 'PathPrefix(`/`)'
+      priority: 100
+      services:
+        - kind: 'Service'
+          name: 'example-nginx'
+          port: 80
