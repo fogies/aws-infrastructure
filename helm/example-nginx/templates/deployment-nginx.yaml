@@ -1,0 +1,24 @@
+apiVersion: 'apps/v1'
+kind: 'Deployment'
+metadata:
+  name: 'deployment-example-nginx'
+  labels:
+    app: 'example-nginx'
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: 'example-nginx'
+  template:
+    metadata:
+      labels:
+        app: 'example-nginx'
+    spec:
+      containers:
+        - name: 'example-nginx'
+          # This example does not pin a specific version
+          image: 'nginx:alpine'
+          imagePullPolicy: 'Always'
+          ports:
+            - containerPort: 80

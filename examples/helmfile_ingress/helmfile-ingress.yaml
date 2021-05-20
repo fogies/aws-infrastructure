@@ -1,3 +1,9 @@
+#
+# A simple helmfile that only configures ingress.
+#
+# Useful as a copy-paste template for starting a helmfile.
+#
+
 repositories:
   # aws-infrastructure helm repository
   #

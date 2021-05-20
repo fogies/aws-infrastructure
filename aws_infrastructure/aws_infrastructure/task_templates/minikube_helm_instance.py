@@ -245,7 +245,7 @@ def task_docker_build(
     instance_config
 ):
     @task
-    def docker_build(context, build_config):
+    def docker_build(context, docker_config):
         """
         Build a Docker image.
         """
@@ -254,17 +254,17 @@ def task_docker_build(
         task_config = context.config[config_key]
         working_dir = Path(task_config.working_dir)
 
-        # build_config must be a path to a file named build-config.yaml
-        if not (Path(build_config).is_file() and Path(build_config).name == 'build-config.yaml'):
-            print('No matching build-config.yaml found.')
+        # docker_config must be a path to a file named docker-config.yaml
+        if not (Path(docker_config).is_file() and Path(docker_config).name == 'docker-config.yaml'):
+            print('No matching docker-config.yaml found.')
             return
 
-        # Print the specific chart we will use
-        print('Found matching build-config.yaml at: {}'.format(build_config))
+        # Print the specific configuration we will use
+        print('Found matching docker-config.yaml at: {}'.format(docker_config))
 
         # Load the config
-        with open(build_config) as file_config:
-            yaml_config = ruamel.yaml.safe_load(file_config)
+        with open(docker_config) as file_config:
+            loaded_config = ruamel.yaml.safe_load(file_config)
 
         # Connect via SSH
         with ssh_client_context_manager(instance_config=instance_config) as ssh_client:
@@ -275,8 +275,9 @@ def task_docker_build(
             ])
 
             # Upload the Dockerfile.
-            # The configuration 'dockerfile' is a path relative to the location of the build config.
-            dockerfile = str(Path(Path(build_config).parent, yaml_config['dockerfile']))
+            #
+            # The configuration 'dockerfile' is a path relative to the location of the docker-config.
+            dockerfile = str(Path(Path(docker_config).parent, loaded_config['dockerfile']))
             with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
                 sftp_client.client.chdir('.minikube_helm_staging')
                 sftp_client.client.put(
@@ -299,13 +300,13 @@ def task_docker_build(
                     ' '.join([
                         '--build-arg "{}={}"'.format(key_current, value_current)
                         for (key_current, value_current)
-                        in yaml_config['args'].items()
+                        in loaded_config['args'].items()
                     ]),
                     # List of tag parameters
                     ' '.join([
                         '--tag "{}"'.format(tag_current)
                         for tag_current
-                        in yaml_config['tags']
+                        in loaded_config['tags']
                     ]),
                     '.'
                 ])
@@ -412,7 +413,7 @@ def task_helm_install(
                 '--install',
                 '--skip-crds',
                 helm_chart_name,
-                '~/.minikube_helm_staging/{}'.format(helm_chart_file_name)
+                '.minikube_helm_staging/{}'.format(helm_chart_file_name)
             ]))
 
             # Remove the staging directory
@@ -437,20 +438,104 @@ def task_helmfile_apply(
         task_config = context.config[config_key]
         working_dir = Path(task_config.working_dir)
 
+        # helmfile might be:
+        # - a path to a 'helmfile-config.yaml', in which case process the config
+        # - a path to a directory that contains a 'helmfile-config.yaml', in which case process the config
+        # - a path to any other file with a '.yaml' extension, in which case attempt to process as a helmfile
+
+        if Path(helmfile).is_file() and Path(helmfile).name == 'helmfile-config.yaml':
+            path_helmfile_config = Path(helmfile)
+            path_helmfile = None
+        elif Path(helmfile).is_dir() and Path(helmfile, 'helmfile-config.yaml').is_file():
+            path_helmfile_config = Path(helmfile, 'helmfile-config.yaml')
+            path_helmfile = None
+        elif Path(helmfile).suffix.casefold() == '.yaml':
+            path_helmfile_config = None
+            path_helmfile = Path(helmfile)
+        else:
+            print('No matching helmfile-config.yaml or helmfile found.')
+            return
+
+        if path_helmfile_config:
+            # Print the specific configuration we will use
+            print('Found matching helmfile-config.yaml at: {}'.format(path_helmfile_config))
+
+            # Load the config
+            with open(path_helmfile_config) as file_config:
+                loaded_config = ruamel.yaml.safe_load(file_config)
+
+            # Obtain the helmfile from the configuration
+            path_helmfile = Path(
+                path_helmfile_config.parent,
+                loaded_config['helmfile']
+            )
+
+        if path_helmfile:
+            if path_helmfile.is_file():
+                # Print the specific helmfile we will use
+                print('Found matching helmfile at: {}'.format(path_helmfile))
+            else:
+                print('No matching helmfile at: {}'.format(path_helmfile))
+                return
+
         # Connect via SSH
         with ssh_client_context_manager(instance_config=instance_config) as ssh_client:
+            path_staging = Path('.minikube_helm_staging')
+
             # Create a staging directory
             ssh_client.exec_command(command=[
-                'rm -rf .minikube_helm_staging',
-                'mkdir -p .minikube_helm_staging'
+                'rm -rf {}'.format(path_staging.as_posix()),
+                'mkdir -p {}'.format(path_staging.as_posix()),
             ])
 
-            # Upload the helmfile
             with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
-                sftp_client.client.chdir('.minikube_helm_staging')
+                # FTP within the staging directory
+                sftp_client.client.chdir(str(path_staging))
+
+                # Upload any dependencies in any provided configuration
+                if path_helmfile_config and 'dependencies' in loaded_config:
+                    for dependency_current in loaded_config['dependencies']:
+                        if 'file' in dependency_current:
+                            # Process a file dependency
+
+                            path_local = Path(
+                                path_helmfile_config.parent,
+                                dependency_current['file']
+                            )
+                            path_remote = Path(
+                                dependency_current['destination']
+                            )
+
+                            # Ensure the dependency exists
+                            if not path_local.is_file():
+                                print('Dependency not found at: {}'.format(path_local))
+                                return
+
+                            # Ensure any remote directories exist
+                            if path_remote.parent != Path('.'):
+                                ssh_client.exec_command(command=[
+                                    'mkdir -p {}'.format(
+                                        Path(
+                                            path_staging,
+                                            path_remote.parent
+                                        ).as_posix()
+                                    )
+                                ])
+
+                            # Upload the dependency file
+                            sftp_client.client.put(
+                                localpath=str(path_local),
+                                remotepath=str(path_remote.as_posix()),
+                            )
+                        else:
+                            print('Unknown dependency type: {}'.format(dependency_current))
+                            return
+
+                # Upload the helmfile
+                print('Uploading helmfile at: {}'.format(path_helmfile))
                 sftp_client.client.put(
-                    localpath=Path(helmfile),
-                    remotepath=Path(helmfile).name,
+                    localpath=str(Path(path_helmfile)),
+                    remotepath=str(Path(path_helmfile).name),
                 )
 
             # Apply the helmfile
@@ -460,7 +545,12 @@ def task_helmfile_apply(
             # - helm diff output tends to be large for a new install
             ssh_client.exec_command(command=' '.join([
                 'helmfile',
-                '--file ~/.minikube_helm_staging/{}'.format(Path(helmfile).name),
+                '--file {}'.format(
+                    Path(
+                        path_staging,
+                        path_helmfile.name
+                    ).as_posix()
+                ),
                 'apply',
                 '--skip-diff-on-install',
             ]))
@@ -469,6 +559,22 @@ def task_helmfile_apply(
             ssh_client.exec_command(command='rm -rf .minikube_helm_staging')
 
     return helmfile_apply
+
+
+def task_ip(
+    *,
+    config_key: str,
+    instance_dir: str,
+    instance_config
+):
+    @task
+    def ip(context):
+        """
+        Print the public IP of the instance.
+        """
+        print(instance_config['instance_ip'])
+
+    return ip
 
 
 def create_tasks(
@@ -521,5 +627,12 @@ def create_tasks(
         instance_config=yaml_config
     )
     ns.add_task(helmfile_apply)
+
+    ip = task_ip(
+        config_key=config_key,
+        instance_dir=instance_dir,
+        instance_config=yaml_config
+    )
+    ns.add_task(ip)
 
     return ns
