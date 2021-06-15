@@ -7,21 +7,37 @@ traefik:
   # https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
 
   ports:
-    # Traefik defaults to ports 8000 and 8443 for web and websecure.
-    # We want to use 8000 for dashboard, so we override the port for web to be 8080.
+    # Host ports to be associated with entrypoints must also be directed from the host machine to Minikube.
+    # This is configured in `ansible/ansible_minikube_ingress_ports.yaml`, currently only (80, 443, 8000, 9000).
+
+    # Entrypoint for public web access via HTTP.
+    # Traefik defaults to port 8000, but we will use that for the entrypoint secure. Overide to port 8080.
     web:
       port: 8080
       hostPort: 80
 
+    # Entrypoint for public web access via HTTPS.
     websecure:
       port: 8443
       hostPort: 443
       tls:
         enabled: true
 
-    dashboard:
+    # Entrypoint intended for ingress-configurable access to internal services.
+    # Should be accessible only via an SSH tunnel to forward port 8000.
+    private:
       port: 8000
       hostPort: 8000
       exposedPort: 8000
+      protocol: TCP
+      expose: true
+
+    # Entrypoint intended for access to a dashboard.
+    # Should be accessible only via an SSH tunnel to forward port 9000.
+    # Not currently used.
+    dashboard:
+      port: 9000
+      hostPort: 9000
+      exposedPort: 9000
       protocol: TCP
       expose: true

@@ -167,6 +167,7 @@ def task_ssh(
             context.run(
                 command=' '.join([
                     'start',  # Ensures Windows launches ssh outside cmd
+                              # This has been only way to obtain a proper terminal
                     'ssh',
                     '-l {}'.format(instance_config['instance_user']),
                     '-i {}'.format(Path(instance_dir, instance_config['instance_key_file'])),

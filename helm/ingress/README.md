@@ -18,6 +18,11 @@ Assumes prior installation of ingress-crd.
 
 ## Versions
 
+### 0.4.0
+
+- Create a `private` entrypoint on port 8000.
+- Move `dashboard` entrypoint to port 9000.
+
 ### 0.3.0
 
 - Create a `dashboard` entrypoint on port 8000.

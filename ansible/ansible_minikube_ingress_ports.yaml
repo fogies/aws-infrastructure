@@ -44,7 +44,7 @@
         content: |
           #!/bin/bash
 
-          # TODO: Traefik Dashboard Ingress
+          # Host ports to be associated with entrypoints must also be directed from the host machine to Minikube.
           ports=(80 443 8000 9000)
 
           # Identify our outgoing network device
