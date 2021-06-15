@@ -5,7 +5,7 @@ name: ingress
 description: Basic environment for ingress, including cert-manager and Traefik.
 
 # Chart version, expected to follow Semantic Versioning <https://semver.org/>
-version: 0.3.0
+version: 0.4.0
 
 dependencies:
   # Traefik for ingress
