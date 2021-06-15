@@ -29,7 +29,7 @@ source "amazon-ebs" "minikube" {
     # - Would probably need to move creation of the device into a provisioner
     device_name = "/dev/sdf"
 
-    volume_size = 10
+    volume_size = 15
     volume_type = "gp3"
     iops = 3000
     delete_on_termination = true
