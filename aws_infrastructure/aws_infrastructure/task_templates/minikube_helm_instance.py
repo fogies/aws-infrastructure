@@ -1,6 +1,8 @@
 import io
 import os
 import re
+import select
+import socketserver
 from typing import List
 from typing import Union
 
@@ -12,7 +14,7 @@ import ruamel.yaml
 import semver
 
 
-class ssh_client_context_manager:
+class SSHClientContextManager:
     """
     Context manager for connecting, using, and destroying an SSH client.
     """
@@ -104,7 +106,7 @@ class ssh_client_context_manager:
         self._client = None
 
 
-class sftp_client_context_manager:
+class SFTPClientContextManager:
     """
     Context manager for connecting, using, and destroying an SFTP client.
     """
@@ -139,6 +141,84 @@ class sftp_client_context_manager:
         """
         self._client.close()
         self._client = None
+
+
+class PortForwardContextManager:
+    """
+    Context manager for forwarding a port through an ssh client.
+    """
+    def __init__(self, *, ssh_client, local_port, remote_port):
+        self._ssh_client = ssh_client
+        self._local_port = local_port
+        self._remote_port = remote_port
+        self._server = None
+
+    def __enter__(self):
+        self._port_forward_start()
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._port_forward_destroy()
+
+    def _create_handler(self, ssh_client, remote_port):
+        class Handler(socketserver.BaseRequestHandler):
+            _ssh_client = ssh_client
+            _remote_port = remote_port
+
+            def handle(self):
+                channel = self._ssh_client.get_transport().open_channel(
+                    kind='direct-tcpip',
+                    dest_addr=('localhost', remote_port),
+                    src_addr=self.request.getpeername(),
+                )
+
+                while True:
+                    # If either direction has data available, forward that data
+                    r, w, x = select.select([self.request, channel], [], [])
+                    if self.request in r:
+                        data = self.request.recv(1024 * 1024)
+                        if len(data) == 0:
+                            break
+                        channel.send(data)
+                        print('{} bytes sent'.format(len(data)))
+                    if channel in r:
+                        data = channel.recv(1024 * 1024)
+                        if len(data) == 0:
+                            break
+                        self.request.send(data)
+                        print('{} bytes received'.format(len(data)))
+
+                channel.close()
+                self.request.close()
+
+        return Handler
+
+    def forward_forever(self):
+        """
+        Handle incoming requests forever.
+        """
+        self._server.serve_forever()
+
+    def _port_forward_start(self):
+        """
+        Start the port forwarding server.
+        """
+        self._server = socketserver.ThreadingTCPServer(
+            server_address=('localhost', self._local_port),
+            RequestHandlerClass=self._create_handler(self._ssh_client.client, self._remote_port),
+        )
+
+        print('Forwarding local port {} to remote port {}'.format(self._local_port, self._remote_port))
+
+    def _port_forward_destroy(self):
+        """
+        Stop the port forwarding server.
+
+        In practice it will already be stopped, as this code is only reached by a keyboard interrupt.
+        """
+        self._server.shutdown()
+        self._server = None
 
 
 def task_ssh(
@@ -195,46 +275,24 @@ def task_ssh_port_forward(
     def ssh_port_forward(context, port, local_port=None):
         """
         Forward a port from the instance.
-
-        TODO: Using a privileged local port on Windows requires ssh >= 7.9
-        https://github.com/PowerShell/Win32-OpenSSH/issues/1350
-        https://github.com/PowerShell/Win32-OpenSSH/releases
-        Could not easily determine how to get that installed for Windows.
-        Forwarding therefore only works for unprivileged ports.
         """
-        print('Creating SSH session to forward port')
 
         # Map our parameters to a remote and local port
-        remote_port = port
-        if local_port is None:
+        remote_port = int(port)
+        if local_port:
+            local_port = int(local_port)
+        else:
             local_port = remote_port
 
-        task_config = context.config[config_key]
-        working_dir = Path(task_config.working_dir)
-
-        with context.cd(working_dir):
-            # Launch an external SSH session,
-            # which seems more appropriate than attempting via Paramiko.
-            context.run(
-                command=' '.join([
-                    'start',  # Ensures Windows launches ssh outside cmd
-                    'ssh',
-                    '-l {}'.format(instance_config['instance_user']),
-                    '-i "{}"'.format(Path(instance_dir, instance_config['instance_key_file'])),
-                    '-o StrictHostKeyChecking=no',
-                    '-o UserKnownHostsFile="{}"'.format(Path(instance_dir, 'known_hosts')),
-                    '-L localhost:{}:localhost:{}'.format(local_port, remote_port),
-                    instance_config['instance_ip'],
-                    '"' + ' && '.join([
-                        'echo \\"Forwarding {}:{}\\"'.format(instance_config['instance_ip'], remote_port),
-                        'echo',
-                        'echo \\"Connect via localhost:{}\\"'.format(local_port),
-                        'echo',
-                        'sleep infinity'
-                    ]) + '"'
-                ]),
-                disown=True
-            )
+        # Connect via SSH
+        with SSHClientContextManager(instance_config=instance_config) as ssh_client:
+            # Initiate port forwarding
+            with PortForwardContextManager(
+                ssh_client=ssh_client,
+                local_port=local_port,
+                remote_port=remote_port
+            ) as port_forward:
+                port_forward.forward_forever()
 
     return ssh_port_forward
 
@@ -268,7 +326,7 @@ def task_docker_build(
             loaded_config = ruamel.yaml.safe_load(file_config)
 
         # Connect via SSH
-        with ssh_client_context_manager(instance_config=instance_config) as ssh_client:
+        with SSHClientContextManager(instance_config=instance_config) as ssh_client:
             # Create a staging directory
             ssh_client.exec_command(command=[
                 'rm -rf .minikube_helm_staging',
@@ -279,7 +337,7 @@ def task_docker_build(
             #
             # The configuration 'dockerfile' is a path relative to the location of the docker-config.
             dockerfile = str(Path(Path(docker_config).parent, loaded_config['dockerfile']))
-            with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
+            with SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
                 sftp_client.client.chdir('.minikube_helm_staging')
                 sftp_client.client.put(
                     localpath=dockerfile,
@@ -391,7 +449,7 @@ def task_helm_install(
         helm_chart_name = match.group(1)
 
         # Connect via SSH
-        with ssh_client_context_manager(instance_config=instance_config) as ssh_client:
+        with SSHClientContextManager(instance_config=instance_config) as ssh_client:
             # Create a staging directory
             ssh_client.exec_command(command=[
                 'rm -rf .minikube_helm_staging',
@@ -399,7 +457,7 @@ def task_helm_install(
             ])
 
             # Upload the chart file
-            with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
+            with SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
                 sftp_client.client.chdir('.minikube_helm_staging')
                 sftp_client.client.put(
                     localpath=Path(helm_chart),
@@ -480,7 +538,7 @@ def task_helmfile_apply(
                 return
 
         # Connect via SSH
-        with ssh_client_context_manager(instance_config=instance_config) as ssh_client:
+        with SSHClientContextManager(instance_config=instance_config) as ssh_client:
             path_staging = Path('.minikube_helm_staging')
 
             # Create a staging directory
@@ -489,7 +547,7 @@ def task_helmfile_apply(
                 'mkdir -p {}'.format(path_staging.as_posix()),
             ])
 
-            with sftp_client_context_manager(ssh_client=ssh_client) as sftp_client:
+            with SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
                 # FTP within the staging directory
                 sftp_client.client.chdir(str(path_staging))
 
