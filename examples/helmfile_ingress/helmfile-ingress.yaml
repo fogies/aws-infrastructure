@@ -21,7 +21,7 @@ releases:
   # ingress is then the actual ingress
   - name: 'ingress'
     chart: 'aws-infrastructure/ingress'
-    version: '0.3.0'
+    version: '0.4.0'
     needs:
       - 'ingress-crd'
 
