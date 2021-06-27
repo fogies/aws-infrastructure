@@ -18,9 +18,9 @@ setuptools.setup(
     # long_description='',
     python_requires='>=3',
     install_requires=[
-        'invoke>=1.5',
-        'paramiko>=2.7.2',
+        'invoke>=1,<2',
+        'paramiko>=2,<3',
         'ruamel.yaml>=0.17,<0.18',
-        'semver>=3.0.0.dev2'
+        'semver>=2,<3'
     ],
 )
