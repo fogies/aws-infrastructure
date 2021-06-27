@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+#
+# Packages needed by aws-infrastructure should be added to `aws_infrastructure/setup.py`.
+#
+aws-infrastructure = {editable = true, path = "./aws_infrastructure"}
+
+[dev-packages]
+pipenv = "*"
+
+[requires]
+python_version = "3.9"
