@@ -1,4 +1,5 @@
-import aws_infrastructure.task_templates.minikube_helm
+from aws_infrastructure.tasks import compose_collection
+import aws_infrastructure.tasks.library.minikube_helm
 from invoke import Collection
 
 # Key for configuration
@@ -20,7 +21,7 @@ ns.configure({
 })
 
 # Define and import tasks
-minikube_helm_tasks = aws_infrastructure.task_templates.minikube_helm.create_tasks(
+minikube_helm_tasks = aws_infrastructure.tasks.library.minikube_helm.create_tasks(
     config_key=CONFIG_KEY,
     working_dir=ns.configuration()[CONFIG_KEY]['working_dir'],
     instance_dirs=ns.configuration()[CONFIG_KEY]['instance_dirs']

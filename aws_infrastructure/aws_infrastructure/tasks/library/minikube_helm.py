@@ -2,8 +2,9 @@ import os
 import shutil
 from typing import List
 
-import aws_infrastructure.task_templates.terraform
-import aws_infrastructure.task_templates.minikube_helm_instance
+from aws_infrastructure.tasks.collection import compose_collection
+import aws_infrastructure.tasks.library.terraform
+import aws_infrastructure.tasks.library.minikube_helm_instance
 from invoke import Collection
 from invoke import task
 
@@ -72,17 +73,16 @@ def create_tasks(
     Create all of the tasks, re-using and passing parameters appropriately.
     """
 
-    ns = Collection('minikube_helm')
+    ns = Collection('minikube-helm')
 
-    # First create the top-level Terraform-related tasks
-
+    # Create the top-level Terraform tasks
     delete_empty_instance_dirs = task_delete_empty_instance_dirs(
         config_key=config_key
     )
     combined_destroy_post = [delete_empty_instance_dirs]
     combined_destroy_post.extend(destroy_post or [])
 
-    terraform_tasks = aws_infrastructure.task_templates.terraform.create_tasks(
+    ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
         config_key=config_key,
         variables=variables,
         apply_pre=apply_pre,
@@ -92,17 +92,25 @@ def create_tasks(
         output_tuple_factory=output_tuple_factory
     )
 
-    for task_current in terraform_tasks.tasks.values():
-        ns.add_task(task_current)
+    # Compose the top-level Terraform tasks
+    compose_collection(
+        ns,
+        ns_terraform,
+        sub=False
+    )
 
     # Then create tasks associated with any active instances
     for instance_dir_current in instance_dirs:
         instance_dir_path = os.path.normpath(os.path.join(working_dir, instance_dir_current))
         if os.path.isdir(instance_dir_path):
-            ns.add_collection(aws_infrastructure.task_templates.minikube_helm_instance.create_tasks(
+            # Create the instance tasks
+            ns_instance = aws_infrastructure.tasks.library.minikube_helm_instance.create_tasks(
                 config_key=config_key,
                 working_dir=working_dir,
                 instance_dir=instance_dir_current
-            ))
+            )
+
+            # Compose the instance tasks
+            compose_collection(ns, ns_instance)
 
     return ns
