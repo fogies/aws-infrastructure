@@ -1,16 +1,20 @@
+"""
+Tasks for managing the Minikube AMI.
+"""
+
 from invoke import Collection
 from invoke import task
 import json
 from pathlib import Path
-import terraform_vpc_packer.tasks
 
-from .config import BUILD_CONFIG
+from packer_ami_minikube.config import BUILD_CONFIG
+import tasks.terraform_vpc_packer
 
 # Key for configuration
 INVOKE_CONFIG_KEY = 'packer_ami_minikube'
 
 # Configure a collection
-ns = Collection('ami-minikube')
+ns = Collection('packer-ami-minikube')
 
 ns.configure({
     INVOKE_CONFIG_KEY: {
@@ -24,14 +28,14 @@ ns.configure({
 @task
 def build(context):
     """
-    Build the AMI.
+    Build the Minikube AMI.
     """
 
     invoke_config = context.config[INVOKE_CONFIG_KEY]
     working_dir = Path(invoke_config.working_dir)
     bin_packer = Path(invoke_config.bin_dir, 'packer.exe')
 
-    with terraform_vpc_packer.tasks.vpc_packer(context=context) as vpc_packer:
+    with tasks.terraform_vpc_packer.vpc_packer(context=context) as vpc_packer:
         vpc_packer_output = vpc_packer.output
 
         with context.cd(working_dir):
@@ -56,5 +60,5 @@ def build(context):
                 )
 
 
-# Add tasks to our collection
+# Compose the collection
 ns.add_task(build)
