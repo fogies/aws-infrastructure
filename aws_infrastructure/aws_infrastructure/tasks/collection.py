@@ -27,7 +27,10 @@ def compose_collection(
     ns.configure(ns_add.configuration())
 
     # Create a collection to hold results of applying inclusion and exclusion patterns
-    ns_included = Collection(ns_add.name)
+    if not ns_add.name:
+        ns_included = Collection()
+    else:
+        ns_included = Collection(ns_add.name)
 
     # First apply to tasks
     for name_current, task_current in ns_add.tasks.items():
