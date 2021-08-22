@@ -18,7 +18,10 @@ compose_collection(
     ns,
     ns_ecr,
     sub=False,
-    include=['apply', 'destroy'],
+    exclude=[
+        'init',
+        'output',
+    ],
 )
 
 ecr_read_only = aws_infrastructure.tasks.library.ecr_simple.create_ecr_read_only(

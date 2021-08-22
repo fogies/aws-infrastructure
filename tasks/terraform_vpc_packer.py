@@ -27,7 +27,8 @@ compose_collection(
     ns,
     ns_terraform,
     sub=False,
-    include=[]
+    include=[
+    ]
 )
 
 # A context manager
