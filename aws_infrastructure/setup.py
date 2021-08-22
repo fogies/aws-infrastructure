@@ -18,6 +18,7 @@ setuptools.setup(
     # long_description='',
     python_requires='>=3',
     install_requires=[
+        'boto3>=1,<2',
         'invoke>=1,<2',
         'paramiko>=2,<3',
         'ruamel.yaml>=0.17,<0.18',
