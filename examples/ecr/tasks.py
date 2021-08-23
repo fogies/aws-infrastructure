@@ -1,5 +1,5 @@
 from aws_infrastructure.tasks import compose_collection
-import aws_infrastructure.tasks.library.ecr_simple
+import aws_infrastructure.tasks.library.ecr
 from invoke import Collection
 
 CONFIG_KEY = 'examples_ecr'
@@ -8,7 +8,7 @@ DIR_TERRAFORM = './examples/ecr'
 
 ns = Collection('ecr')
 
-ns_ecr = aws_infrastructure.tasks.library.ecr_simple.create_tasks(
+ns_ecr = aws_infrastructure.tasks.library.ecr.create_tasks(
     config_key=CONFIG_KEY,
     bin_terraform=BIN_TERRAFORM,
     dir_terraform=DIR_TERRAFORM,
@@ -24,6 +24,6 @@ compose_collection(
     ],
 )
 
-ecr_read_only = aws_infrastructure.tasks.library.ecr_simple.create_ecr_read_only(
+ecr_read_only = aws_infrastructure.tasks.library.ecr.create_ecr_read_only(
     ns_ecr=ns_ecr
 )
