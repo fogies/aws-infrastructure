@@ -315,3 +315,39 @@ def create_context_manager_read_only(
             return self._cached_output
 
     return terraform_context_manager_read_only
+
+
+def exclude_destroy_without_state(
+    *,
+    dir_terraform: Union[Path, str],
+    exclude: List[str],
+) -> List[str]:
+    """
+    Helper for excluding the 'destroy' task if there is no current Terraform state.
+    """
+
+    # Ensure Path object
+    dir_terraform = Path(dir_terraform)
+
+    # Determine whether state exists
+    state_exists = True
+
+    # Confirm the state file exists
+    if state_exists:
+        path_state = Path(dir_terraform, 'terraform.tfstate')
+        if not path_state.exists():
+            state_exists = False
+
+    # Confirm the state file is not empty
+    if state_exists:
+        with open(path_state, mode='r') as file_state:
+            json_state = json.load(file_state)
+        if json_state['resources'] == []:
+            state_exists = False
+
+    # If no state exists, append 'destroy' to the provided exclude list
+    if not state_exists:
+        exclude = list(exclude)
+        exclude.append('destroy')
+
+    return exclude

@@ -1,5 +1,6 @@
 from aws_infrastructure.tasks import compose_collection
 import aws_infrastructure.tasks.library.minikube_helm
+import aws_infrastructure.tasks.library.terraform
 from invoke import Collection
 
 CONFIG_KEY = 'examples_minikube_helm_multiple'
@@ -22,7 +23,10 @@ compose_collection(
     ns,
     ns_minikube_helm,
     sub=False,
-    exclude=[
-        'init',
-    ]
+    exclude=aws_infrastructure.tasks.library.terraform.exclude_destroy_without_state(
+        dir_terraform=DIR_TERRAFORM,
+        exclude=[
+            'init',
+        ],
+    )
 )
