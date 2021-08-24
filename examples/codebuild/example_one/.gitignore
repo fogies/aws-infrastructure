@@ -1,0 +1,2 @@
+# Environment variables for CodeBuild secrets that should not be on GitHub.
+codebuild_secrets.sh
