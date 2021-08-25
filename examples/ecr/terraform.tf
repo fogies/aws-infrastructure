@@ -4,5 +4,8 @@
 module "ecr" {
   source = "../../terraform_common/ecr_simple"
 
-  name = "example_ecr"
+  names = [
+    "aws_infrastructure/example_one",
+    "aws_infrastructure/example_two",
+  ]
 }

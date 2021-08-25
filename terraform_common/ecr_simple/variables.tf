@@ -1,7 +1,6 @@
 /*
- * Name of ECR.
+ * Names of created ECRs.
  */
-variable "name" {
-  type = string
+variable "names" {
+  type = set(string)
 }
-

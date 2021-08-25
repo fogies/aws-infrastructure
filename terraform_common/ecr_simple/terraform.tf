@@ -6,5 +6,7 @@
  * The ECR.
  */
 resource "aws_ecr_repository" "ecr" {
-  name = var.name
+  for_each = var.names
+
+  name = each.value
 }
