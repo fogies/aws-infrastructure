@@ -55,14 +55,7 @@ variable "eip_public_ip" {
 /*
  * Name for this instance.
  */
-variable "instance_name" {
-  type = string
-}
-
-/*
- * Directory in which to generate files for this instance.
- */
-variable "instance_dir" {
+variable "name" {
   type = string
 }
 

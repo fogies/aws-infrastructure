@@ -7,7 +7,7 @@ CONFIG_KEY = 'examples_minikube_helm_multiple'
 BIN_TERRAFORM = './bin/terraform.exe'
 DIR_TERRAFORM = './examples/minikube_helm_multiple'
 DIR_HELM_REPO = './helm_repo'
-DIR_INSTANCES = ['amd64_medium', 'amd64_large']
+INSTANCES = ['amd64_medium', 'amd64_large']
 
 ns = Collection('minikube-helm-multiple')
 
@@ -16,7 +16,7 @@ ns_minikube_helm = aws_infrastructure.tasks.library.minikube_helm.create_tasks(
     bin_terraform=BIN_TERRAFORM,
     dir_terraform=DIR_TERRAFORM,
     dir_helm_repo=DIR_HELM_REPO,
-    dir_instances=DIR_INSTANCES,
+    instances=INSTANCES,
 )
 
 compose_collection(

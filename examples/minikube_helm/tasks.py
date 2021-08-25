@@ -7,7 +7,7 @@ CONFIG_KEY = 'examples_minikube_helm'
 BIN_TERRAFORM = './bin/terraform.exe'
 DIR_TERRAFORM = './examples/minikube_helm'
 DIR_HELM_REPO = './helm_repo'
-DIR_INSTANCES = ['instance']
+INSTANCES = ['instance']
 
 ns = Collection('minikube-helm')
 
@@ -16,7 +16,7 @@ ns_minikube_helm = aws_infrastructure.tasks.library.minikube_helm.create_tasks(
     bin_terraform=BIN_TERRAFORM,
     dir_terraform=DIR_TERRAFORM,
     dir_helm_repo=DIR_HELM_REPO,
-    dir_instances=DIR_INSTANCES,
+    instances=INSTANCES,
 )
 
 compose_collection(

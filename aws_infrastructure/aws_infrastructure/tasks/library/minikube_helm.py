@@ -15,7 +15,7 @@ def _task_delete_empty_instance_dirs(
     *,
     config_key: str,
     dir_terraform: Path,
-    dir_instances: List[Path],
+    instances: List[str],
 ):
     """
     Create a task to delete any instance directories which are effectively empty.
@@ -30,10 +30,10 @@ def _task_delete_empty_instance_dirs(
         # Terraform will create instance directories to store state files related to SSH.
         # But Terraform will not automatically remove those same instance directories, even if they are empty.
         # Look for these directories, delete them if they are effectively empty.
-        for dir_instance_current in dir_instances:
+        for instance_current in instances:
             # Instance dirs are relative to the Terraform directory
-            expanded_dir_instance_current = Path(dir_terraform, dir_instance_current)
-            if expanded_dir_instance_current.exists() and expanded_dir_instance_current.is_dir():
+            dir_instance_current = Path(dir_terraform, instance_current)
+            if dir_instance_current.exists() and dir_instance_current.is_dir():
                 # Some children may exist but can be safely deleted.
                 # Check if all existing children are known to be safe to delete.
                 # If so, delete everything. Otherwise, leave everything.
@@ -42,7 +42,7 @@ def _task_delete_empty_instance_dirs(
                 ]
 
                 # Determine if all existing files are safe to delete
-                existing_entries = os.scandir(expanded_dir_instance_current)
+                existing_entries = os.scandir(dir_instance_current)
                 unknown_entries = [
                     entry_current
                     for entry_current in existing_entries
@@ -51,7 +51,7 @@ def _task_delete_empty_instance_dirs(
 
                 # If everything is safe to delete, then go ahead with deletion
                 if len(unknown_entries) == 0:
-                    shutil.rmtree(expanded_dir_instance_current)
+                    shutil.rmtree(dir_instance_current)
 
     return delete_empty_instance_dirs
 
@@ -62,8 +62,7 @@ def create_tasks(
     bin_terraform: Union[Path, str],
     dir_terraform: Union[Path, str],
     dir_helm_repo: Union[Path, str],
-
-    dir_instances: List[Union[Path, str]],
+    instances: List[str],
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -72,7 +71,6 @@ def create_tasks(
     bin_terraform = Path(bin_terraform)
     dir_terraform = Path(dir_terraform)
     dir_helm_repo = Path(dir_helm_repo)
-    dir_instances = [Path(instance_current) for instance_current in dir_instances]
 
     # Collection to compose
     ns = Collection('minikube-helm')
@@ -81,7 +79,7 @@ def create_tasks(
     delete_empty_instance_dirs = _task_delete_empty_instance_dirs(
         config_key=config_key,
         dir_terraform=dir_terraform,
-        dir_instances=dir_instances
+        instances=instances
     )
     destroy_post = [delete_empty_instance_dirs]
 
@@ -102,16 +100,16 @@ def create_tasks(
     )
 
     # Then create tasks associated with any active instances
-    for dir_instance_current in dir_instances:
+    for instance_current in instances:
         # Instance dirs are relative to the Terraform directory
-        expanded_dir_instance_current = Path(dir_terraform, dir_instance_current)
-        if expanded_dir_instance_current.exists() and expanded_dir_instance_current.is_dir():
+        dir_instance_current = Path(dir_terraform, instance_current)
+        if dir_instance_current.exists() and dir_instance_current.is_dir():
             # Create the instance tasks
             ns_instance = aws_infrastructure.tasks.library.minikube_helm_instance.create_tasks(
-                config_key=config_key,
+                config_key='{}.{}'.format(config_key, instance_current),
                 dir_terraform=dir_terraform,
                 dir_helm_repo=dir_helm_repo,
-                dir_instance=dir_instance_current
+                instance=instance_current
             )
 
             # Compose the instance tasks

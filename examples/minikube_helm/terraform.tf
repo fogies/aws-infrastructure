@@ -18,8 +18,7 @@ resource "aws_eip" "ip" {
 module "minikube_helm_instance" {
   source = "../../terraform_common/minikube_helm"
 
-  instance_name = "instance"
-  instance_dir = "instance"
+  name = "instance"
 
   aws_availability_zone = "us-east-1a"
   aws_instance_type = "t3.medium"

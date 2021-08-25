@@ -224,7 +224,6 @@ def _task_ssh(
     *,
     config_key: str,
     dir_terraform: Path,
-    dir_instance: Path,
     instance_config
 ):
     """
@@ -238,22 +237,23 @@ def _task_ssh(
         """
         print('Creating SSH session')
 
-        with context.cd(dir_terraform):
-            # Launch an external SSH session,
-            # which seems more appropriate than attempting via Paramiko.
-            context.run(
-                command=' '.join([
-                    'start',  # Ensures Windows launches ssh outside cmd
-                              # This has been only way to obtain a proper terminal
-                    'ssh',
-                    '-l {}'.format(instance_config['instance_user']),
-                    '-i {}'.format(Path(dir_instance, instance_config['instance_key_file'])),
-                    '-o StrictHostKeyChecking=no',
-                    '-o UserKnownHostsFile="{}"'.format(Path(dir_instance, 'known_hosts')),
-                    instance_config['instance_ip']
-                ]),
-                disown=True
-            )
+        dir_instance = Path(dir_terraform, instance_config['instance_name'])
+
+        # Launch an external SSH session,
+        # which seems more appropriate than attempting via Paramiko.
+        context.run(
+            command=' '.join([
+                'start',  # Ensures Windows launches ssh outside cmd
+                          # This has been only way to obtain a proper terminal
+                'ssh',
+                '-l {}'.format(instance_config['instance_user']),
+                '-i {}'.format(Path(dir_instance, instance_config['instance_key_file'])),
+                '-o StrictHostKeyChecking=no',
+                '-o UserKnownHostsFile="{}"'.format(Path(dir_instance, 'known_hosts')),
+                instance_config['instance_ip']
+            ]),
+            disown=True
+        )
 
     return ssh
 
@@ -376,7 +376,6 @@ def _task_helm_install(
     *,
     config_key: str,
     dir_helm_repo: Path,
-    dir_instance: Path,
     instance_config
 ):
     @task
@@ -631,7 +630,7 @@ def create_tasks(
     config_key: str,
     dir_terraform: Union[Path, str],
     dir_helm_repo: Union[Path, str],
-    dir_instance: Union[Path, str],
+    instance: str,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -639,9 +638,8 @@ def create_tasks(
 
     dir_terraform = Path(dir_terraform)
     dir_helm_repo = Path(dir_helm_repo)
-    dir_instance = Path(dir_instance)
 
-    with open(Path(dir_terraform, dir_instance, 'config.yaml')) as file_config:
+    with open(Path(dir_terraform, instance, 'config.yaml')) as file_config:
         yaml_config = ruamel.yaml.safe_load(file_config)
 
     instance_name = yaml_config['instance_name']
@@ -651,7 +649,6 @@ def create_tasks(
     ssh = _task_ssh(
         config_key=config_key,
         dir_terraform=dir_terraform,
-        dir_instance=dir_instance,
         instance_config=yaml_config
     )
     ns.add_task(ssh)
@@ -671,7 +668,6 @@ def create_tasks(
     helm_install = _task_helm_install(
         config_key=config_key,
         dir_helm_repo=dir_helm_repo,
-        dir_instance=dir_instance,
         instance_config=yaml_config
     )
     ns.add_task(helm_install)
