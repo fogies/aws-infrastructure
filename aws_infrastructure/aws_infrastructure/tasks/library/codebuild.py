@@ -6,6 +6,7 @@ from invoke import Collection
 from invoke import task
 import os
 from pathlib import Path
+import ruamel.yaml
 import shutil
 from typing import List
 from typing import Union
@@ -17,6 +18,7 @@ def create_tasks(
     bin_terraform: Union[Path, str],
     dir_terraform: Union[Path, str],
     instances: List[str],
+    environment_variables
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -41,10 +43,52 @@ def create_tasks(
 
         # Create an archive of each source that Terraform can upload to S3
         for instance_current in instances:
+            path_source = Path(dir_terraform, instance_current)
+            path_staging = Path(dir_terraform, 'staging', instance_current)
+
+            # Copy source into a staging directory
+            shutil.rmtree(path=path_staging, ignore_errors=True)
+            shutil.copytree(src=path_source, dst=path_staging)
+
+            # Determine whether we need to update the buildspec.yml with environment variables
+            if environment_variables != None and instance_current in environment_variables:
+                # Obtain the variables we need to update in the buildspec.yml
+                environment_variables_current = environment_variables[instance_current](context=context)
+
+                # Use a parsing object for roundtrip
+                yaml_parser = ruamel.yaml.YAML()
+                path_buildspec = Path(path_staging, 'buildspec.yml')
+
+                # Update the buildspec to add provided environment variables
+                with open(path_buildspec) as file_buildspec:
+                    yaml_buildspec = yaml_parser.load(file_buildspec)
+
+                # Ensure the buildspec provides for environment variables
+                if 'env' not in yaml_buildspec:
+                    yaml_buildspec['env'] = {}
+                if 'variables' not in yaml_buildspec['env']:
+                    yaml_buildspec['env']['variables'] = {}
+
+                # Add the variables
+                for key_current, value_current in environment_variables_current.items():
+                    yaml_buildspec['env']['variables'][key_current] = value_current
+
+                # Replace the buildspec
+                os.remove(path_buildspec)
+                with open(path_buildspec, mode='w') as file_buildspec:
+                    yaml_parser.dump(yaml_buildspec, file_buildspec)
+
+            # Make the archive
             shutil.make_archive(
-                base_name=str(Path(dir_terraform, 'staging', instance_current)),
+                base_name=path_staging,
                 format='zip',
-                root_dir=Path(dir_terraform, instance_current)
+                root_dir=path_staging
+            )
+
+            # Remove the staged source directory
+            shutil.rmtree(
+                path=path_staging,
+                ignore_errors=True
             )
 
         # Execute the underlying task

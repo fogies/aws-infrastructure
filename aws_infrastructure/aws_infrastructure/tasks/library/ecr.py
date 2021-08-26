@@ -25,7 +25,7 @@ def create_tasks(
         config_key=config_key,
         bin_terraform=bin_terraform,
         dir_terraform=dir_terraform,
-        output_tuple_factory=namedtuple('ecr', ['repository_urls']),
+        output_tuple_factory=namedtuple('ecr', ['registry_url', 'repository_urls']),
     )
 
     compose_collection(
