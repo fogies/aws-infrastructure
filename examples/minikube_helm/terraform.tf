@@ -7,18 +7,18 @@ terraform {
 }
 
 /*
- * Instance of Minikube Helm.
- *
- * Associated with a provided elastic IP.
+ * IP to provide to instance of Minikube Helm.
  */
 resource "aws_eip" "ip" {
 }
 
+/*
+ * Instance of Minikube Helm.
+ */
 module "minikube_helm_instance" {
   source = "../../terraform_common/minikube_helm"
 
-  instance_name = "instance"
-  instance_dir = "instance"
+  name = "instance"
 
   aws_availability_zone = "us-east-1a"
   aws_instance_type = "t3.medium"

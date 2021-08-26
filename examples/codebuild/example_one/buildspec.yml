@@ -1,0 +1,46 @@
+version: 0.2
+
+env:
+  shell: "bash"
+
+phases:
+  pre_build:
+    on-failure: "ABORT"
+    commands:
+      # Load environment variables and secrets
+      - 'test -f ./codebuild_env.sh && source ./codebuild_env.sh'
+      - 'test -f ./codebuild_secrets.sh && source ./codebuild_secrets.sh'
+      # Login to DockerHub, required due to rate limits on public images
+      - 'echo $DOCKER_PASSWORD |
+         docker login
+           --username $DOCKER_ACCOUNT
+           --password-stdin
+        '
+      # Login to our private ECR, required to push the image
+      - 'aws ecr get-login-password |
+         docker login
+           --username AWS
+           --password-stdin
+           $REGISTRY_URL
+        '
+  build:
+    on-failure: "ABORT"
+    commands:
+      # Build the image
+      - 'docker build
+           --build-arg "GIT_REPOSITORY=$GIT_REPOSITORY"
+           --build-arg "GIT_REPOSITORY_BRANCH=$GIT_REPOSITORY_BRANCH"
+           --tag "$REPOSITORY:codebuild"
+           .
+        '
+
+  post_build:
+    on-failure: "ABORT"
+    commands:
+      # For each provided tag, push to the repository
+      - 'read -ra REPOSITORY_TAGS_ARRAY <<< "$REPOSITORY_TAGS" &&
+         for TAG_CURRENT in "${REPOSITORY_TAGS_ARRAY[@]}"; do
+           docker tag "$REPOSITORY:codebuild" "$REPOSITORY_URL:$TAG_CURRENT";
+           docker push "$REPOSITORY_URL:$TAG_CURRENT";
+         done
+        '

@@ -1,13 +1,18 @@
-import os
-
 from invoke import Collection
 from invoke import task
+import os
+from pathlib import Path
 import ruamel.yaml
+from typing import Union
 
 
-def task_package(
+def _task_package(
     *,
-    config_key: str
+    config_key: str,
+    bin_helm: Path,
+    dir_helm_charts: Path,
+    dir_helm_repo: Path,
+    dir_helm_repo_staging: Path,
 ):
     """
     Create a task to build packages from charts into staging.
@@ -19,18 +24,11 @@ def task_package(
         Build packages from charts into staging.
         """
 
-        config = context.config[config_key]
-
-        bin_helm = os.path.normpath(os.path.join(config.bin_dir, 'helm.exe'))
-        helm_charts_dir = os.path.normpath(config.helm_charts_dir)
-        helm_repo_staging_dir = os.path.normpath(config.helm_repo_staging_dir)
-        helm_repo_dir = os.path.normpath(config.helm_repo_dir)
-
         # Package any chart which has a version that has not already been released
-        for entry_current in os.scandir(helm_charts_dir):
+        for entry_current in os.scandir(dir_helm_charts):
             # Use the existence of Chart.yaml to infer this is actually a chart
-            path_chart = os.path.normpath(os.path.join(helm_charts_dir, entry_current.name, 'Chart.yaml'))
-            if os.path.exists(path_chart) and os.path.isfile(path_chart):
+            path_chart = Path(dir_helm_charts, entry_current.name, 'Chart.yaml')
+            if path_chart.exists():
                 # Get information about the chart that may need packaged
                 with open(path_chart) as file_chart:
                     yaml_chart = ruamel.yaml.safe_load(file_chart)
@@ -40,9 +38,9 @@ def task_package(
 
                 # Check existing releases of this same chart
                 chart_released = False
-                path_index = os.path.normpath(os.path.join(helm_repo_dir, 'index.yaml'))
-                # Beware there might not be any prior index may exist
-                if os.path.exists(path_index):
+                path_index = Path(dir_helm_repo, 'index.yaml')
+                # Beware there might not be any prior index
+                if path_index.exists():
                     with open(path_index) as file_index:
                         yaml_index = ruamel.yaml.safe_load(file_index)
 
@@ -56,19 +54,23 @@ def task_package(
                 if not chart_released:
                     context.run(
                         command=' '.join([
-                            bin_helm,
+                            str(bin_helm),
                             'package',
-                            os.path.normpath(os.path.join(helm_charts_dir, entry_current.name)),
-                            '--destination "{}"'.format(helm_repo_staging_dir)
+                            '"{}"'.format(Path(dir_helm_charts, entry_current.name)),
+                            '--destination "{}"'.format(dir_helm_repo_staging)
                         ]),
                     )
 
     return package
 
 
-def task_release(
+def _task_release(
     *,
-    config_key: str
+    config_key: str,
+    bin_helm: Path,
+    dir_helm_charts: Path,
+    dir_helm_repo: Path,
+    dir_helm_repo_staging: Path,
 ):
     """
     Create a task to release staged packages.
@@ -80,31 +82,25 @@ def task_release(
         Release staged packages.
         """
 
-        config = context.config[config_key]
-
-        bin_helm = os.path.normpath(os.path.join(config.bin_dir, 'helm.exe'))
-        helm_repo_staging_dir = os.path.normpath(config.helm_repo_staging_dir)
-        helm_repo_dir = os.path.normpath(config.helm_repo_dir)
-
         # Build the release index, updating based on content of staging directory
         context.run(
             command=' '.join([
-                bin_helm,
+                str(bin_helm),
                 'repo',
                 'index',
-                '"{}"'.format(helm_repo_staging_dir),
-                '--merge "{}"'.format(os.path.normpath(os.path.join(helm_repo_dir, 'index.yaml')))
+                '"{}"'.format(dir_helm_repo_staging),
+                '--merge "{}"'.format(Path(dir_helm_repo, 'index.yaml'))
             ]),
         )
 
         # Move from staging into release
-        for entry_current in os.scandir(helm_repo_staging_dir):
+        for entry_current in os.scandir(dir_helm_repo_staging):
             if entry_current.name != '.gitignore':
-                path_current_repo = os.path.normpath(os.path.join(helm_repo_dir, entry_current.name))
-                path_current_repo_staging = os.path.normpath(os.path.join(helm_repo_staging_dir, entry_current.name))
+                path_current_repo = Path(dir_helm_repo, entry_current.name)
+                path_current_repo_staging = Path(dir_helm_repo_staging, entry_current.name)
 
                 # The index will already exist
-                if os.path.exists(path_current_repo):
+                if path_current_repo.exists():
                     os.remove(path_current_repo)
 
                 os.rename(path_current_repo_staging, path_current_repo)
@@ -112,9 +108,13 @@ def task_release(
     return release
 
 
-def task_update(
+def _task_update(
     *,
-    config_key: str
+    config_key: str,
+    bin_helm: Path,
+    dir_helm_charts: Path,
+    dir_helm_repo: Path,
+    dir_helm_repo_staging: Path,
 ):
     @task
     def update(context):
@@ -122,23 +122,18 @@ def task_update(
         Update chart dependencies.
         """
 
-        config = context.config[config_key]
-
-        bin_helm = os.path.normpath(os.path.join(config.bin_dir, 'helm.exe'))
-        helm_charts_dir = os.path.normpath(config.helm_charts_dir)
-
         # Update every chart
-        for entry_current in os.scandir(helm_charts_dir):
+        for entry_current in os.scandir(dir_helm_charts):
             # Use the existence of Chart.yaml to infer this is actually a chart
-            path_chart = os.path.normpath(os.path.join(helm_charts_dir, entry_current.name, 'Chart.yaml'))
-            if os.path.exists(path_chart) and os.path.isfile(path_chart):
+            path_chart = Path(dir_helm_charts, entry_current.name, 'Chart.yaml')
+            if os.path.exists(path_chart):
                 # Update the chart
                 context.run(
                     command=' '.join([
-                        bin_helm,
+                        str(bin_helm),
                         'dependency',
                         'update',
-                        os.path.normpath(os.path.join(helm_charts_dir, entry_current.name)),
+                        '"{}"'.format(Path(dir_helm_charts, entry_current.name)),
                     ])
                 )
 
@@ -148,25 +143,46 @@ def task_update(
 def create_tasks(
     *,
     config_key: str,
+    bin_helm: Union[Path, str],
+    dir_helm_charts: Union[Path, str],
+    dir_helm_repo: Union[Path, str],
+    dir_helm_repo_staging: Union[Path, str],
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
     """
 
+    bin_helm = Path(bin_helm)
+    dir_helm_charts = Path(dir_helm_charts)
+    dir_helm_repo = Path(dir_helm_repo)
+    dir_helm_repo_staging = Path(dir_helm_repo_staging)
+
     ns = Collection('helm')
 
-    package = task_package(
-        config_key=config_key
+    package = _task_package(
+        config_key=config_key,
+        bin_helm=bin_helm,
+        dir_helm_charts=dir_helm_charts,
+        dir_helm_repo=dir_helm_repo,
+        dir_helm_repo_staging=dir_helm_repo_staging,
     )
     ns.add_task(package)
 
-    release = task_release(
-        config_key=config_key
+    release = _task_release(
+        config_key=config_key,
+        bin_helm=bin_helm,
+        dir_helm_charts=dir_helm_charts,
+        dir_helm_repo=dir_helm_repo,
+        dir_helm_repo_staging=dir_helm_repo_staging,
     )
     ns.add_task(release)
 
-    update = task_update(
-        config_key=config_key
+    update = _task_update(
+        config_key=config_key,
+        bin_helm=bin_helm,
+        dir_helm_charts=dir_helm_charts,
+        dir_helm_repo=dir_helm_repo,
+        dir_helm_repo_staging=dir_helm_repo_staging,
     )
     ns.add_task(update)
 

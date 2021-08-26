@@ -1,17 +1,16 @@
+from invoke import Collection
+from invoke import task
 import io
 import os
+import paramiko
+from pathlib import Path
 import re
+import ruamel.yaml
 import select
+import semver
 import socketserver
 from typing import List
 from typing import Union
-
-from invoke import Collection
-from invoke import task
-import paramiko
-from pathlib import Path
-import ruamel.yaml
-import semver
 
 
 class SSHClientContextManager:
@@ -221,10 +220,10 @@ class PortForwardContextManager:
         self._server = None
 
 
-def task_ssh(
+def _task_ssh(
     *,
     config_key: str,
-    instance_dir: str,
+    dir_terraform: Path,
     instance_config
 ):
     """
@@ -238,33 +237,30 @@ def task_ssh(
         """
         print('Creating SSH session')
 
-        task_config = context.config[config_key]
-        working_dir = Path(task_config.working_dir)
+        dir_instance = Path(dir_terraform, instance_config['instance_name'])
 
-        with context.cd(working_dir):
-            # Launch an external SSH session,
-            # which seems more appropriate than attempting via Paramiko.
-            context.run(
-                command=' '.join([
-                    'start',  # Ensures Windows launches ssh outside cmd
-                              # This has been only way to obtain a proper terminal
-                    'ssh',
-                    '-l {}'.format(instance_config['instance_user']),
-                    '-i {}'.format(Path(instance_dir, instance_config['instance_key_file'])),
-                    '-o StrictHostKeyChecking=no',
-                    '-o UserKnownHostsFile="{}"'.format(Path(instance_dir, 'known_hosts')),
-                    instance_config['instance_ip']
-                ]),
-                disown=True
-            )
+        # Launch an external SSH session,
+        # which seems more appropriate than attempting via Paramiko.
+        context.run(
+            command=' '.join([
+                'start',  # Ensures Windows launches ssh outside cmd
+                          # This has been only way to obtain a proper terminal
+                'ssh',
+                '-l {}'.format(instance_config['instance_user']),
+                '-i {}'.format(Path(dir_instance, instance_config['instance_key_file'])),
+                '-o StrictHostKeyChecking=no',
+                '-o UserKnownHostsFile="{}"'.format(Path(dir_instance, 'known_hosts')),
+                instance_config['instance_ip']
+            ]),
+            disown=True
+        )
 
     return ssh
 
 
-def task_ssh_port_forward(
+def _task_ssh_port_forward(
     *,
     config_key: str,
-    instance_dir: str,
     instance_config
 ):
     """
@@ -297,10 +293,9 @@ def task_ssh_port_forward(
     return ssh_port_forward
 
 
-def task_docker_build(
+def _task_docker_build(
     *,
     config_key: str,
-    instance_dir: str,
     instance_config
 ):
     @task
@@ -309,9 +304,6 @@ def task_docker_build(
         Build a Docker image.
         """
         print('Building Docker image')
-
-        task_config = context.config[config_key]
-        working_dir = Path(task_config.working_dir)
 
         # docker_config must be a path to a file named docker-config.yaml
         if not (Path(docker_config).is_file() and Path(docker_config).name == 'docker-config.yaml'):
@@ -336,11 +328,14 @@ def task_docker_build(
             # Upload the Dockerfile.
             #
             # The configuration 'dockerfile' is a path relative to the location of the docker-config.
-            dockerfile = str(Path(Path(docker_config).parent, loaded_config['dockerfile']))
+            dockerfile = Path(
+                Path(docker_config).parent,
+                loaded_config['dockerfile']
+            )
             with SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
                 sftp_client.client.chdir('.minikube_helm_staging')
                 sftp_client.client.put(
-                    localpath=dockerfile,
+                    localpath=str(dockerfile),
                     remotepath='Dockerfile',
                 )
 
@@ -377,10 +372,10 @@ def task_docker_build(
     return docker_build
 
 
-def task_helm_install(
+def _task_helm_install(
     *,
     config_key: str,
-    instance_dir: str,
+    dir_helm_repo: Path,
     instance_config
 ):
     @task
@@ -389,10 +384,6 @@ def task_helm_install(
         Install a chart in the instance.
         """
         print('Installing chart')
-
-        task_config = context.config[config_key]
-        working_dir = Path(task_config.working_dir)
-        helm_charts_dir = Path(task_config.helm_charts_dir)
 
         # helm_chart might be:
         # - a full path (e.g., 'helm_repo/ingress-0.1.0.tgz')
@@ -408,11 +399,11 @@ def task_helm_install(
         elif (match := re.match('(.+)-([0-9\\.]+)\\.tgz', helm_chart)) is not None:
             # A file (e.g., 'ingress-0.1.0.tgz').
             # Use it to reference a file in helm_charts_dir.
-            helm_chart = Path(working_dir, helm_charts_dir, helm_chart)
+            helm_chart = Path(dir_helm_repo, helm_chart)
         elif (match := re.match('(.+)-([0-9\\.]+)', helm_chart)) is not None:
             # A name including a version (e.g., 'ingress-0.1.0').
             # Use it to reference a file in helm_charts_dir.
-            helm_chart = Path(working_dir, helm_charts_dir, '{}.tgz'.format(helm_chart))
+            helm_chart = Path(dir_helm_repo, '{}.tgz'.format(helm_chart))
         else:
             # A name absent a version (e.g., 'ingress').
             # Find the latest matching chart in helm_charts_dir.
@@ -420,11 +411,11 @@ def task_helm_install(
             # Alternatively, could parse and examine `index.yaml`.
             helm_chart_latest = None
             helm_chart_version_latest = None
-            for root, dirs, files in os.walk(Path(working_dir, helm_charts_dir)):
+            for root, dirs, files in os.walk(dir_helm_repo):
                 for file_current in files:
                     if (match := re.match('(.+)-([0-9\\.]+)\\.tgz', file_current)) is not None:
                         match_chart = match.group(1)
-                        match_version = semver.version.Version.parse(match.group(2))
+                        match_version = semver.VersionInfo.parse(match.group(2))
                         if match_chart == helm_chart:
                             if (helm_chart_version_latest is None) or (match_version > helm_chart_version_latest):
                                 helm_chart_latest = Path(root, file_current)
@@ -481,10 +472,9 @@ def task_helm_install(
     return helm_install
 
 
-def task_helmfile_apply(
+def _task_helmfile_apply(
     *,
     config_key: str,
-    instance_dir: str,
     instance_config
 ):
     @task
@@ -494,8 +484,8 @@ def task_helmfile_apply(
         """
         print('Applying helmfile')
 
-        task_config = context.config[config_key]
-        working_dir = Path(task_config.working_dir)
+        # task_config = context.config[config_key]
+        # working_dir = Path(task_config.working_dir)
 
         # helmfile might be:
         # - a path to a 'helmfile-config.yaml', in which case process the config
@@ -620,10 +610,9 @@ def task_helmfile_apply(
     return helmfile_apply
 
 
-def task_ip(
+def _task_ip(
     *,
     config_key: str,
-    instance_dir: str,
     instance_config
 ):
     @task
@@ -639,57 +628,58 @@ def task_ip(
 def create_tasks(
     *,
     config_key: str,
-    working_dir: str,
-    instance_dir: str,
+    dir_terraform: Union[Path, str],
+    dir_helm_repo: Union[Path, str],
+    instance: str,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
     """
-    with open(Path(working_dir, instance_dir, 'config.yaml')) as file_config:
+
+    dir_terraform = Path(dir_terraform)
+    dir_helm_repo = Path(dir_helm_repo)
+
+    with open(Path(dir_terraform, instance, 'config.yaml')) as file_config:
         yaml_config = ruamel.yaml.safe_load(file_config)
 
     instance_name = yaml_config['instance_name']
 
     ns = Collection(instance_name)
 
-    ssh = task_ssh(
+    ssh = _task_ssh(
         config_key=config_key,
-        instance_dir=instance_dir,
+        dir_terraform=dir_terraform,
         instance_config=yaml_config
     )
     ns.add_task(ssh)
 
-    ssh_port_forward = task_ssh_port_forward(
+    ssh_port_forward = _task_ssh_port_forward(
         config_key=config_key,
-        instance_dir=instance_dir,
         instance_config=yaml_config
     )
     ns.add_task(ssh_port_forward)
 
-    docker_build = task_docker_build(
+    docker_build = _task_docker_build(
         config_key=config_key,
-        instance_dir=instance_dir,
         instance_config=yaml_config
     )
     ns.add_task(docker_build)
 
-    helm_install = task_helm_install(
+    helm_install = _task_helm_install(
         config_key=config_key,
-        instance_dir=instance_dir,
+        dir_helm_repo=dir_helm_repo,
         instance_config=yaml_config
     )
     ns.add_task(helm_install)
 
-    helmfile_apply = task_helmfile_apply(
+    helmfile_apply = _task_helmfile_apply(
         config_key=config_key,
-        instance_dir=instance_dir,
         instance_config=yaml_config
     )
     ns.add_task(helmfile_apply)
 
-    ip = task_ip(
+    ip = _task_ip(
         config_key=config_key,
-        instance_dir=instance_dir,
         instance_config=yaml_config
     )
     ns.add_task(ip)

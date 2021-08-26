@@ -12,8 +12,7 @@ terraform {
 module "minikube_helm_instance_amd64_medium" {
   source = "../../terraform_common/minikube_helm"
 
-  instance_name = "amd64_medium"
-  instance_dir = "amd64_medium"
+  name = "amd64_medium"
 
   aws_availability_zone = "us-east-1a"
   aws_instance_type = "t3.medium"
@@ -32,8 +31,7 @@ module "minikube_helm_instance_amd64_medium" {
 module "minikube_helm_instance_amd64_large" {
   source = "../../terraform_common/minikube_helm"
 
-  instance_name = "amd64_large"
-  instance_dir = "amd64_large"
+  name = "amd64_large"
 
   aws_availability_zone = "us-east-1a"
   aws_instance_type = "t3.large"

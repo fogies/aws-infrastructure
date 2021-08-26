@@ -160,7 +160,7 @@ locals {
 resource "local_file" "gitignore" {
   filename = format(
     "%s/%s",
-    var.instance_dir,
+    var.name,
     ".gitignore"
   )
 
@@ -184,7 +184,7 @@ locals {
 resource "local_file" "instance_key_private" {
   filename = format(
     "%s/%s",
-    var.instance_dir,
+    var.name,
     local.instance_key_private_filename
   )
 
@@ -197,14 +197,14 @@ resource "local_file" "instance_key_private" {
 resource "local_file" "python_config" {
   filename = format(
     "%s/%s",
-    var.instance_dir,
+    var.name,
     "config.yaml"
   )
 
   content = templatefile(
     "${path.module}/templates/config.yaml.tmpl",
     {
-        instance_name = var.instance_name,
+        instance_name = var.name,
         instance_ip = local.instance_public_ip
         instance_user = "ubuntu"
         instance_key = tls_private_key.instance_key_pair.private_key_pem
