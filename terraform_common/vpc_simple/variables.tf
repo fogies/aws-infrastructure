@@ -9,10 +9,21 @@ variable "tags" {
 }
 
 /*
- * Availability zone to use.
+ * Default availability zone.
+ *
+ * Output subnet_id will be set to the value for this availability_zone.
  */
-variable "aws_availability_zone" {
+variable "availability_zone" {
   type = string
+  default = null
+}
+
+/*
+ * Availability zones in which to create subnets.
+ */
+variable "availability_zones" {
+  type = set(string)
+  default = []
 }
 
 /*
@@ -20,4 +31,5 @@ variable "aws_availability_zone" {
  */
 variable "map_public_ip_on_launch" {
   type = bool
+  default = false
 }
