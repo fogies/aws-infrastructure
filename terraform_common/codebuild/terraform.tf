@@ -1,12 +1,4 @@
 /*
- * Explicit configuration of providers.
- */
-terraform {
-  required_providers {
-  }
-}
-
-/*
  * S3 bucket in which to place archive of source.
  */
 resource "aws_s3_bucket" "codebuild_source_bucket" {

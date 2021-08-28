@@ -1,12 +1,4 @@
 /*
- * Explicit configuration of providers.
- */
-terraform {
-  required_providers {
-  }
-}
-
-/*
  * IP to provide to instance of Minikube Helm.
  */
 resource "aws_eip" "ip" {

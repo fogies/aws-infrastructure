@@ -1,12 +1,4 @@
 /*
- * Explicit configuration of providers.
- */
-terraform {
-  required_providers {
-  }
-}
-
-/*
  * Instance amd64-medium.
  */
 module "minikube_helm_instance_amd64_medium" {

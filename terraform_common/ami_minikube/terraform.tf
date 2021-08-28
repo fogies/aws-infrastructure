@@ -3,18 +3,6 @@
  */
 
 /*
- * Explicit configuration of providers.
- */
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 3.9.0"
-    }
-  }
-}
-
-/*
  * Locals that define our AMI.
  */
 locals {
