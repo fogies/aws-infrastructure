@@ -28,13 +28,6 @@ variable "aws_instance_type" {
 }
 
 /*
- * True if providing an EIP to associate, False if module should create public IP.
- */
-variable "eip" {
-  type = bool
-}
-
-/*
  * Optional ID of Elastic IP to associate.
  */
 variable "eip_id" {

@@ -17,7 +17,6 @@ module "minikube_helm_instance" {
 
   ami_configuration = "amd64-medium"
 
-  eip = true
   eip_id = aws_eip.ip.id
   eip_public_ip = aws_eip.ip.public_ip
 

@@ -3,19 +3,7 @@
  */
 locals {
   module_tags = {
-    terraform   = true
-    minikube_id = local.minikube_id
   }
-}
-
-/*
- * Generate a random minikube_id to include in tags.
- */
-resource "random_uuid" "minikube_id" {
-}
-
-locals {
-  minikube_id = format("minikube-%s", random_uuid.minikube_id.result)
 }
 
 /*
@@ -24,10 +12,7 @@ locals {
 module "vpc" {
   source = "../vpc_simple"
 
-  aws_availability_zone = var.aws_availability_zone
-
-  # Require instances to indicate if they want a public IP.
-  map_public_ip_on_launch = false
+  availability_zones = [var.aws_availability_zone]
 
   tags = merge(
     var.tags,
@@ -94,7 +79,6 @@ resource "aws_instance" "minikube" {
   instance_type = var.aws_instance_type
 
   subnet_id         = module.vpc.subnet_id
-  availability_zone = var.aws_availability_zone
 
   vpc_security_group_ids = module.instance_security_groups.security_group_ids
 
@@ -105,86 +89,5 @@ resource "aws_instance" "minikube" {
     local.module_tags,
     {
     },
-  )
-}
-
-/*
- * If we were not provided an elastic IP, create our own.
- */
-resource "aws_eip" "eip" {
-  count = var.eip ? 0 : 1
-}
-
-/*
- * Associate to our elastic IP, either as provided or as created.
- */
-resource "aws_eip_association" "eip_association" {
-  instance_id = aws_instance.minikube.id
-  allocation_id = var.eip ? var.eip_id : aws_eip.eip[0].id
-}
-
-/*
- * Our public IP is based on how we associated an EIP.
- */
-locals {
-  instance_public_ip = var.eip ? var.eip_public_ip : aws_eip.eip[0].public_ip
-}
-
-/*
- * Create and ignore a directory with created state.
- */
-resource "local_file" "gitignore" {
-  filename = format(
-    "%s/%s",
-    var.name,
-    ".gitignore"
-  )
-
-  content = <<-EOT
-    /*
-  EOT
-}
-
-/*
- * An identify file for SSH access.
- */
-locals {
-  instance_key_private_filename = format(
-    "id_rsa_%s",
-    replace(
-      local.instance_public_ip, ".", "_"
-    )
-  )
-}
-
-resource "local_file" "instance_key_private" {
-  filename = format(
-    "%s/%s",
-    var.name,
-    local.instance_key_private_filename
-  )
-
-  sensitive_content = tls_private_key.instance_key_pair.private_key_pem
-}
-
-/*
- * A configuration file to be loaded by Python tasks.
- */
-resource "local_file" "python_config" {
-  filename = format(
-    "%s/%s",
-    var.name,
-    "config.yaml"
-  )
-
-  content = templatefile(
-    "${path.module}/templates/config.yaml.tmpl",
-    {
-        instance_name = var.name,
-        instance_ip = local.instance_public_ip
-        instance_user = "ubuntu"
-        instance_key = tls_private_key.instance_key_pair.private_key_pem
-        instance_key_file = local.instance_key_private_filename
-    }
   )
 }
