@@ -639,7 +639,8 @@ def create_tasks(
     dir_terraform = Path(dir_terraform)
     dir_helm_repo = Path(dir_helm_repo)
 
-    with open(Path(dir_terraform, instance, 'config.yaml')) as file_config:
+    path_config = Path(dir_terraform, instance, 'config.yaml')
+    with open(path_config) as file_config:
         yaml_config = ruamel.yaml.safe_load(file_config)
 
     instance_name = yaml_config['instance_name']
