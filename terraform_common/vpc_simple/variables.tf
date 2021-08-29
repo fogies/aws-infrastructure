@@ -1,14 +1,4 @@
 /*
- * Tags to apply to created resources.
- */
-variable "tags" {
-  type = map
-
-  default = {
-  }
-}
-
-/*
  * Default availability zone.
  *
  * Output subnet_id will be set to the value for this availability_zone.

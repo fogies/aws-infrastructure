@@ -1,5 +1,5 @@
 /*
- * Simple VPC allowing a single subnet or subnets in multiple availability zones.
+ * Simple VPC allowing subnets in multiple availability zones.
  */
 
 locals {
@@ -33,13 +33,6 @@ locals {
                                   setunion([var.availability_zone], var.availability_zones) :
                                   var.availability_zones
                                 )
-
-  /*
-   * Tags applied within this module.
-   */
-  module_tags = {
-    terraform = true
-  }
 }
 
 /*
@@ -50,12 +43,7 @@ resource "aws_vpc" "vpc" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
-  tags = merge(
-    var.tags,
-    local.module_tags,
-    {
-    },
-  )
+  tags = local.module_tags
 }
 
 /*
@@ -76,12 +64,7 @@ resource "aws_subnet" "subnet" {
 
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
-  tags = merge(
-    var.tags,
-    local.module_tags,
-    {
-    },
-  )
+  tags = local.module_tags
 }
 
 /*
@@ -90,12 +73,7 @@ resource "aws_subnet" "subnet" {
 resource "aws_internet_gateway" "gateway" {
   vpc_id = aws_vpc.vpc.id
 
-  tags = merge(
-    var.tags,
-    local.module_tags,
-    {
-    },
-  )
+  tags = local.module_tags
 }
 
 /*
@@ -109,12 +87,7 @@ resource "aws_route_table" "route" {
     gateway_id = aws_internet_gateway.gateway.id
   }
 
-  tags = merge(
-    var.tags,
-    local.module_tags,
-    {
-    },
-  )
+  tags = local.module_tags
 }
 
 /*
