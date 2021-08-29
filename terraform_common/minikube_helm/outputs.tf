@@ -9,7 +9,7 @@ output "id" {
  * Public IP of the instance.
  */
 output "ip" {
-  value = aws_instance.minikube.public_ip
+  value = local.resolved_public_ip
 }
 
 /*
