@@ -6,6 +6,13 @@ output "vpc_id" {
 }
 
 /*
+ * ID of the default security group, automatically assigned by AWS.
+ */
+output "default_security_group_id" {
+  value = aws_vpc.vpc.default_security_group_id
+}
+
+/*
  * ID of the default subnet.
  */
 output "subnet_id" {

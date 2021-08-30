@@ -30,7 +30,10 @@ resource "aws_instance" "minikube" {
   instance_type = var.aws_instance_type
 
   subnet_id         = local.resolved_subnet_id
-  vpc_security_group_ids = module.instance_security_groups.security_group_ids
+  vpc_security_group_ids = concat(
+    [ local.resolved_vpc_default_security_group_id ],
+    module.instance_security_groups.security_group_ids
+  )
 
   key_name = aws_key_pair.instance_key_pair.id
 

@@ -28,7 +28,7 @@ variable "aws_instance_type" {
 /*
  * Whether the module should create its own VPC.
  *
- * If false, must provide vpc_id and subnet_id.
+ * If false, must provide vpc_id, vpc_default_security_group_id, and subnet_id.
  * If true, must provide availability_zone.
  */
 variable "create_vpc" {
@@ -49,6 +49,14 @@ variable "availability_zone" {
  * If VPC is provided, its ID.
  */
 variable "vpc_id" {
+  type = string
+  default = null
+}
+
+/*
+ * If VPC is provided, its default security group ID.
+ */
+variable "vpc_default_security_group_id" {
   type = string
   default = null
 }
