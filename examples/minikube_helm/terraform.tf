@@ -1,15 +1,10 @@
 /*
- * Explicit configuration of providers.
+ * Tag created resources.
  */
-terraform {
-  required_providers {
+locals {
+  tags = {
+    "aws-infrastructure/examples/minikube_helm": ""
   }
-}
-
-/*
- * IP to provide to instance of Minikube Helm.
- */
-resource "aws_eip" "ip" {
 }
 
 /*
@@ -20,15 +15,13 @@ module "minikube_helm_instance" {
 
   name = "instance"
 
-  aws_availability_zone = "us-east-1a"
+  ami_configuration = "amd64-medium"
   aws_instance_type = "t3.medium"
 
-  ami_configuration = "amd64-medium"
+  create_vpc = true
+  availability_zone = "us-east-1a"
 
-  eip = true
-  eip_id = aws_eip.ip.id
-  eip_public_ip = aws_eip.ip.public_ip
+  create_eip = true
 
-  tags = {
-  }
+  tags = local.tags
 }

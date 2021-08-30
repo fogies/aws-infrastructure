@@ -103,7 +103,8 @@ def create_tasks(
     for instance_current in instances:
         # Instance dirs are relative to the Terraform directory
         dir_instance_current = Path(dir_terraform, instance_current)
-        if dir_instance_current.exists() and dir_instance_current.is_dir():
+        path_instance_config = Path(dir_terraform, instance_current, 'config.yaml')
+        if path_instance_config.exists():
             # Create the instance tasks
             ns_instance = aws_infrastructure.tasks.library.minikube_helm_instance.create_tasks(
                 config_key='{}.{}'.format(config_key, instance_current),

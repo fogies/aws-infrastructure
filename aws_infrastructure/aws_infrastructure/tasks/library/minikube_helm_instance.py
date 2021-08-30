@@ -146,10 +146,11 @@ class PortForwardContextManager:
     """
     Context manager for forwarding a port through an ssh client.
     """
-    def __init__(self, *, ssh_client, local_port, remote_port):
+    def __init__(self, *, ssh_client, remote_host, remote_port, local_port):
         self._ssh_client = ssh_client
-        self._local_port = local_port
+        self._remote_host = remote_host
         self._remote_port = remote_port
+        self._local_port = local_port
         self._server = None
 
     def __enter__(self):
@@ -160,7 +161,7 @@ class PortForwardContextManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._port_forward_destroy()
 
-    def _create_handler(self, ssh_client, remote_port):
+    def _create_handler(self, ssh_client, remote_host, remote_port):
         class Handler(socketserver.BaseRequestHandler):
             _ssh_client = ssh_client
             _remote_port = remote_port
@@ -168,7 +169,7 @@ class PortForwardContextManager:
             def handle(self):
                 channel = self._ssh_client.get_transport().open_channel(
                     kind='direct-tcpip',
-                    dest_addr=('localhost', remote_port),
+                    dest_addr=(remote_host, remote_port),
                     src_addr=self.request.getpeername(),
                 )
 
@@ -205,7 +206,7 @@ class PortForwardContextManager:
         """
         self._server = socketserver.ThreadingTCPServer(
             server_address=('localhost', self._local_port),
-            RequestHandlerClass=self._create_handler(self._ssh_client.client, self._remote_port),
+            RequestHandlerClass=self._create_handler(self._ssh_client.client, self._remote_host, self._remote_port),
         )
 
         print('Forwarding local port {} to remote port {}'.format(self._local_port, self._remote_port))
@@ -268,13 +269,21 @@ def _task_ssh_port_forward(
     """
 
     @task
-    def ssh_port_forward(context, port, local_port=None):
+    def ssh_port_forward(context, port, host=None, local_port=None):
         """
-        Forward a port from the instance.
+        Forward a port from a remote host accessible by the instance.
         """
 
-        # Map our parameters to a remote and local port
+        # Remote port is required
         remote_port = int(port)
+
+        # If no remote host is provided, use 'localhost'
+        if host:
+            remote_host = host
+        else:
+            remote_host = 'localhost'
+
+        # If no local port is provided, use the same as the remote port
         if local_port:
             local_port = int(local_port)
         else:
@@ -286,6 +295,7 @@ def _task_ssh_port_forward(
             with PortForwardContextManager(
                 ssh_client=ssh_client,
                 local_port=local_port,
+                remote_host=remote_host,
                 remote_port=remote_port
             ) as port_forward:
                 port_forward.forward_forever()
@@ -639,7 +649,8 @@ def create_tasks(
     dir_terraform = Path(dir_terraform)
     dir_helm_repo = Path(dir_helm_repo)
 
-    with open(Path(dir_terraform, instance, 'config.yaml')) as file_config:
+    path_config = Path(dir_terraform, instance, 'config.yaml')
+    with open(path_config) as file_config:
         yaml_config = ruamel.yaml.safe_load(file_config)
 
     instance_name = yaml_config['instance_name']

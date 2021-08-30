@@ -1,9 +1,7 @@
 /*
- * Availability zone in which to create instance.
+ * Name for this instance.
  */
-variable "aws_availability_zone" {
-  # Typical value is "us-east-1a"
-
+variable "name" {
   type = string
 }
 
@@ -28,43 +26,71 @@ variable "aws_instance_type" {
 }
 
 /*
- * True if providing an EIP to associate, False if module should create public IP.
+ * Whether the module should create its own VPC.
+ *
+ * If false, must provide vpc_id, vpc_default_security_group_id, and subnet_id.
+ * If true, must provide availability_zone.
  */
-variable "eip" {
+variable "create_vpc" {
   type = bool
+  default = false
 }
 
 /*
- * Optional ID of Elastic IP to associate.
+ * If module creates VPC and subnet, availability zone in which to create instance.
+ */
+variable "availability_zone" {
+  # Typical value is "us-east-1a"
+  type = string
+  default = null
+}
+
+/*
+ * If VPC is provided, its ID.
+ */
+variable "vpc_id" {
+  type = string
+  default = null
+}
+
+/*
+ * If VPC is provided, its default security group ID.
+ */
+variable "vpc_default_security_group_id" {
+  type = string
+  default = null
+}
+
+/*
+ * If subnet is provided, its ID.
+ */
+variable "subnet_id" {
+  type = string
+  default = null
+}
+
+/*
+ * Whether the module should create its own EIP.
+ *
+ * If false, must provide eip_id and eip_public_ip.
+ */
+variable "create_eip" {
+  type = bool
+  default = false
+}
+
+/*
+ * If EIP is provided, its ID.
  */
 variable "eip_id" {
-  default = null
-
   type = string
+  default = null
 }
 
 /*
- * Optional IP of Elastic IP to associate.
+ * If EIP is provided, its public IP.
  */
 variable "eip_public_ip" {
+  type = string
   default = null
-
-  type = string
-}
-
-/*
- * Name for this instance.
- */
-variable "name" {
-  type = string
-}
-
-/*
- * Tags to apply to created resources.
- */
-variable "tags" {
-  type = map
-
-  default = {
-  }
 }
