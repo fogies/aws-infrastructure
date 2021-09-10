@@ -12,6 +12,7 @@
 .terraform
 terraform.tfstate
 terraform.tfstate.backup
+terraform.tfstate.lock.info
 
 # Temporary Files for Communicating State
 /packer_ami_minikube/manifest.json
