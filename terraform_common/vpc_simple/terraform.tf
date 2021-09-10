@@ -94,8 +94,8 @@ resource "aws_route_table" "route" {
  * Associate the route with each subnet.
  */
 resource "aws_route_table_association" "route" {
-  for_each = var.availability_zones
-  subnet_id      = aws_subnet.subnet[each.value].id
+  for_each = local.resolved_availability_zones
+  subnet_id = aws_subnet.subnet[each.value].id
 
   route_table_id = aws_route_table.route.id
 }

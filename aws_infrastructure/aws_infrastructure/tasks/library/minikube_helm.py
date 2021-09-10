@@ -117,6 +117,12 @@ def create_tasks(
             )
 
             # Compose the instance tasks
-            compose_collection(ns, ns_instance)
+            compose_collection(
+                ns,
+                ns_instance,
+                # If there is only 1 instance, its tasks are part of our collection
+                # If there are multiple instances, their tasks are each a sub-collection
+                sub=len(instances) > 1
+            )
 
     return ns
