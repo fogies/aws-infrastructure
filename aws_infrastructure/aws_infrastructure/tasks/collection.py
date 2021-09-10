@@ -7,7 +7,8 @@ from typing import Optional
 def compose_collection(
     ns: Collection,
     ns_add: Collection,
-    sub: bool = True,  # If True, added as sub-collection. If False, tasks added to collection.
+    sub: bool = True,  # If True, added as sub-collection.
+                       # If False, tasks added to collection.
     name: Optional[str] = None,  # If added as sub-collection, name for the sub-collection.
     include: List[str] = ['.*'],  # Collections or tasks to include in the composition.
                                   # Currently only applied to immediate children.

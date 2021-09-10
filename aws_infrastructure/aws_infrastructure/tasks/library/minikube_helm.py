@@ -63,6 +63,8 @@ def create_tasks(
     dir_terraform: Union[Path, str],
     dir_helm_repo: Union[Path, str],
     instances: List[str],
+
+    variables=None,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -89,6 +91,7 @@ def create_tasks(
         bin_terraform=bin_terraform,
         dir_terraform=dir_terraform,
 
+        variables=variables,
         destroy_post=destroy_post,
     )
 
