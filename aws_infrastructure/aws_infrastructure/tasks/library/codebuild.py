@@ -35,7 +35,10 @@ def create_tasks(
     )
 
     # Enhance the apply task
-    @task
+    @task(
+        pre=ns_terraform['apply'].pre,
+        post=ns_terraform['apply'].post
+    )
     def apply(context):
         """
         Issue a Terraform apply.
@@ -95,7 +98,10 @@ def create_tasks(
         ns_terraform['apply'](context)
 
     # Enhance the destroy task
-    @task
+    @task(
+        pre=ns_terraform['destroy'].pre,
+        post=ns_terraform['destroy'].post
+    )
     def destroy(context):
         """
         Issue a Terraform destroy.
