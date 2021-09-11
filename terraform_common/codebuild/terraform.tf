@@ -110,7 +110,7 @@ resource "aws_cloudwatch_log_group" "logs" {
 }
 
 /*
- * Codebuild test project.
+ * Codebuild project.
  */
 resource "aws_codebuild_project" "codebuild_project" {
   name = var.name
