@@ -16,7 +16,7 @@ DIR_TERRAFORM = './examples/codebuild'
 BUILD_TIMESTAMP = datetime.now().strftime('%Y%m%d%H%M')
 
 
-def environment_variables_example_one(*, context):
+def codebuild_environment_variables_example_one(*, context):
     with examples.ecr.tasks.ecr_read_only(context=context) as ecr:
         return {
             'REGISTRY_URL': ecr.output.registry_url,
@@ -26,7 +26,7 @@ def environment_variables_example_one(*, context):
         }
 
 
-def environment_variables_example_two(*, context):
+def codebuild_environment_variables_example_two(*, context):
     with examples.ecr.tasks.ecr_read_only(context=context) as ecr:
         return {
             'REGISTRY_URL': ecr.output.registry_url,
@@ -43,9 +43,9 @@ ns_terraform = aws_infrastructure.tasks.library.codebuild.create_tasks(
     bin_terraform=BIN_TERRAFORM,
     dir_terraform=DIR_TERRAFORM,
     instances=['example_one', 'example_two'],
-    environment_variables={
-        'example_one': environment_variables_example_one,
-        'example_two': environment_variables_example_two,
+    codebuild_environment_variables={
+        'example_one': codebuild_environment_variables_example_one,
+        'example_two': codebuild_environment_variables_example_two,
     }
 )
 

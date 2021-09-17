@@ -1,3 +1,4 @@
+from collections import namedtuple
 from invoke import Collection
 from invoke import task
 import json
@@ -50,27 +51,40 @@ def _task_apply(
     bin_terraform: Path,
     dir_terraform: Path,
     init: task,
-    variables=None,
-    pre: List[task] = None,
-    post: List[task] = None
+    terraform_variables = None,
+    pre_invoke: List[task] = None,
+    post_invoke: List[task] = None,
+    pre_exec = None,  # A function to execute before
+    post_exec = None, # A function to execute after
 ):
     """
     Create a task to issue a Terraform apply.
     """
 
-    pre_combined = [init]
-    pre_combined.extend(pre or [])
+    pre_invoke_combined = [init]
+    pre_invoke_combined.extend(pre_invoke or [])
 
     @task(
-        pre=pre_combined,
-        post=post
+        pre=pre_invoke_combined,
+        post=post_invoke
     )
     def apply(context):
         """
         Issue a Terraform apply.
         """
 
-        variables_dict = variables(context=context) if variables else {}
+        terraform_variables_dict = terraform_variables(context=context) if terraform_variables else {}
+
+        if pre_exec:
+            params = namedtuple(
+                'apply_pre_exec',
+                [
+                    'terraform_variables',
+                ]
+            )(
+                terraform_variables=terraform_variables_dict
+            )
+            pre_exec(context=context, params=params)
 
         with context.cd(dir_terraform):
             print('Terraform applying')
@@ -79,13 +93,24 @@ def _task_apply(
                     os.path.relpath(bin_terraform, dir_terraform),
                     'apply',
                     ' '.join([
-                        '-var "{}={}"'.format(key, value) for (key, value) in variables_dict.items()
+                        '-var "{}={}"'.format(key, value) for (key, value) in terraform_variables_dict.items()
                     ]),
                     '-auto-approve',
                     '-no-color',
                 ]),
                 echo=True
             )
+
+        if post_exec:
+            params = namedtuple(
+                'apply_post_exec',
+                [
+                    'terraform_variables',
+                ]
+            )(
+                terraform_variables=terraform_variables_dict
+            )
+            post_exec(context=context, params=params)
 
     return apply
 
@@ -96,27 +121,40 @@ def _task_destroy(
     bin_terraform: Path,
     dir_terraform: Path,
     init: task,
-    variables=None,
-    pre: List[task] = None,
-    post: List[task] = None
+    terraform_variables = None,
+    pre_invoke: List[task] = None,
+    post_invoke: List[task] = None,
+    pre_exec = None,  # A function to execute before
+    post_exec = None, # A function to execute after
 ):
     """
     Create a task to issue a Terraform destroy.
     """
 
-    pre_combined = [init]
-    pre_combined.extend(pre or [])
+    pre_invoke_combined = [init]
+    pre_invoke_combined.extend(pre_invoke or [])
 
     @task(
-        pre=pre_combined,
-        post=post
+        pre=pre_invoke_combined,
+        post=post_invoke
     )
     def destroy(context):
         """
         Issue a Terraform destroy.
         """
 
-        variables_dict = variables(context=context) if variables else {}
+        terraform_variables_dict = terraform_variables(context=context) if terraform_variables else {}
+
+        if pre_exec:
+            params = namedtuple(
+                'destroy_pre_exec',
+                [
+                    'terraform_variables',
+                ]
+            )(
+                terraform_variables=terraform_variables_dict
+            )
+            pre_exec(context=context, params=params)
 
         with context.cd(dir_terraform):
             print('Terraform destroying')
@@ -125,12 +163,23 @@ def _task_destroy(
                     os.path.relpath(bin_terraform, dir_terraform),
                     'destroy',
                     ' '.join([
-                        '-var "{}={}"'.format(key, value) for (key, value) in variables_dict.items()
+                        '-var "{}={}"'.format(key, value) for (key, value) in terraform_variables_dict.items()
                     ]),
                     '-auto-approve',
                     '-no-color',
                 ]),
             )
+
+        if post_exec:
+            params = namedtuple(
+                'destroy_post_exec',
+                [
+                    'terraform_variables',
+                ]
+            )(
+                terraform_variables=terraform_variables_dict
+            )
+            post_exec(context=context, params=params)
 
     return destroy
 
@@ -141,16 +190,17 @@ def _task_output(
     bin_terraform: Path,
     dir_terraform: Path,
     init: task,
-    output_tuple_factory
+    output_tuple_factory,
+    output_enhance = None, # A function to execute to enhance the output
 ):
     """
     Create a task to obtain Terraform output.
     """
 
-    pre_combined = [init]
+    pre_invoke_combined = [init]
 
     @task(
-        pre=pre_combined
+        pre=pre_invoke_combined
     )
     def output(context):
         """
@@ -172,7 +222,10 @@ def _task_output(
 
         output_tuple = output_tuple_factory(**{key: output_json[key]['value'] for key in output_tuple_factory._fields})
 
-        return output_tuple
+        if output_enhance:
+            return output_enhance(context=context, output=output_tuple)
+        else:
+            return output_tuple
 
     return output
 
@@ -183,12 +236,17 @@ def create_tasks(
     bin_terraform: Union[Path, str],
     dir_terraform: Union[Path, str],
 
-    variables=None,
-    apply_pre: List[task] = None,
-    apply_post: List[task] = None,
-    destroy_pre: List[task] = None,
-    destroy_post: List[task] = None,
+    terraform_variables=None,
+    apply_pre_invoke: List[task] = None,
+    apply_post_invoke: List[task] = None,
+    apply_pre_exec=None,
+    apply_post_exec=None,
+    destroy_pre_invoke: List[task] = None,
+    destroy_post_invoke: List[task] = None,
+    destroy_pre_exec=None,
+    destroy_post_exec=None,
     output_tuple_factory=None,
+    output_enhance=None,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -211,9 +269,11 @@ def create_tasks(
         bin_terraform=bin_terraform,
         dir_terraform=dir_terraform,
         init=init,
-        variables=variables,
-        pre=apply_pre,
-        post=apply_post
+        terraform_variables=terraform_variables,
+        pre_invoke=apply_pre_invoke,
+        post_invoke=apply_post_invoke,
+        pre_exec=apply_pre_exec,
+        post_exec=apply_post_exec,
     )
     ns.add_task(apply)
 
@@ -222,9 +282,11 @@ def create_tasks(
         bin_terraform=bin_terraform,
         dir_terraform=dir_terraform,
         init=init,
-        variables=variables,
-        pre=destroy_pre,
-        post=destroy_post
+        terraform_variables=terraform_variables,
+        pre_invoke=destroy_pre_invoke,
+        post_invoke=destroy_post_invoke,
+        pre_exec=destroy_pre_exec,
+        post_exec=destroy_post_exec,
     )
     ns.add_task(destroy)
 
@@ -234,7 +296,8 @@ def create_tasks(
             bin_terraform=bin_terraform,
             dir_terraform=dir_terraform,
             init=init,
-            output_tuple_factory=output_tuple_factory
+            output_tuple_factory=output_tuple_factory,
+            output_enhance=output_enhance,
         )
         ns.add_task(output)
 
@@ -285,6 +348,8 @@ def create_context_manager_read_only(
     *,
     init: task,
     output: task,
+
+    output_enhance = None,
 ):
     """
     Create a context manager limited to only accessing output.
