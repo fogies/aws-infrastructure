@@ -10,19 +10,20 @@ from typing import List
 from typing import Union
 
 
-# Define and import tasks
-def _task_delete_empty_instance_dirs(
+def _destroy_post_exec(
     *,
-    config_key: str,
     dir_terraform: Path,
     instances: List[str],
 ):
     """
-    Create a task to delete any instance directories which are effectively empty.
+    Create a helper function for the destroy task.
     """
 
-    @task
-    def delete_empty_instance_dirs(context):
+    def delete_empty_instance_dirs(
+        *,
+        context,
+        params,
+    ):
         """
         Delete any instance directories which are effectively empty.
         """
@@ -64,7 +65,7 @@ def create_tasks(
     dir_helm_repo: Union[Path, str],
     instances: List[str],
 
-    variables=None,
+    terraform_variables=None,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -77,22 +78,17 @@ def create_tasks(
     # Collection to compose
     ns = Collection('minikube-helm')
 
-    # Create a post-processing task for deleting empty instance dirs
-    delete_empty_instance_dirs = _task_delete_empty_instance_dirs(
-        config_key=config_key,
-        dir_terraform=dir_terraform,
-        instances=instances
-    )
-    destroy_post = [delete_empty_instance_dirs]
-
     # Create the terraform tasks
     ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
         config_key=config_key,
         bin_terraform=bin_terraform,
         dir_terraform=dir_terraform,
 
-        variables=variables,
-        destroy_post=destroy_post,
+        terraform_variables=terraform_variables,
+        destroy_post_exec=_destroy_post_exec(
+            dir_terraform=dir_terraform,
+            instances=instances,
+        ),
     )
 
     # Compose the top-level Terraform tasks

@@ -12,36 +12,19 @@ from typing import List
 from typing import Union
 
 
-def create_tasks(
+def _apply_pre_exec(
     *,
-    config_key: str,
-    bin_terraform: Union[Path, str],
-    dir_terraform: Union[Path, str],
+    dir_terraform: Path,
     instances: List[str],
-    environment_variables
+    codebuild_environment_variables,
 ):
-    """
-    Create all of the tasks, re-using and passing parameters appropriately.
-    """
-
-    # Collection to compose
-    ns_codebuild = Collection('codebuild')
-
-    # Create the terraform tasks
-    ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
-        config_key=config_key,
-        bin_terraform=bin_terraform,
-        dir_terraform=dir_terraform,
-    )
-
-    # Enhance the apply task
-    @task(
-        pre=ns_terraform['apply'].pre,
-        post=ns_terraform['apply'].post
-    )
-    def apply(context):
+    def apply_pre_exec(
+        *,
+        context,
+        params,
+    ):
         """
-        Issue a Terraform apply.
+        Prepare CodeBuild archives that Terraform can upload.
         """
 
         # Create an archive of each source that Terraform can upload to S3
@@ -54,9 +37,9 @@ def create_tasks(
             shutil.copytree(src=path_source, dst=path_staging)
 
             # Determine whether we need to update the buildspec.yml with environment variables
-            if environment_variables != None and instance_current in environment_variables:
+            if codebuild_environment_variables != None and instance_current in codebuild_environment_variables:
                 # Obtain the variables we need to update in the buildspec.yml
-                environment_variables_current = environment_variables[instance_current](context=context)
+                codebuild_environment_variables_current = codebuild_environment_variables[instance_current](context=context)
 
                 # Use a parsing object for roundtrip
                 yaml_parser = ruamel.yaml.YAML()
@@ -73,7 +56,7 @@ def create_tasks(
                     yaml_buildspec['env']['variables'] = {}
 
                 # Add the variables
-                for key_current, value_current in environment_variables_current.items():
+                for key_current, value_current in codebuild_environment_variables_current.items():
                     yaml_buildspec['env']['variables'][key_current] = value_current
 
                 # Replace the buildspec
@@ -94,35 +77,67 @@ def create_tasks(
                 ignore_errors=True
             )
 
-        # Execute the underlying task
-        ns_terraform['apply'](context)
+    return apply_pre_exec
 
-    # Enhance the destroy task
-    @task(
-        pre=ns_terraform['destroy'].pre,
-        post=ns_terraform['destroy'].post
-    )
-    def destroy(context):
+
+def _destroy_post_exec(
+    *,
+    dir_terraform: Path,
+    instances: List[str],
+):
+    def destroy_post_exec(
+        *,
+        context,
+        params,
+    ):
         """
-        Issue a Terraform destroy.
+        Remove CodeBuild archives.
         """
 
         # Clean up the archives
         for instance_current in instances:
             os.remove(Path(dir_terraform, 'staging', instance_current + '.zip'))
 
-        # Execute the underlying task
-        ns_terraform['destroy'](context)
+    return destroy_post_exec
 
-    # Compose the enhanced tasks
+
+def create_tasks(
+    *,
+    config_key: str,
+    bin_terraform: Union[Path, str],
+    dir_terraform: Union[Path, str],
+    instances: List[str],
+    codebuild_environment_variables,
+):
+    """
+    Create all of the tasks, re-using and passing parameters appropriately.
+    """
+
+    bin_terraform = Path(bin_terraform)
+    dir_terraform = Path(dir_terraform)
+
+    ns_codebuild = Collection('codebuild')
+
+    ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
+        config_key=config_key,
+        bin_terraform=bin_terraform,
+        dir_terraform=dir_terraform,
+        apply_pre_exec=_apply_pre_exec(
+            dir_terraform=dir_terraform,
+            instances=instances,
+            codebuild_environment_variables=codebuild_environment_variables,
+        ),
+        destroy_post_exec=_destroy_post_exec(
+            dir_terraform=dir_terraform,
+            instances=instances
+        ),
+    )
+
     compose_collection(
         ns_codebuild,
         ns_terraform,
         sub=False,
     )
-
-    ns_codebuild.add_task(apply)
-    ns_codebuild.add_task(destroy)
 
     # Create tasks associated with our instances
     for instance_current in instances:
