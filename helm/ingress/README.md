@@ -18,6 +18,10 @@ Assumes prior installation of ingress-crd.
 
 ## Versions
 
+### 0.5.0
+
+- Increment dependency versions, cert-manager to 1.5.3.
+
 ### 0.4.0
 
 - Renamed a `private` entrypoint on port 8000.

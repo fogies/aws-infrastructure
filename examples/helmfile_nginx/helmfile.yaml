@@ -16,12 +16,12 @@ releases:
   # ingress-crd contains the CRDs required by ingress
   - name: 'ingress-crd'
     chart: 'aws-infrastructure/ingress-crd'
-    version: '0.1.0'
+    version: '0.5.0'
 
   # ingress is then the actual ingress
   - name: 'ingress'
     chart: 'aws-infrastructure/ingress'
-    version: '0.4.0'
+    version: '0.5.0'
     needs:
       - 'ingress-crd'
 
