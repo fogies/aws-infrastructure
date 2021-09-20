@@ -5,6 +5,6 @@ name: ingress-crd
 description: CRD expected by ingress chart.
 
 # Chart version, expected to follow Semantic Versioning <https://semver.org/>
-version: 0.1.0
+version: 0.5.0
 
-dependencies:
+dependencies: []

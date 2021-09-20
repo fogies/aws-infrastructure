@@ -5,16 +5,16 @@ name: ingress
 description: Basic environment for ingress, including cert-manager and Traefik.
 
 # Chart version, expected to follow Semantic Versioning <https://semver.org/>
-version: 0.4.0
+version: 0.5.0
 
 dependencies:
   # Traefik for ingress
   - name: traefik
-    # Use an exact version for Traefik, as they have been sloppy with chart releases that contain bugs
+    # Prefer an exact version for safety
     version: 9.12.3
     repository: https://helm.traefik.io/traefik
   # cert-manager for certificates
   - name: cert-manager
-    # Prefer an exact version for general safety
-    version: 1.1.0
+    # Prefer an exact version for safety
+    version: 1.5.3
     repository: https://charts.jetstack.io
