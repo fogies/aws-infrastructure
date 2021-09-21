@@ -4,8 +4,8 @@ from aws_infrastructure.tasks import compose_collection
 import examples.codebuild.tasks
 import examples.ecr.tasks
 import examples.eip.tasks
-import examples.minikube_helm.tasks
-import examples.minikube_helm_multiple.tasks
+import examples.minikube.tasks
+import examples.minikube_multiple.tasks
 
 # Build our task collection
 ns = Collection('examples')
@@ -20,7 +20,7 @@ compose_collection(ns, examples.ecr.tasks.ns)
 compose_collection(ns, examples.eip.tasks.ns)
 
 # Compose from minikube-helm
-compose_collection(ns, examples.minikube_helm.tasks.ns)
+compose_collection(ns, examples.minikube.tasks.ns)
 
 # Compose from minikube-helm-multiple
-compose_collection(ns, examples.minikube_helm_multiple.tasks.ns)
+compose_collection(ns, examples.minikube_multiple.tasks.ns)
