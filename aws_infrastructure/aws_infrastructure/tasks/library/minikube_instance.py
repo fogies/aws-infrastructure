@@ -302,87 +302,6 @@ def _task_ssh_port_forward(
 
     return ssh_port_forward
 
-# 9/21/2021: Deprecate docker_build in favor of using CodeBuild
-#
-# def _task_docker_build(
-#     *,
-#     config_key: str,
-#     instance_config
-# ):
-#     @task
-#     def docker_build(context, docker_config):
-#         """
-#         Build a Docker image.
-#         """
-#         print('Building Docker image')
-#
-#         # docker_config must be a path to a file named docker-config.yaml
-#         if not (Path(docker_config).is_file() and Path(docker_config).name == 'docker-config.yaml'):
-#             print('No matching docker-config.yaml found.')
-#             return
-#
-#         # Print the specific configuration we will use
-#         print('Found matching docker-config.yaml at: {}'.format(docker_config))
-#
-#         # Load the config
-#         with open(docker_config) as file_config:
-#             loaded_config = ruamel.yaml.safe_load(file_config)
-#
-#         # Connect via SSH
-#         with SSHClientContextManager(instance_config=instance_config) as ssh_client:
-#             # Create a staging directory
-#             ssh_client.exec_command(command=[
-#                 'rm -rf .minikube_helm_staging',
-#                 'mkdir -p .minikube_helm_staging'
-#             ])
-#
-#             # Upload the Dockerfile.
-#             #
-#             # The configuration 'dockerfile' is a path relative to the location of the docker-config.
-#             dockerfile = Path(
-#                 Path(docker_config).parent,
-#                 loaded_config['dockerfile']
-#             )
-#             with SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
-#                 sftp_client.client.chdir('.minikube_helm_staging')
-#                 sftp_client.client.put(
-#                     localpath=str(dockerfile),
-#                     remotepath='Dockerfile',
-#                 )
-#
-#             ssh_client.exec_command(command=[
-#                 # Point the session Docker CLI at our Minikube Docker context
-#                 'eval $(minikube -p minikube docker-env)',
-#                 'cd .minikube_helm_staging',
-#                 ' '.join([
-#                     'docker',
-#                     'build',
-#                     # Until we have a strategy for cache busting, always use no-cache
-#                     '--no-cache',
-#                     # Until we have a strategy for CPU usage, limit to 50%
-#                     '--cpu-period=100000 --cpu-quota=50000',
-#                     # List of build-arg parameters
-#                     ' '.join([
-#                         '--build-arg "{}={}"'.format(key_current, value_current)
-#                         for (key_current, value_current)
-#                         in loaded_config['args'].items()
-#                     ]),
-#                     # List of tag parameters
-#                     ' '.join([
-#                         '--tag "{}"'.format(tag_current)
-#                         for tag_current
-#                         in loaded_config['tags']
-#                     ]),
-#                     '.'
-#                 ])
-#             ])
-#
-#             # Remove the staging directory
-#             ssh_client.exec_command(command='rm -rf .minikube_helm_staging')
-#
-#     return docker_build
-
-
 def _task_helm_install(
     *,
     config_key: str,
@@ -670,14 +589,6 @@ def create_tasks(
         instance_config=yaml_config
     )
     ns.add_task(ssh_port_forward)
-
-    # 9/21/2021: Deprecate docker_build in favor of using CodeBuild
-    #
-    # docker_build = _task_docker_build(
-    #     config_key=config_key,
-    #     instance_config=yaml_config
-    # )
-    # ns.add_task(docker_build)
 
     helm_install = _task_helm_install(
         config_key=config_key,
