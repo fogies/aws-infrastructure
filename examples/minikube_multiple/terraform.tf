@@ -3,7 +3,7 @@
  */
 locals {
   tags = {
-    "aws-infrastructure/examples/minikube_helm_multiple": ""
+    "aws-infrastructure/examples/minikube_multiple": ""
   }
 }
 
@@ -35,8 +35,8 @@ resource "aws_eip" "ip_amd64_medium" {
 /*
  * Instance amd64-medium, in us-east-1a.
  */
-module "minikube_helm_instance_amd64_medium" {
-  source = "../../terraform_common/minikube_helm"
+module "minikube_instance_amd64_medium" {
+  source = "../../terraform_common/minikube_instance"
 
   name = "amd64_medium"
 
@@ -63,8 +63,8 @@ resource "aws_eip" "ip_amd64_large" {
 /*
  * Instance amd64-large, in us-east-1b.
  */
-module "minikube_helm_instance_amd64_large" {
-  source = "../../terraform_common/minikube_helm"
+module "minikube_instance_amd64_large" {
+  source = "../../terraform_common/minikube_instance"
 
   name = "amd64_large"
 

@@ -1,6 +1,6 @@
 from aws_infrastructure.tasks.collection import compose_collection
 import aws_infrastructure.tasks.library.terraform
-import aws_infrastructure.tasks.library.minikube_helm_instance
+import aws_infrastructure.tasks.library.minikube_instance
 from invoke import Collection
 from invoke import task
 import os
@@ -105,7 +105,7 @@ def create_tasks(
         path_instance_config = Path(dir_terraform, instance_current, 'config.yaml')
         if path_instance_config.exists():
             # Create the instance tasks
-            ns_instance = aws_infrastructure.tasks.library.minikube_helm_instance.create_tasks(
+            ns_instance = aws_infrastructure.tasks.library.minikube_instance.create_tasks(
                 config_key='{}.{}'.format(config_key, instance_current),
                 dir_terraform=dir_terraform,
                 dir_helm_repo=dir_helm_repo,
