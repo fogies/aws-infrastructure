@@ -1,3 +1,4 @@
+from collections import namedtuple
 from invoke import task
 import io
 import paramiko
@@ -8,13 +9,24 @@ from typing import List
 from typing import Union
 
 
+SSHConfig = namedtuple(
+    'SSHContext',
+    [
+        'ip',
+        'user',
+        'key',
+        'key_file',
+    ]
+)
+
+
 class SSHClientContextManager:
     """
     Context manager for connecting, using, and destroying an SSH client.
     """
-    def __init__(self, *, instance_config):
-        self._instance_config = instance_config
-        self._client = None
+    def __init__(self, *, ssh_config: SSHConfig):
+        self._ssh_config: SSHConfig = ssh_config
+        self._client: paramiko.SSHClient = None
 
     def __enter__(self):
         self._ssh_connect()
@@ -84,9 +96,9 @@ class SSHClientContextManager:
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(IgnorePolicy())
         client.connect(
-            hostname=self._instance_config['instance_ip'],
-            username=self._instance_config['instance_user'],
-            pkey=paramiko.rsakey.RSAKey.from_private_key(io.StringIO(self._instance_config['instance_key']))
+            hostname=self._ssh_config.ip,
+            username=self._ssh_config.user,
+            pkey=paramiko.rsakey.RSAKey.from_private_key(io.StringIO(self._ssh_config.key))
         )
 
         self._client = client
@@ -219,7 +231,7 @@ def task_ssh(
     *,
     config_key: str,
     dir_instance: Path,
-    instance_config,
+    ssh_config: SSHConfig,
 ):
     """
     Create a task to open an SSH session to the instance.
@@ -241,11 +253,11 @@ def task_ssh(
                 'start',  # Ensures Windows launches ssh outside cmd
                           # This has been only way to obtain a proper terminal
                 'ssh',
-                '-l {}'.format(instance_config['instance_user']),
-                '-i {}'.format(Path(dir_instance, instance_config['instance_key_file'])),
+                '-l {}'.format(ssh_config.user),
+                '-i {}'.format(Path(dir_instance, ssh_config.key_file)),
                 '-o StrictHostKeyChecking=no',
                 '-o UserKnownHostsFile="{}"'.format(Path(dir_instance, 'known_hosts')),
-                instance_config['instance_ip']
+                ssh_config.ip
             ]),
             disown=True
         )
@@ -256,7 +268,7 @@ def task_ssh(
 def task_ssh_port_forward(
     *,
     config_key: str,
-    instance_config,
+    ssh_config: SSHConfig,
 ):
     """
     Create a task to forward a port from the instance.
@@ -284,7 +296,7 @@ def task_ssh_port_forward(
             local_port = remote_port
 
         # Connect via SSH
-        with SSHClientContextManager(instance_config=instance_config) as ssh_client:
+        with SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
             # Initiate port forwarding
             with PortForwardContextManager(
                 ssh_client=ssh_client,

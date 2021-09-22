@@ -10,7 +10,7 @@ def task_helm_install(
     *,
     config_key: str,
     dir_helm_repo: Path,
-    instance_config,
+    ssh_config: aws_infrastructure.tasks.library.instance_ssh.SSHConfig,
 ):
     @task
     def helm_install(context, helm_chart):
@@ -74,7 +74,7 @@ def task_helm_install(
         helm_chart_name = match.group(1)
 
         # Connect via SSH
-        with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(instance_config=instance_config) as ssh_client:
+        with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
             # Create a staging directory
             ssh_client.exec_command(command=[
                 'rm -rf .minikube_helm_staging',

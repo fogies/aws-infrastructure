@@ -44,17 +44,16 @@ resource "local_file" "python_config" {
   filename = format(
     "%s/%s",
     var.name,
-    "config.yaml"
+    "ssh_config.yaml"
   )
 
   content = templatefile(
-    "${path.module}/templates/config.yaml.tmpl",
+    "${path.module}/templates/ssh_config.yaml.tmpl",
     {
-        instance_name = var.name,
-        instance_ip = local.resolved_public_ip
-        instance_user = "ubuntu"
-        instance_key = tls_private_key.instance_key_pair.private_key_pem
-        instance_key_file = local.instance_key_private_filename
+        ip = local.resolved_public_ip
+        user = "ubuntu"
+        key = tls_private_key.instance_key_pair.private_key_pem
+        key_file = local.instance_key_private_filename
     }
   )
 }
