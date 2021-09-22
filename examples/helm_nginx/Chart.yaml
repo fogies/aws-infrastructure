@@ -1,7 +1,7 @@
 apiVersion: v2
 type: application
 
-name: example-nginx
+name: helm-nginx
 description: Simple example chart for an nginx deployment.
 
 # Chart version, expected to follow Semantic Versioning <https://semver.org/>
