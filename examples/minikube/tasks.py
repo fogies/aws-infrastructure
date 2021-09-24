@@ -7,6 +7,7 @@ CONFIG_KEY = 'examples_minikube'
 BIN_TERRAFORM = './bin/terraform.exe'
 DIR_TERRAFORM = './examples/minikube'
 DIR_HELM_REPO = './helm_repo'
+DIR_STAGING_LOCAL_HELMFILE = './.staging/helmfile'
 INSTANCE_NAMES = ['instance']
 
 ns = Collection('minikube')
@@ -16,6 +17,7 @@ ns_minikube = aws_infrastructure.tasks.library.minikube.create_tasks(
     bin_terraform=BIN_TERRAFORM,
     dir_terraform=DIR_TERRAFORM,
     dir_helm_repo=DIR_HELM_REPO,
+    dir_staging_local_helmfile=DIR_STAGING_LOCAL_HELMFILE,
     instance_names=INSTANCE_NAMES,
 )
 

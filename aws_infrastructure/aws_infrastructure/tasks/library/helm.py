@@ -13,7 +13,7 @@ def _task_package(
     bin_helm: Path,
     dirs_helm_charts: List[Path],
     dir_helm_repo: Path,
-    dir_helm_repo_staging: Path,
+    dir_staging_local: Path,
 ):
     """
     Create a task to build packages from charts into staging.
@@ -71,7 +71,7 @@ def _task_package(
                                 str(bin_helm),
                                 'package',
                                 '"{}"'.format(Path(dir_helm_charts_current, entry_current.name)),
-                                '--destination "{}"'.format(dir_helm_repo_staging)
+                                '--destination "{}"'.format(dir_staging_local)
                             ]),
                         )
 
@@ -83,7 +83,7 @@ def _task_release(
     config_key: str,
     bin_helm: Path,
     dir_helm_repo: Path,
-    dir_helm_repo_staging: Path,
+    dir_staging_local: Path,
 ):
     """
     Create a task to release staged packages.
@@ -101,16 +101,16 @@ def _task_release(
                 str(bin_helm),
                 'repo',
                 'index',
-                '"{}"'.format(dir_helm_repo_staging),
+                '"{}"'.format(dir_staging_local),
                 '--merge "{}"'.format(Path(dir_helm_repo, 'index.yaml'))
             ]),
         )
 
         # Move from staging into release
-        for entry_current in os.scandir(dir_helm_repo_staging):
+        for entry_current in os.scandir(dir_staging_local):
             if entry_current.name != '.gitignore':
                 path_current_repo = Path(dir_helm_repo, entry_current.name)
-                path_current_repo_staging = Path(dir_helm_repo_staging, entry_current.name)
+                path_current_repo_staging = Path(dir_staging_local, entry_current.name)
 
                 # The index will already exist
                 if path_current_repo.exists():
@@ -127,7 +127,7 @@ def create_tasks(
     bin_helm: Union[Path, str],
     dirs_helm_charts: List[Union[Path, str]],
     dir_helm_repo: Union[Path, str],
-    dir_helm_repo_staging: Union[Path, str],
+    dir_staging_local: Union[Path, str],
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -136,7 +136,7 @@ def create_tasks(
     bin_helm = Path(bin_helm)
     dirs_helm_charts = [Path(dir_helm_charts_current) for dir_helm_charts_current in dirs_helm_charts]
     dir_helm_repo = Path(dir_helm_repo)
-    dir_helm_repo_staging = Path(dir_helm_repo_staging)
+    dir_staging_local = Path(dir_staging_local)
 
     ns = Collection('helm')
 
@@ -145,7 +145,7 @@ def create_tasks(
         bin_helm=bin_helm,
         dirs_helm_charts=dirs_helm_charts,
         dir_helm_repo=dir_helm_repo,
-        dir_helm_repo_staging=dir_helm_repo_staging,
+        dir_staging_local=dir_staging_local,
     )
     ns.add_task(package)
 
@@ -153,7 +153,7 @@ def create_tasks(
         config_key=config_key,
         bin_helm=bin_helm,
         dir_helm_repo=dir_helm_repo,
-        dir_helm_repo_staging=dir_helm_repo_staging,
+        dir_staging_local=dir_staging_local,
     )
     ns.add_task(release)
 

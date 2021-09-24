@@ -64,6 +64,7 @@ def create_tasks(
     bin_terraform: Union[Path, str],
     dir_terraform: Union[Path, str],
     dir_helm_repo: Union[Path, str],
+    dir_staging_local_helmfile: Union[Path, str],
     instance_names: List[str],
 
     terraform_variables=None,
@@ -75,6 +76,7 @@ def create_tasks(
     bin_terraform = Path(bin_terraform)
     dir_terraform = Path(dir_terraform)
     dir_helm_repo = Path(dir_helm_repo)
+    dir_staging_local_helmfile = Path(dir_staging_local_helmfile)
 
     # Collection to compose
     ns = Collection('minikube-helm')
@@ -116,6 +118,7 @@ def create_tasks(
                 dir_helm_repo=dir_helm_repo,
                 instance_name=instance_name_current,
                 ssh_config=ssh_config,
+                dir_staging_local_helmfile=dir_staging_local_helmfile
             )
 
             # Compose the instance tasks

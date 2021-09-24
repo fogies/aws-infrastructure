@@ -13,7 +13,7 @@ DIRS_HELM_CHARTS = [
     './examples',
 ]
 DIR_HELM_REPO = './helm_repo'
-DIR_HELM_REPO_STAGING = './helm_repo_staging'
+DIR_STAGING_LOCAL = './.staging/helm_repo'
 
 ns = Collection('helm')
 
@@ -22,7 +22,7 @@ ns_helm = aws_infrastructure.tasks.library.helm.create_tasks(
     bin_helm=BIN_HELM,
     dirs_helm_charts=DIRS_HELM_CHARTS,
     dir_helm_repo=DIR_HELM_REPO,
-    dir_helm_repo_staging=DIR_HELM_REPO_STAGING,
+    dir_staging_local=DIR_STAGING_LOCAL,
 )
 
 compose_collection(

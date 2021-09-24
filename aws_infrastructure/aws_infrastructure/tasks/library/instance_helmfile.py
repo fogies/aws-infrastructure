@@ -1,6 +1,7 @@
 from invoke import task
 from pathlib import Path
 import ruamel.yaml
+from typing import Union
 
 import aws_infrastructure.tasks.library.instance_ssh
 
@@ -8,23 +9,23 @@ import aws_infrastructure.tasks.library.instance_ssh
 def _helmfile_apply(
     *,
     ssh_config: aws_infrastructure.tasks.library.instance_ssh.SSHConfig,
+    dir_staging_local: Path,
+    dir_staging_remote: Path,
     path_helmfile: Path,
     helmfile_config,
     path_helmfile_config_base: Path,
 ):
     # Connect via SSH
     with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
-        path_remote_staging = Path('.minikube_helmfile_staging')
-
         # Create a staging directory
         ssh_client.exec_command(command=[
-            'rm -rf {}'.format(path_remote_staging.as_posix()),
-            'mkdir -p {}'.format(path_remote_staging.as_posix()),
+            'rm -rf {}'.format(dir_staging_remote.as_posix()),
+            'mkdir -p {}'.format(dir_staging_remote.as_posix()),
         ])
 
         with aws_infrastructure.tasks.library.instance_ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
             # FTP within the staging directory
-            sftp_client.client.chdir(path_remote_staging.as_posix())
+            sftp_client.client.chdir(dir_staging_remote.as_posix())
 
             # Upload any dependencies in any provided configuration
             for dependency_current in helmfile_config.get('dependencies', []):
@@ -48,7 +49,7 @@ def _helmfile_apply(
                         ssh_client.exec_command(command=[
                             'mkdir -p {}'.format(
                                 Path(
-                                    path_remote_staging,
+                                    dir_staging_remote,
                                     path_remote.parent
                                 ).as_posix()
                             )
@@ -79,7 +80,7 @@ def _helmfile_apply(
             'helmfile',
             '--file {}'.format(
                 Path(
-                    path_remote_staging,
+                    dir_staging_remote,
                     path_helmfile.name
                 ).as_posix()
             ),
@@ -88,13 +89,15 @@ def _helmfile_apply(
         ]))
 
         # Remove the staging directory
-        ssh_client.exec_command(command='rm -rf .minikube_helm_staging')
+        ssh_client.exec_command(command='rm -rf {}'.format(dir_staging_remote.as_posix()))
 
 
 def task_helmfile_apply(
     *,
     config_key: str,
     ssh_config: aws_infrastructure.tasks.library.instance_ssh.SSHConfig,
+    dir_staging_local: Union[Path, str],
+    dir_staging_remote: Union[Path, str],
 ):
     @task
     def helmfile_apply(context, helmfile):
@@ -102,6 +105,9 @@ def task_helmfile_apply(
         Apply a helmfile in the instance.
         """
         print('Applying helmfile')
+
+        dir_staging_local = Path(dir_staging_local)
+        dir_staging_remote = Path(dir_staging_remote)
 
         # helmfile might be:
         # - a path to a 'helmfile-config.yaml', in which case process the config
@@ -153,6 +159,8 @@ def task_helmfile_apply(
 
         _helmfile_apply(
             ssh_config=ssh_config,
+            dir_staging_local=dir_staging_local,
+            dir_staging_remote=dir_staging_remote,
             path_helmfile=path_helmfile,
             helmfile_config=loaded_helmfile_config,
             path_helmfile_config_base=path_helmfile_config_base,

@@ -30,6 +30,11 @@ def create_tasks(
     dir_helm_repo: Union[Path, str],
     instance_name: str,
     ssh_config: aws_infrastructure.tasks.library.instance_ssh.SSHConfig,
+
+    dir_staging_local_helmfile: Union[Path, str],
+
+    dir_staging_remote_helm: Union[Path, str] = '.staging/helm',
+    dir_staging_remote_helmfile: Union[Path, str] = '.staging/helmfile',
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -38,6 +43,8 @@ def create_tasks(
     dir_terraform = Path(dir_terraform)
     dir_instance = Path(dir_terraform, instance_name)
     dir_helm_repo = Path(dir_helm_repo)
+    dir_staging_remote_helm = Path(dir_staging_remote_helm)
+    dir_staging_remote_helmfile = Path(dir_staging_remote_helmfile)
 
     ns = Collection(instance_name)
 
@@ -58,12 +65,15 @@ def create_tasks(
         config_key=config_key,
         dir_helm_repo=dir_helm_repo,
         ssh_config=ssh_config,
+        dir_staging_remote=dir_staging_remote_helm,
     )
     ns.add_task(helm_install)
 
     helmfile_apply = aws_infrastructure.tasks.library.instance_helmfile.task_helmfile_apply(
         config_key=config_key,
         ssh_config=ssh_config,
+        dir_staging_local=dir_staging_local_helmfile,
+        dir_staging_remote=dir_staging_remote_helmfile,
     )
     ns.add_task(helmfile_apply)
 

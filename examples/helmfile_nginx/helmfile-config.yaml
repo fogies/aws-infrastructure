@@ -3,5 +3,5 @@ helmfile: 'helmfile-nginx.yaml'
 
 # Dependencies to be uploaded so they can be referenced as local files
 dependencies:
-  - file: '../../helm_repo_staging/helm-nginx-0.1.0.tgz'
+  - file: '../../.staging/helm_repo/helm-nginx-0.1.0.tgz'
     destination: 'helm/helm-nginx.tgz'
