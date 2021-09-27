@@ -5,7 +5,6 @@ from invoke import Collection
 from invoke import task
 import os
 from pathlib import Path
-import ruamel.yaml
 import shutil
 from typing import List
 from typing import Union
@@ -67,7 +66,7 @@ def create_tasks(
     dir_staging_local_helmfile: Union[Path, str],
     instance_names: List[str],
 
-    terraform_variables=None,
+    terraform_variables = None,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -105,19 +104,17 @@ def create_tasks(
     for instance_name_current in instance_names:
         # Instance dirs are relative to the Terraform directory
         dir_instance_current = Path(dir_terraform, instance_name_current)
-        path_instance_ssh_config = Path(dir_terraform, instance_name_current, 'ssh_config.yaml')
-        if path_instance_ssh_config.exists():
-            with open(path_instance_ssh_config) as file_ssh_config:
-                yaml_config = ruamel.yaml.safe_load(file_ssh_config)
-            ssh_config = aws_infrastructure.tasks.library.instance_ssh.SSHConfig(**yaml_config)
+        path_ssh_config = Path(dir_terraform, instance_name_current, 'ssh_config.yaml')
 
+        # We are currently using existence of the ssh_config to detect the instance exists
+        if path_ssh_config.exists():
             # Create the instance tasks
             ns_instance = aws_infrastructure.tasks.library.minikube_instance.create_tasks(
                 config_key='{}.{}'.format(config_key, instance_name_current),
                 dir_terraform=dir_terraform,
                 dir_helm_repo=dir_helm_repo,
                 instance_name=instance_name_current,
-                ssh_config=ssh_config,
+                path_ssh_config=path_ssh_config,
                 dir_staging_local_helmfile=dir_staging_local_helmfile
             )
 

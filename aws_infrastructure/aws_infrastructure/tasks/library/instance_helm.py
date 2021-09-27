@@ -10,7 +10,7 @@ def task_helm_install(
     *,
     config_key: str,
     dir_helm_repo: Path,
-    ssh_config: aws_infrastructure.tasks.library.instance_ssh.SSHConfig,
+    path_ssh_config: Path,
     dir_staging_remote: Path,
 ):
     @task
@@ -75,6 +75,7 @@ def task_helm_install(
         helm_chart_name = match.group(1)
 
         # Connect via SSH
+        ssh_config = aws_infrastructure.tasks.library.instance_ssh.SSHConfig(path_ssh_config=path_ssh_config)
         with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
             # Create a staging directory
             ssh_client.exec_command(command=[

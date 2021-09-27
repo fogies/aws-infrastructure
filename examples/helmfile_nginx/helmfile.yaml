@@ -29,6 +29,9 @@ releases:
   # Installed from a local helmfile, managed in helmfile-config.yaml
   - name: 'nginx'
     chart: './helm/helm-nginx.tgz'
+    values:
+      - 'values/examples_nginx.values.yaml'
+
     needs:
       - 'ingress'
 
