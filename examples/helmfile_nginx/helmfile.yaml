@@ -8,7 +8,7 @@ repositories:
   # aws-infrastructure helm repository
   #
   # When developing charts that will later be merged, it can be helpful to instead point at a branch:
-  # - url: 'https://raw.githubusercontent.com/<account>/aws-infrastructure/<branch>/helm_repo/'
+  # url: 'https://raw.githubusercontent.com/<account>/aws-infrastructure/<branch>/helm_repo/'
   - name: 'aws-infrastructure'
     url: 'https://raw.githubusercontent.com/fogies/aws-infrastructure/main/helm_repo/'
 
@@ -21,14 +21,17 @@ releases:
   # ingress is then the actual ingress
   - name: 'ingress'
     chart: 'aws-infrastructure/ingress'
-    version: '0.3.0'
+    version: '0.4.0'
     needs:
       - 'ingress-crd'
 
   # Simple nginx service
   # Installed from a local helmfile, managed in helmfile-config.yaml
   - name: 'nginx'
-    chart: './helm/example-nginx.tgz'
+    chart: './helm/helm-nginx.tgz'
+    values:
+      - 'values/examples_nginx.values.yaml'
+
     needs:
       - 'ingress'
 

@@ -16,7 +16,7 @@ def _apply_pre_exec(
     *,
     dir_terraform: Path,
     instances: List[str],
-    codebuild_environment_variables,
+    codebuild_environment_variables, # Dictionary from string to function that returns dictionary
 ):
     def apply_pre_exec(
         *,

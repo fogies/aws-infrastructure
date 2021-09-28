@@ -1,27 +1,29 @@
 from aws_infrastructure.tasks import compose_collection
-import aws_infrastructure.tasks.library.minikube_helm
+import aws_infrastructure.tasks.library.minikube
 import aws_infrastructure.tasks.library.terraform
 from invoke import Collection
 
-CONFIG_KEY = 'examples_minikube_helm_multiple'
+CONFIG_KEY = 'examples_minikube_multiple'
 BIN_TERRAFORM = './bin/terraform.exe'
-DIR_TERRAFORM = './examples/minikube_helm_multiple'
+DIR_TERRAFORM = './examples/minikube_multiple'
 DIR_HELM_REPO = './helm_repo'
-INSTANCES = ['amd64_medium', 'amd64_large']
+DIR_STAGING_LOCAL_HELMFILE = './.staging/helmfile'
+INSTANCE_NAMES = ['amd64_medium', 'amd64_large']
 
-ns = Collection('minikube-helm-multiple')
+ns = Collection('minikube-multiple')
 
-ns_minikube_helm = aws_infrastructure.tasks.library.minikube_helm.create_tasks(
+ns_minikube = aws_infrastructure.tasks.library.minikube.create_tasks(
     config_key=CONFIG_KEY,
     bin_terraform=BIN_TERRAFORM,
     dir_terraform=DIR_TERRAFORM,
     dir_helm_repo=DIR_HELM_REPO,
-    instances=INSTANCES,
+    dir_staging_local_helmfile=DIR_STAGING_LOCAL_HELMFILE,
+    instance_names=INSTANCE_NAMES,
 )
 
 compose_collection(
     ns,
-    ns_minikube_helm,
+    ns_minikube,
     sub=False,
     exclude=aws_infrastructure.tasks.library.terraform.exclude_destroy_without_state(
         dir_terraform=DIR_TERRAFORM,

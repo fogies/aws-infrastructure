@@ -1,0 +1,44 @@
+apiVersion: 'apps/v1'
+kind: 'Deployment'
+metadata:
+  name: 'deployment-example-nginx'
+  labels:
+    app: 'example-nginx'
+
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: 'example-nginx'
+  template:
+    metadata:
+      labels:
+        app: 'example-nginx'
+    spec:
+      containers:
+        - name: 'example-nginx'
+          image: 'nginx:alpine'
+          imagePullPolicy: 'Always'
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: 'nginx-index-html'
+              mountPath: '/usr/share/nginx/html/'
+      volumes:
+        - name: 'nginx-index-html'
+          configMap:
+            name: 'configmap-example-nginx-index-html'
+
+---
+
+apiVersion: 'v1'
+kind: 'ConfigMap'
+metadata:
+  name: 'configmap-example-nginx-index-html'
+data:
+  index.html: |
+    <html>
+    <h1>Example Helm Nginx</h1>
+    </br>
+    <p>{{ .Values.exampleHelmNginxText }}<p>
+    </html>

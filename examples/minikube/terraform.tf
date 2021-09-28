@@ -3,15 +3,15 @@
  */
 locals {
   tags = {
-    "aws-infrastructure/examples/minikube_helm": ""
+    "aws-infrastructure/examples/minikube": ""
   }
 }
 
 /*
  * Instance of Minikube Helm.
  */
-module "minikube_helm_instance" {
-  source = "../../terraform_common/minikube_helm"
+module "minikube_instance" {
+  source = "../../terraform_common/minikube_instance"
 
   name = "instance"
 
