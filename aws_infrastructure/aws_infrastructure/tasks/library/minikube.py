@@ -78,7 +78,7 @@ def create_tasks(
     dir_staging_local_helmfile = Path(dir_staging_local_helmfile)
 
     # Collection to compose
-    ns = Collection('minikube-helm')
+    ns = Collection('minikube')
 
     # Create the terraform tasks
     ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
