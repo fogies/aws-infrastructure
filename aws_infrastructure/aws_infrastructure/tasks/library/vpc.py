@@ -35,7 +35,6 @@ def create_tasks(
                 'subnet_ids',
             ]
         ),
-        output_enhance=_output_enhance,
     )
 
     compose_collection(
