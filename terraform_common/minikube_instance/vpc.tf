@@ -13,7 +13,7 @@ locals {
 module "vpc" {
   count = var.create_vpc ? 1 : 0
 
-  source = "../vpc_simple"
+  source = "../vpc"
 
   availability_zone = var.availability_zone
 

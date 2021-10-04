@@ -11,7 +11,7 @@ locals {
  * Multi-zone VPC in which to create instances.
  */
 module "vpc" {
-  source = "../../terraform_common/vpc_simple"
+  source = "../../terraform_common/vpc"
 
   availability_zones = [
     "us-east-1a",
