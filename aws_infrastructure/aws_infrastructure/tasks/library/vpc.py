@@ -31,8 +31,9 @@ def create_tasks(
             [
                 'vpc_id',
                 'default_security_group_id',
-                'subnet_id',
+                'availability_zone_subnet_ids',
                 'subnet_ids',
+                'subnet_id',
             ]
         ),
     )
