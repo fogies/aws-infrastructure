@@ -10,6 +10,8 @@ def create_tasks(
     config_key: str,
     bin_terraform: Union[Path, str],
     dir_terraform: Union[Path, str],
+
+    terraform_variables=None,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -33,6 +35,8 @@ def create_tasks(
                 'hosts',
             ]
         ),
+
+        terraform_variables=terraform_variables,
     )
 
     compose_collection(
