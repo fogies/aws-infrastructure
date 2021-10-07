@@ -10,7 +10,7 @@ from typing import Union
 def _task_package(
     *,
     config_key: str,
-    bin_helm: Path,
+    helm_bin: Path,
     helm_charts_dirs: List[Path],
     helm_repo_dir: Path,
     staging_local_dir: Path,
@@ -58,7 +58,7 @@ def _task_package(
                         # Ensure dependencies are current
                         context.run(
                             command=' '.join([
-                                str(bin_helm),
+                                str(helm_bin),
                                 'dependency',
                                 'update',
                                 '"{}"'.format(Path(dir_helm_charts_current, entry_current.name)),
@@ -68,7 +68,7 @@ def _task_package(
                         # Do the actual packaging
                         context.run(
                             command=' '.join([
-                                str(bin_helm),
+                                str(helm_bin),
                                 'package',
                                 '"{}"'.format(Path(dir_helm_charts_current, entry_current.name)),
                                 '--destination "{}"'.format(staging_local_dir)
@@ -81,7 +81,7 @@ def _task_package(
 def _task_release(
     *,
     config_key: str,
-    bin_helm: Path,
+    helm_bin: Path,
     helm_repo_dir: Path,
     staging_local_dir: Path,
 ):
@@ -98,7 +98,7 @@ def _task_release(
         # Build the release index, updating based on content of staging directory
         context.run(
             command=' '.join([
-                str(bin_helm),
+                str(helm_bin),
                 'repo',
                 'index',
                 '"{}"'.format(staging_local_dir),
@@ -124,7 +124,7 @@ def _task_release(
 def create_tasks(
     *,
     config_key: str,
-    bin_helm: Union[Path, str],
+    helm_bin: Union[Path, str],
     helm_charts_dirs: List[Union[Path, str]],
     helm_repo_dir: Union[Path, str],
     staging_local_dir: Union[Path, str],
@@ -133,7 +133,7 @@ def create_tasks(
     Create all of the tasks, re-using and passing parameters appropriately.
     """
 
-    bin_helm = Path(bin_helm)
+    helm_bin = Path(helm_bin)
     helm_charts_dirs = [Path(dir_helm_charts_current) for dir_helm_charts_current in helm_charts_dirs]
     helm_repo_dir = Path(helm_repo_dir)
     staging_local_dir = Path(staging_local_dir)
@@ -142,7 +142,7 @@ def create_tasks(
 
     package = _task_package(
         config_key=config_key,
-        bin_helm=bin_helm,
+        helm_bin=helm_bin,
         helm_charts_dirs=helm_charts_dirs,
         helm_repo_dir=helm_repo_dir,
         staging_local_dir=staging_local_dir,
@@ -151,7 +151,7 @@ def create_tasks(
 
     release = _task_release(
         config_key=config_key,
-        bin_helm=bin_helm,
+        helm_bin=helm_bin,
         helm_repo_dir=helm_repo_dir,
         staging_local_dir=staging_local_dir,
     )

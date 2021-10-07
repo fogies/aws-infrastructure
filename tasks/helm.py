@@ -7,7 +7,7 @@ import aws_infrastructure.tasks.library.helm
 from invoke import Collection
 
 CONFIG_KEY = 'helm'
-BIN_HELM = './bin/helm.exe'
+HELM_BIN = './bin/helm.exe'
 HELM_CHARTS_DIRS = [
     './helm',
     './examples',
@@ -19,7 +19,7 @@ ns = Collection('helm')
 
 ns_helm = aws_infrastructure.tasks.library.helm.create_tasks(
     config_key=CONFIG_KEY,
-    bin_helm=BIN_HELM,
+    helm_bin=HELM_BIN,
     helm_charts_dirs=HELM_CHARTS_DIRS,
     helm_repo_dir=HELM_REPO_DIR,
     staging_local_dir=STAGING_LOCAL_DIR,
