@@ -25,7 +25,8 @@ def _write_terraform_variables(
         for key, value in terraform_variables_dict.items():
             file_variables.write(
                 '{} = {}\n'.format(
-                    json.dumps(value, separators=(',', ' = '))
+                    key,
+                    json.dumps(value, separators=(',', ' = ')),
                 )
             )
 
