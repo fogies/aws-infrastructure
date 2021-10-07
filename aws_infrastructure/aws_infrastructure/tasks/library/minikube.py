@@ -66,7 +66,8 @@ def create_tasks(
     dir_staging_local_helmfile: Union[Path, str],
     instance_names: List[str],
 
-    terraform_variables = None,
+    terraform_variables_factory = None,
+    terraform_variables_path: Union[Path, str] = None,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -76,6 +77,7 @@ def create_tasks(
     dir_terraform = Path(dir_terraform)
     dir_helm_repo = Path(dir_helm_repo)
     dir_staging_local_helmfile = Path(dir_staging_local_helmfile)
+    terraform_variables_path = Path(terraform_variables_path) if terraform_variables_path else None
 
     # Collection to compose
     ns = Collection('minikube')
@@ -86,7 +88,8 @@ def create_tasks(
         bin_terraform=bin_terraform,
         dir_terraform=dir_terraform,
 
-        terraform_variables=terraform_variables,
+        terraform_variables_factory=terraform_variables_factory,
+        terraform_variables_path=terraform_variables_path,
         destroy_post_exec=_destroy_post_exec(
             dir_terraform=dir_terraform,
             instance_names=instance_names,

@@ -11,7 +11,8 @@ def create_tasks(
     bin_terraform: Union[Path, str],
     dir_terraform: Union[Path, str],
 
-    terraform_variables=None,
+    terraform_variables_factory=None,
+    terraform_variables_path: Union[Path, str] = None,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -19,6 +20,7 @@ def create_tasks(
 
     bin_terraform = Path(bin_terraform)
     dir_terraform = Path(dir_terraform)
+    terraform_variables_path = Path(terraform_variables_path) if terraform_variables_path else None
 
     ns_documentdb = Collection('documentdb')
 
@@ -36,7 +38,8 @@ def create_tasks(
             ]
         ),
 
-        terraform_variables=terraform_variables,
+        terraform_variables_factory=terraform_variables_factory,
+        terraform_variables_path=terraform_variables_path,
     )
 
     compose_collection(
