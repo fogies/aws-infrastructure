@@ -11,9 +11,9 @@ def _task_package(
     *,
     config_key: str,
     bin_helm: Path,
-    dirs_helm_charts: List[Path],
-    dir_helm_repo: Path,
-    dir_staging_local: Path,
+    helm_charts_dirs: List[Path],
+    helm_repo_dir: Path,
+    staging_local_dir: Path,
 ):
     """
     Create a task to build packages from charts into staging.
@@ -26,7 +26,7 @@ def _task_package(
         """
 
         # Go through provided helm charts directories
-        for dir_helm_charts_current in dirs_helm_charts:
+        for dir_helm_charts_current in helm_charts_dirs:
             # Package any chart which has a version that has not already been released
             for entry_current in os.scandir(dir_helm_charts_current):
                 # Use the existence of Chart.yaml to infer this is actually a chart
@@ -41,7 +41,7 @@ def _task_package(
 
                     # Check existing releases of this same chart
                     chart_released = False
-                    path_index = Path(dir_helm_repo, 'index.yaml')
+                    path_index = Path(helm_repo_dir, 'index.yaml')
                     # Beware there might not be any prior index
                     if path_index.exists():
                         with open(path_index) as file_index:
@@ -71,7 +71,7 @@ def _task_package(
                                 str(bin_helm),
                                 'package',
                                 '"{}"'.format(Path(dir_helm_charts_current, entry_current.name)),
-                                '--destination "{}"'.format(dir_staging_local)
+                                '--destination "{}"'.format(staging_local_dir)
                             ]),
                         )
 
@@ -82,8 +82,8 @@ def _task_release(
     *,
     config_key: str,
     bin_helm: Path,
-    dir_helm_repo: Path,
-    dir_staging_local: Path,
+    helm_repo_dir: Path,
+    staging_local_dir: Path,
 ):
     """
     Create a task to release staged packages.
@@ -101,16 +101,16 @@ def _task_release(
                 str(bin_helm),
                 'repo',
                 'index',
-                '"{}"'.format(dir_staging_local),
-                '--merge "{}"'.format(Path(dir_helm_repo, 'index.yaml'))
+                '"{}"'.format(staging_local_dir),
+                '--merge "{}"'.format(Path(helm_repo_dir, 'index.yaml'))
             ]),
         )
 
         # Move from staging into release
-        for entry_current in os.scandir(dir_staging_local):
+        for entry_current in os.scandir(staging_local_dir):
             if entry_current.name != '.gitignore':
-                path_current_repo = Path(dir_helm_repo, entry_current.name)
-                path_current_repo_staging = Path(dir_staging_local, entry_current.name)
+                path_current_repo = Path(helm_repo_dir, entry_current.name)
+                path_current_repo_staging = Path(staging_local_dir, entry_current.name)
 
                 # The index will already exist
                 if path_current_repo.exists():
@@ -125,35 +125,35 @@ def create_tasks(
     *,
     config_key: str,
     bin_helm: Union[Path, str],
-    dirs_helm_charts: List[Union[Path, str]],
-    dir_helm_repo: Union[Path, str],
-    dir_staging_local: Union[Path, str],
+    helm_charts_dirs: List[Union[Path, str]],
+    helm_repo_dir: Union[Path, str],
+    staging_local_dir: Union[Path, str],
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
     """
 
     bin_helm = Path(bin_helm)
-    dirs_helm_charts = [Path(dir_helm_charts_current) for dir_helm_charts_current in dirs_helm_charts]
-    dir_helm_repo = Path(dir_helm_repo)
-    dir_staging_local = Path(dir_staging_local)
+    helm_charts_dirs = [Path(dir_helm_charts_current) for dir_helm_charts_current in helm_charts_dirs]
+    helm_repo_dir = Path(helm_repo_dir)
+    staging_local_dir = Path(staging_local_dir)
 
     ns = Collection('helm')
 
     package = _task_package(
         config_key=config_key,
         bin_helm=bin_helm,
-        dirs_helm_charts=dirs_helm_charts,
-        dir_helm_repo=dir_helm_repo,
-        dir_staging_local=dir_staging_local,
+        helm_charts_dirs=helm_charts_dirs,
+        helm_repo_dir=helm_repo_dir,
+        staging_local_dir=staging_local_dir,
     )
     ns.add_task(package)
 
     release = _task_release(
         config_key=config_key,
         bin_helm=bin_helm,
-        dir_helm_repo=dir_helm_repo,
-        dir_staging_local=dir_staging_local,
+        helm_repo_dir=helm_repo_dir,
+        staging_local_dir=staging_local_dir,
     )
     ns.add_task(release)
 

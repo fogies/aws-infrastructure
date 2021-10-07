@@ -28,8 +28,8 @@ def _write_terraform_variables(
 def _task_init(
     *,
     config_key: str,
-    bin_terraform: Path,
-    dir_terraform: Path,
+    terraform_bin: Path,
+    terraform_dir: Path,
 ):
     """
     Create a task to initialize Terraform and update any dependencies.
@@ -41,18 +41,18 @@ def _task_init(
         Initialize Terraform and update any dependencies.
         """
 
-        with context.cd(dir_terraform):
+        with context.cd(terraform_dir):
             print('Terraform initializing')
             context.run(
                 command=' '.join([
-                    os.path.relpath(bin_terraform, dir_terraform),
+                    os.path.relpath(terraform_bin, terraform_dir),
                     'init',
                     '-no-color',
                 ]),
             )
             context.run(
                 command=' '.join([
-                    os.path.relpath(bin_terraform, dir_terraform),
+                    os.path.relpath(terraform_bin, terraform_dir),
                     'get',
                     '-update',
                     '-no-color',
@@ -65,11 +65,11 @@ def _task_init(
 def _task_apply(
     *,
     config_key: str,
-    bin_terraform: Path,
-    dir_terraform: Path,
-    init: task,
+    terraform_bin: Path,
+    terraform_dir: Path,
     terraform_variables_factory,
     terraform_variables_path: Path,
+    init: task,
     pre_invoke: List[task],
     post_invoke: List[task],
     pre_exec,  # A function to execute before
@@ -110,11 +110,11 @@ def _task_apply(
             )
             pre_exec(context=context, params=params)
 
-        with context.cd(dir_terraform):
+        with context.cd(terraform_dir):
             print('Terraform applying')
             context.run(
                 command=' '.join([
-                    os.path.relpath(bin_terraform, dir_terraform),
+                    os.path.relpath(terraform_bin, terraform_dir),
                     'apply',
                     '-var-file="{}"'.format(terraform_variables_path) if terraform_variables_factory else '',
                     '-auto-approve',
@@ -140,11 +140,11 @@ def _task_apply(
 def _task_destroy(
     *,
     config_key: str,
-    bin_terraform: Path,
-    dir_terraform: Path,
-    init: task,
+    terraform_bin: Path,
+    terraform_dir: Path,
     terraform_variables_factory,
     terraform_variables_path: Path,
+    init: task,
     pre_invoke: List[task],
     post_invoke: List[task],
     pre_exec,  # A function to execute before
@@ -185,11 +185,11 @@ def _task_destroy(
             )
             pre_exec(context=context, params=params)
 
-        with context.cd(dir_terraform):
+        with context.cd(terraform_dir):
             print('Terraform destroying')
             context.run(
                 command=' '.join([
-                    os.path.relpath(bin_terraform, dir_terraform),
+                    os.path.relpath(terraform_bin, terraform_dir),
                     'destroy',
                     '-var-file="{}"'.format(terraform_variables_path) if terraform_variables_factory else '',
                     '-auto-approve',
@@ -214,8 +214,8 @@ def _task_destroy(
 def _task_output(
     *,
     config_key: str,
-    bin_terraform: Path,
-    dir_terraform: Path,
+    terraform_bin: Path,
+    terraform_dir: Path,
     init: task,
     output_tuple_factory,
     output_enhance = None, # A function to execute to enhance the output
@@ -234,11 +234,11 @@ def _task_output(
         Obtain Terraform output.
         """
 
-        with context.cd(dir_terraform):
+        with context.cd(terraform_dir):
             print('Obtaining Terraform output')
             result = context.run(
                 command=' '.join([
-                    os.path.relpath(bin_terraform, dir_terraform),
+                    os.path.relpath(terraform_bin, terraform_dir),
                     'output',
                     '-json',
                     '-no-color',
@@ -260,8 +260,8 @@ def _task_output(
 def create_tasks(
     *,
     config_key: str,
-    bin_terraform: Union[Path, str],
-    dir_terraform: Union[Path, str],
+    terraform_bin: Union[Path, str],
+    terraform_dir: Union[Path, str],
 
     terraform_variables_factory = None,
     terraform_variables_path: Union[Path, str] = None,
@@ -280,8 +280,8 @@ def create_tasks(
     Create all of the tasks, re-using and passing parameters appropriately.
     """
 
-    bin_terraform = Path(bin_terraform)
-    dir_terraform = Path(dir_terraform)
+    terraform_bin = Path(terraform_bin)
+    terraform_dir = Path(terraform_dir)
     terraform_variables_path = Path(terraform_variables_path) if terraform_variables_path else None
 
     if terraform_variables_factory is not None:
@@ -292,18 +292,18 @@ def create_tasks(
 
     init = _task_init(
         config_key=config_key,
-        bin_terraform=bin_terraform,
-        dir_terraform=dir_terraform,
+        terraform_bin=terraform_bin,
+        terraform_dir=terraform_dir,
     )
     ns.add_task(init)
 
     apply = _task_apply(
         config_key=config_key,
-        bin_terraform=bin_terraform,
-        dir_terraform=dir_terraform,
-        init=init,
+        terraform_bin=terraform_bin,
+        terraform_dir=terraform_dir,
         terraform_variables_factory=terraform_variables_factory,
         terraform_variables_path=terraform_variables_path,
+        init=init,
         pre_invoke=apply_pre_invoke,
         post_invoke=apply_post_invoke,
         pre_exec=apply_pre_exec,
@@ -313,11 +313,11 @@ def create_tasks(
 
     destroy = _task_destroy(
         config_key=config_key,
-        bin_terraform=bin_terraform,
-        dir_terraform=dir_terraform,
-        init=init,
+        terraform_bin=terraform_bin,
+        terraform_dir=terraform_dir,
         terraform_variables_factory=terraform_variables_factory,
         terraform_variables_path=terraform_variables_path,
+        init=init,
         pre_invoke=destroy_pre_invoke,
         post_invoke=destroy_post_invoke,
         pre_exec=destroy_pre_exec,
@@ -328,8 +328,8 @@ def create_tasks(
     if output_tuple_factory:
         output = _task_output(
             config_key=config_key,
-            bin_terraform=bin_terraform,
-            dir_terraform=dir_terraform,
+            terraform_bin=terraform_bin,
+            terraform_dir=terraform_dir,
             init=init,
             output_tuple_factory=output_tuple_factory,
             output_enhance=output_enhance,
@@ -419,7 +419,7 @@ def create_context_manager_read_only(
 
 def exclude_destroy_without_state(
     *,
-    dir_terraform: Union[Path, str],
+    terraform_dir: Union[Path, str],
     exclude: List[str],
 ) -> List[str]:
     """
@@ -427,14 +427,14 @@ def exclude_destroy_without_state(
     """
 
     # Ensure Path object
-    dir_terraform = Path(dir_terraform)
+    terraform_dir = Path(terraform_dir)
 
     # Determine whether state exists
     state_exists = True
 
     # Confirm the state file exists
     if state_exists:
-        path_state = Path(dir_terraform, 'terraform.tfstate')
+        path_state = Path(terraform_dir, 'terraform.tfstate')
         if not path_state.exists():
             state_exists = False
 

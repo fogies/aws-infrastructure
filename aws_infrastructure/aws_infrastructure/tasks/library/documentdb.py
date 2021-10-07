@@ -8,8 +8,8 @@ from typing import Union
 def create_tasks(
     *,
     config_key: str,
-    bin_terraform: Union[Path, str],
-    dir_terraform: Union[Path, str],
+    terraform_bin: Union[Path, str],
+    terraform_dir: Union[Path, str],
 
     terraform_variables_factory=None,
     terraform_variables_path: Union[Path, str] = None,
@@ -18,16 +18,16 @@ def create_tasks(
     Create all of the tasks, re-using and passing parameters appropriately.
     """
 
-    bin_terraform = Path(bin_terraform)
-    dir_terraform = Path(dir_terraform)
+    terraform_bin = Path(terraform_bin)
+    terraform_dir = Path(terraform_dir)
     terraform_variables_path = Path(terraform_variables_path) if terraform_variables_path else None
 
     ns_documentdb = Collection('documentdb')
 
     ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
         config_key=config_key,
-        bin_terraform=bin_terraform,
-        dir_terraform=dir_terraform,
+        terraform_bin=terraform_bin,
+        terraform_dir=terraform_dir,
         output_tuple_factory=namedtuple(
             'documentdb',
             [

@@ -14,8 +14,8 @@ class SSHConfig:
     """
     Configuration for SSH connection to an instance.
     """
-    def __init__(self, *, path_ssh_config: Path):
-        with open(path_ssh_config) as file_ssh_config:
+    def __init__(self, *, ssh_config_path: Path):
+        with open(ssh_config_path) as file_ssh_config:
             yaml_config = ruamel.yaml.safe_load(file_ssh_config)
 
         self._ip = yaml_config['ip']
@@ -250,13 +250,13 @@ class PortForwardContextManager:
 def task_ssh(
     *,
     config_key: str,
-    path_ssh_config: Union[Path, str],
+    ssh_config_path: Union[Path, str],
 ):
     """
     Create a task to open an SSH session to the instance.
     """
 
-    path_ssh_config = Path(path_ssh_config)
+    ssh_config_path = Path(ssh_config_path)
 
     @task
     def ssh(context):
@@ -266,7 +266,7 @@ def task_ssh(
         print('Creating SSH session')
 
         # Load the SSH config
-        ssh_config = SSHConfig(path_ssh_config=path_ssh_config)
+        ssh_config = SSHConfig(ssh_config_path=ssh_config_path)
 
         # Launch an external SSH session,
         # which seems more appropriate than attempting via Paramiko.
@@ -276,9 +276,9 @@ def task_ssh(
                           # This has been only way to obtain a proper terminal
                 'ssh',
                 '-l {}'.format(ssh_config.user),
-                '-i {}'.format(Path(path_ssh_config.parent, ssh_config.key_file)),
+                '-i {}'.format(Path(ssh_config_path.parent, ssh_config.key_file)),
                 '-o StrictHostKeyChecking=no',
-                '-o UserKnownHostsFile="{}"'.format(Path(path_ssh_config.parent, 'known_hosts')),
+                '-o UserKnownHostsFile="{}"'.format(Path(ssh_config_path.parent, 'known_hosts')),
                 ssh_config.ip
             ]),
             disown=True
@@ -290,13 +290,13 @@ def task_ssh(
 def task_ssh_port_forward(
     *,
     config_key: str,
-    path_ssh_config: Union[Path, str],
+    ssh_config_path: Union[Path, str],
 ):
     """
     Create a task to forward a port from the instance.
     """
 
-    path_ssh_config = Path(path_ssh_config)
+    ssh_config_path = Path(ssh_config_path)
 
     @task
     def ssh_port_forward(context, port, host=None, local_port=None):
@@ -305,7 +305,7 @@ def task_ssh_port_forward(
         """
 
         # Load the SSH config
-        ssh_config = SSHConfig(path_ssh_config=path_ssh_config)
+        ssh_config = SSHConfig(ssh_config_path=ssh_config_path)
 
         # Remote port is required
         remote_port = int(port)

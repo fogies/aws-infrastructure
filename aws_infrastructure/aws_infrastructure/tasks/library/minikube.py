@@ -12,7 +12,7 @@ from typing import Union
 
 def _destroy_post_exec(
     *,
-    dir_terraform: Path,
+    terraform_dir: Path,
     instance_names: List[str],
 ):
     """
@@ -33,7 +33,7 @@ def _destroy_post_exec(
         # Look for these directories, delete them if they are effectively empty.
         for instance_name_current in instance_names:
             # Instance dirs are relative to the Terraform directory
-            dir_instance_current = Path(dir_terraform, instance_name_current)
+            dir_instance_current = Path(terraform_dir, instance_name_current)
             if dir_instance_current.exists() and dir_instance_current.is_dir():
                 # Some children may exist but can be safely deleted.
                 # Check if all existing children are known to be safe to delete.
@@ -60,10 +60,10 @@ def _destroy_post_exec(
 def create_tasks(
     *,
     config_key: str,
-    bin_terraform: Union[Path, str],
-    dir_terraform: Union[Path, str],
-    dir_helm_repo: Union[Path, str],
-    dir_staging_local_helmfile: Union[Path, str],
+    terraform_bin: Union[Path, str],
+    terraform_dir: Union[Path, str],
+    helm_repo_dir: Union[Path, str],
+    staging_local_helmfile_dir: Union[Path, str],
     instance_names: List[str],
 
     terraform_variables_factory = None,
@@ -73,10 +73,10 @@ def create_tasks(
     Create all of the tasks, re-using and passing parameters appropriately.
     """
 
-    bin_terraform = Path(bin_terraform)
-    dir_terraform = Path(dir_terraform)
-    dir_helm_repo = Path(dir_helm_repo)
-    dir_staging_local_helmfile = Path(dir_staging_local_helmfile)
+    terraform_bin = Path(terraform_bin)
+    terraform_dir = Path(terraform_dir)
+    helm_repo_dir = Path(helm_repo_dir)
+    staging_local_helmfile_dir = Path(staging_local_helmfile_dir)
     terraform_variables_path = Path(terraform_variables_path) if terraform_variables_path else None
 
     # Collection to compose
@@ -85,13 +85,13 @@ def create_tasks(
     # Create the terraform tasks
     ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
         config_key=config_key,
-        bin_terraform=bin_terraform,
-        dir_terraform=dir_terraform,
+        terraform_bin=terraform_bin,
+        terraform_dir=terraform_dir,
 
         terraform_variables_factory=terraform_variables_factory,
         terraform_variables_path=terraform_variables_path,
         destroy_post_exec=_destroy_post_exec(
-            dir_terraform=dir_terraform,
+            terraform_dir=terraform_dir,
             instance_names=instance_names,
         ),
     )
@@ -106,19 +106,19 @@ def create_tasks(
     # Then create tasks associated with any active instances
     for instance_name_current in instance_names:
         # Instance dirs are relative to the Terraform directory
-        dir_instance_current = Path(dir_terraform, instance_name_current)
-        path_ssh_config = Path(dir_terraform, instance_name_current, 'ssh_config.yaml')
+        dir_instance_current = Path(terraform_dir, instance_name_current)
+        ssh_config_path = Path(terraform_dir, instance_name_current, 'ssh_config.yaml')
 
         # We are currently using existence of the ssh_config to detect the instance exists
-        if path_ssh_config.exists():
+        if ssh_config_path.exists():
             # Create the instance tasks
             ns_instance = aws_infrastructure.tasks.library.minikube_instance.create_tasks(
                 config_key='{}.{}'.format(config_key, instance_name_current),
-                dir_terraform=dir_terraform,
-                dir_helm_repo=dir_helm_repo,
+                terraform_dir=terraform_dir,
+                helm_repo_dir=helm_repo_dir,
                 instance_name=instance_name_current,
-                path_ssh_config=path_ssh_config,
-                dir_staging_local_helmfile=dir_staging_local_helmfile
+                ssh_config_path=ssh_config_path,
+                staging_local_helmfile_dir=staging_local_helmfile_dir
             )
 
             # Compose the instance tasks
