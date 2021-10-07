@@ -13,10 +13,6 @@ def _write_terraform_variables(
     terraform_variables_path,
     terraform_variables_dict,
 ):
-    lines.extend([
-        '{}="{}"'.format(key, value) for (key, value) in terraform_variables_dict.items()
-    ])
-
     with open(terraform_variables_path, 'w') as file_variables:
         file_variables.write('\n'.join(
             [
