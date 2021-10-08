@@ -10,7 +10,7 @@ from typing import Union
 
 def _write_terraform_variables(
     *,
-    terraform_variables_path,
+    terraform_variables_path: Path,
     terraform_variables_dict,
 ):
     with open(terraform_variables_path, 'w') as file_variables:
@@ -121,7 +121,9 @@ def _task_apply(
                 command=' '.join([
                     os.path.relpath(terraform_bin, terraform_dir),
                     'apply',
-                    '-var-file="{}"'.format(terraform_variables_path) if terraform_variables_factory else '',
+                    '-var-file="{}"'.format(
+                        os.path.relpath(terraform_dir, terraform_variables_path)
+                    ) if terraform_variables_factory else '',
                     '-auto-approve',
                     '-no-color',
                 ]),
@@ -196,7 +198,9 @@ def _task_destroy(
                 command=' '.join([
                     os.path.relpath(terraform_bin, terraform_dir),
                     'destroy',
-                    '-var-file="{}"'.format(terraform_variables_path) if terraform_variables_factory else '',
+                    '-var-file="{}"'.format(
+                        os.path.relpath(terraform_dir, terraform_variables_path)
+                    ) if terraform_variables_factory else '',
                     '-auto-approve',
                     '-no-color',
                 ]),
