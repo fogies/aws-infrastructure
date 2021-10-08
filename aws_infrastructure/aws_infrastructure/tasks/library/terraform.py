@@ -122,7 +122,7 @@ def _task_apply(
                     os.path.relpath(terraform_bin, terraform_dir),
                     'apply',
                     '-var-file="{}"'.format(
-                        os.path.relpath(terraform_dir, terraform_variables_path)
+                        os.path.relpath(terraform_variables_path, terraform_dir)
                     ) if terraform_variables_factory else '',
                     '-auto-approve',
                     '-no-color',
@@ -199,7 +199,7 @@ def _task_destroy(
                     os.path.relpath(terraform_bin, terraform_dir),
                     'destroy',
                     '-var-file="{}"'.format(
-                        os.path.relpath(terraform_dir, terraform_variables_path)
+                        os.path.relpath(terraform_variables_path, terraform_dir)
                     ) if terraform_variables_factory else '',
                     '-auto-approve',
                     '-no-color',
