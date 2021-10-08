@@ -49,3 +49,18 @@ def create_tasks(
     )
 
     return ns_documentdb
+
+
+def create_documentdb_read_only(
+    ns_documentdb: Collection,
+):
+    """
+    Create a read only context manager.
+    """
+
+    documentdb_read_only = aws_infrastructure.tasks.library.terraform.create_context_manager_read_only(
+        init=ns_documentdb.tasks['init'],
+        output=ns_documentdb.tasks['output'],
+    )
+
+    return documentdb_read_only
