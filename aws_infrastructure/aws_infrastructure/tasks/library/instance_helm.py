@@ -11,7 +11,7 @@ def task_helm_install(
     config_key: str,
     helm_repo_dir: Path,
     ssh_config_path: Path,
-    dir_staging_remote: Path,
+    staging_remote_dir: Path,
 ):
     @task
     def helm_install(context, helm_chart):
@@ -79,13 +79,13 @@ def task_helm_install(
         with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
             # Create a staging directory
             ssh_client.exec_command(command=[
-                'rm -rf {}'.format(dir_staging_remote.as_posix()),
-                'mkdir -p {}'.format(dir_staging_remote.as_posix()),
+                'rm -rf {}'.format(staging_remote_dir.as_posix()),
+                'mkdir -p {}'.format(staging_remote_dir.as_posix()),
             ])
 
             # Upload the chart file
             with aws_infrastructure.tasks.library.instance_ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
-                sftp_client.client.chdir(dir_staging_remote.as_posix())
+                sftp_client.client.chdir(staging_remote_dir.as_posix())
                 sftp_client.client.put(
                     localpath=Path(helm_chart),
                     remotepath=helm_chart_file_name,
@@ -99,10 +99,10 @@ def task_helm_install(
                 '--install',
                 '--skip-crds',
                 helm_chart_name,
-                Path(dir_staging_remote, helm_chart_file_name).as_posix(),
+                Path(staging_remote_dir, helm_chart_file_name).as_posix(),
             ]))
 
             # Remove the staging directory
-            ssh_client.exec_command(command='rm -rf {}'.format(dir_staging_remote.as_posix()))
+            ssh_client.exec_command(command='rm -rf {}'.format(staging_remote_dir.as_posix()))
 
     return helm_install

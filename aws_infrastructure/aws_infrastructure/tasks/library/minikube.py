@@ -64,6 +64,8 @@ def create_tasks(
     terraform_dir: Union[Path, str],
     helm_repo_dir: Union[Path, str],
     staging_local_helmfile_dir: Union[Path, str],
+    staging_remote_helm_dir: Union[Path, str],
+    staging_remote_helmfile_dir: Union[Path, str],
     instance_names: List[str],
 
     terraform_variables_factory = None,
@@ -118,7 +120,9 @@ def create_tasks(
                 helm_repo_dir=helm_repo_dir,
                 instance_name=instance_name_current,
                 ssh_config_path=ssh_config_path,
-                staging_local_helmfile_dir=staging_local_helmfile_dir
+                staging_local_helmfile_dir=staging_local_helmfile_dir,
+                staging_remote_helm_dir=staging_remote_helm_dir,
+                staging_remote_helmfile_dir=staging_remote_helmfile_dir,
             )
 
             # Compose the instance tasks

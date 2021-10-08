@@ -32,9 +32,8 @@ def create_tasks(
     ssh_config_path: Union[Path, str],
 
     staging_local_helmfile_dir: Union[Path, str],
-
-    dir_staging_remote_helm: Union[Path, str] = None, # '.staging/helm',
-    dir_staging_remote_helmfile: Union[Path, str] = None, # '.staging/helmfile'
+    staging_remote_helm_dir: Union[Path, str],
+    staging_remote_helmfile_dir: Union[Path, str],
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -43,10 +42,8 @@ def create_tasks(
     terraform_dir = Path(terraform_dir)
     helm_repo_dir = Path(helm_repo_dir)
     ssh_config_path = Path(ssh_config_path)
-    if dir_staging_remote_helm is not None:
-        dir_staging_remote_helm = Path(dir_staging_remote_helm)
-    if dir_staging_remote_helmfile is not None:
-        dir_staging_remote_helmfile = Path(dir_staging_remote_helmfile)
+    staging_remote_helm_dir = Path(staging_remote_helm_dir)
+    staging_remote_helmfile_dir = Path(staging_remote_helmfile_dir)
 
     ns = Collection(instance_name)
 
@@ -66,7 +63,7 @@ def create_tasks(
         config_key=config_key,
         helm_repo_dir=helm_repo_dir,
         ssh_config_path=ssh_config_path,
-        dir_staging_remote=dir_staging_remote_helm,
+        staging_remote_dir=staging_remote_helm_dir,
     )
     ns.add_task(helm_install)
 
@@ -74,7 +71,7 @@ def create_tasks(
         config_key=config_key,
         ssh_config_path=ssh_config_path,
         staging_local_dir=staging_local_helmfile_dir,
-        dir_staging_remote=dir_staging_remote_helmfile,
+        staging_remote_dir=staging_remote_helmfile_dir,
     )
     ns.add_task(helmfile_apply)
 

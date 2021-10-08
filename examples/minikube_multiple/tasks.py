@@ -8,6 +8,8 @@ TERRAFORM_BIN = './bin/terraform.exe'
 TERRAFORM_DIR = './examples/minikube_multiple'
 HELM_REPO_DIR = './helm_repo'
 STAGING_LOCAL_HELMFILE_DIR = './.staging/helmfile'
+STAGING_REMOTE_HELM_DIR = './.staging/helm'
+STAGING_REMOTE_HELMFILE_DIR = './.staging/helmfile'
 INSTANCE_NAMES = ['amd64_medium', 'amd64_large']
 
 ns = Collection('minikube-multiple')
@@ -18,6 +20,8 @@ ns_minikube = aws_infrastructure.tasks.library.minikube.create_tasks(
     terraform_dir=TERRAFORM_DIR,
     helm_repo_dir=HELM_REPO_DIR,
     staging_local_helmfile_dir=STAGING_LOCAL_HELMFILE_DIR,
+    staging_remote_helm_dir=STAGING_REMOTE_HELM_DIR,
+    staging_remote_helmfile_dir=STAGING_REMOTE_HELMFILE_DIR,
     instance_names=INSTANCE_NAMES,
 )
 

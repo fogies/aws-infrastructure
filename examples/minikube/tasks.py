@@ -10,6 +10,8 @@ TERRAFORM_BIN = './bin/terraform.exe'
 TERRAFORM_DIR = './examples/minikube'
 HELM_REPO_DIR = './helm_repo'
 STAGING_LOCAL_HELMFILE_DIR = './.staging/helmfile'
+STAGING_REMOTE_HELM_DIR = './.staging/helm'
+STAGING_REMOTE_HELMFILE_DIR = './.staging/helmfile'
 INSTANCE_NAMES = ['instance']
 
 ns = Collection('minikube')
@@ -20,6 +22,8 @@ ns_minikube = aws_infrastructure.tasks.library.minikube.create_tasks(
     terraform_dir=TERRAFORM_DIR,
     helm_repo_dir=HELM_REPO_DIR,
     staging_local_helmfile_dir=STAGING_LOCAL_HELMFILE_DIR,
+    staging_remote_helm_dir=STAGING_REMOTE_HELM_DIR,
+    staging_remote_helmfile_dir=STAGING_REMOTE_HELMFILE_DIR,
     instance_names=INSTANCE_NAMES,
 )
 
@@ -36,7 +40,7 @@ compose_collection(
 )
 
 
-def examples_nginx_values_variables(*, context):
+def examples_nginx_values_factory(*, context):
     return {
         'exampleHelmNginxText': 'Example Helm Nginx Text from examples_nginx_values_variables.'
     }
@@ -50,10 +54,11 @@ for instance_name_current in INSTANCE_NAMES:
             config_key=CONFIG_KEY,
             ssh_config_path=ssh_config_path,
             staging_local_dir=STAGING_LOCAL_HELMFILE_DIR,
+            staging_remote_dir=STAGING_REMOTE_HELMFILE_DIR,
             path_helmfile='./examples/helmfile_nginx/helmfile.yaml',
             path_helmfile_config='./examples/helmfile_nginx/helmfile-config.yaml',
-            values_variables={
-                'examples_nginx': examples_nginx_values_variables
+            helmfile_values_factories={
+                'examples_nginx': examples_nginx_values_factory
             },
         )
 
