@@ -118,15 +118,15 @@ def _task_apply(
         with context.cd(terraform_dir):
             print('Terraform applying')
             context.run(
-                command=' '.join([
+                command=' '.join(filter(None, [
                     os.path.relpath(terraform_bin, terraform_dir),
                     'apply',
                     '-var-file="{}"'.format(
                         os.path.relpath(terraform_variables_path, terraform_dir)
-                    ) if terraform_variables_factory else '',
+                    ) if terraform_variables_factory else None,
                     '-auto-approve',
                     '-no-color',
-                ]),
+                ])),
                 echo=True
             )
 
@@ -195,15 +195,15 @@ def _task_destroy(
         with context.cd(terraform_dir):
             print('Terraform destroying')
             context.run(
-                command=' '.join([
+                command=' '.join(filter(None, [
                     os.path.relpath(terraform_bin, terraform_dir),
                     'destroy',
                     '-var-file="{}"'.format(
                         os.path.relpath(terraform_variables_path, terraform_dir)
-                    ) if terraform_variables_factory else '',
+                    ) if terraform_variables_factory else None,
                     '-auto-approve',
                     '-no-color',
-                ]),
+                ])),
             )
 
         if post_exec:

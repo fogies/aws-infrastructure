@@ -2,14 +2,62 @@ from aws_infrastructure.tasks import compose_collection
 import aws_infrastructure.tasks.library.terraform
 from collections import namedtuple
 from invoke import Collection
+import os
 from pathlib import Path
+import shutil
 from typing import Union
+
+
+def _destroy_post_exec(
+    *,
+    terraform_dir: Path,
+    config_dir: Path,
+):
+    """
+    Create a helper function for the destroy task.
+    """
+
+    def delete_empty_config_dir(
+        *,
+        context,
+        params,
+    ):
+        """
+        Delete any instance directories which are effectively empty.
+        """
+
+        # Terraform will create directories for created files.
+        # But Terraform will not automatically remove those same directories, even if they are empty.
+        # Look for these directories, delete them if they are effectively empty.
+        if config_dir.exists() and config_dir.is_dir():
+            # Some children may exist but can be safely deleted.
+            # Check if all existing children are known to be safe to delete.
+            # If so, delete everything. Otherwise, leave everything.
+            safe_to_delete_entries = [
+                # Not expecting any children
+            ]
+
+            # Determine if all existing files are safe to delete
+            existing_entries = os.scandir(config_dir)
+            unknown_entries = [
+                entry_current
+                for entry_current in existing_entries
+                if entry_current.name not in safe_to_delete_entries
+            ]
+
+            # If everything is safe to delete, then go ahead with deletion
+            if len(unknown_entries) == 0:
+                shutil.rmtree(config_dir)
+
+    return delete_empty_config_dir
+
 
 def create_tasks(
     *,
     config_key: str,
     terraform_bin: Union[Path, str],
     terraform_dir: Union[Path, str],
+    name: str,
 
     terraform_variables_factory=None,
     terraform_variables_path: Union[Path, str] = None,
@@ -40,6 +88,10 @@ def create_tasks(
 
         terraform_variables_factory=terraform_variables_factory,
         terraform_variables_path=terraform_variables_path,
+        destroy_post_exec=_destroy_post_exec(
+            terraform_dir=terraform_dir,
+            config_dir=Path(terraform_dir, name),
+        ),
     )
 
     compose_collection(
