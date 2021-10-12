@@ -6,4 +6,5 @@ locals {
   resolved_admin_password = aws_docdb_cluster.docdb.master_password
   resolved_endpoint = aws_docdb_cluster.docdb.endpoint
   resolved_hosts = [ for instance_current in aws_docdb_cluster_instance.instances: instance_current.endpoint ]
+  resolved_port = aws_docdb_cluster.docdb.port
 }

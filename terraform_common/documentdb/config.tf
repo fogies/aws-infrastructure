@@ -30,5 +30,6 @@ resource "local_file" "documentdb_config" {
     admin_password = local.resolved_admin_password
     endpoint = local.resolved_endpoint
     hosts = local.resolved_hosts
+    port = local.resolved_port
   })
 }

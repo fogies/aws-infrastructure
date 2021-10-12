@@ -26,3 +26,10 @@ output "endpoint" {
 output "hosts" {
   value = local.resolved_hosts
 }
+
+/*
+ * Port on which to connect.
+ */
+output "port" {
+  value = local.resolved_port
+}
