@@ -5,7 +5,60 @@ from invoke import Collection
 import os
 from pathlib import Path
 import shutil
+from typing import List
 from typing import Union
+
+
+class DocumentDBConfig:
+    """
+    Configuration for connection to a DocumentDB instance.
+    """
+
+    _admin_password: str
+    _admin_user: str
+    _endpoint: Path
+    _hosts: List[str]
+    _port: int
+
+    def __init__(self, *, admin_user: str, admin_password: str, endpoint:str, hosts: List[str], port: int):
+        self._admin_user = admin_user
+        self._admin_password = admin_password
+        self._endpoint = endpoint
+        self._hosts = hosts
+        self._port = port
+
+    @staticmethod
+    def load(documentdb_config_path: Path):
+        with open(documentdb_config_path) as documentdb_config_file:
+            yaml_config = ruamel.yaml.safe_load(documentdb_config_file)
+
+        return DocumentDBConfig(
+            admin_user = yaml_config['admin_user'],
+            admin_password = yaml_config['admin_password'],
+            endpoint = yaml_config['endpoint'],
+            hosts = yaml_config['hosts'],
+            port = yaml_config['port'],
+        )
+
+    @property
+    def admin_password(self) -> str:
+        return self._admin_password
+
+    @property
+    def admin_user(self) -> str:
+        return self._admin_user
+
+    @property
+    def endpoint(self) -> str:
+        return self._endpoint
+
+    @property
+    def hosts(self) -> List[str]:
+        return self._hosts
+
+    @property
+    def port(self) -> int:
+        return self._port
 
 
 def _destroy_post_exec(
