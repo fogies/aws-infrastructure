@@ -4,6 +4,7 @@ from pathlib import Path
 import ruamel.yaml
 import select
 import socketserver
+import threading
 from typing import List
 from typing import Union
 
@@ -195,7 +196,14 @@ class SSHPortForwardContextManager:
     _local_port: int
     _server: socketserver.ThreadingTCPServer
 
-    def __init__(self, *, ssh_client: SSHClientContextManager, remote_host: str, remote_port: int, local_port: int):
+    def __init__(
+        self,
+        *,
+        ssh_client: SSHClientContextManager,
+        remote_host: str,
+        remote_port: int,
+        local_port: int = 0,
+    ):
         self._ssh_client = ssh_client
         self._remote_host = remote_host
         self._remote_port = remote_port
@@ -243,11 +251,19 @@ class SSHPortForwardContextManager:
 
         return Handler
 
-    def forward_forever(self):
+    def forward_forever(self, *, threaded: bool):
         """
         Handle incoming requests forever.
         """
-        self._server.serve_forever()
+
+        def forward_forever_thread():
+            self._server.serve_forever()
+
+        if threaded:
+            threading.Thread(target=forward_forever_thread)
+        else:
+            forward_forever_thread()
+
 
     def _port_forward_start(self):
         """
@@ -258,7 +274,7 @@ class SSHPortForwardContextManager:
             RequestHandlerClass=self._create_handler(self._ssh_client.client, self._remote_host, self._remote_port),
         )
 
-        print('Forwarding local port {} to remote port {}'.format(self._local_port, self._remote_port))
+        print('Forwarding local port {} to remote {}:{}'.format(self.local_port, self.remote_host, self.remote_port))
 
     def _port_forward_destroy(self):
         """
@@ -268,3 +284,19 @@ class SSHPortForwardContextManager:
         """
         self._server.shutdown()
         self._server = None
+
+    @property
+    def local_port(self) -> str:
+        # Obtain the port from the server,
+        # so that providing local port of 0 allows automatically choosing an open port
+        (server_host, server_port) = self._server.server_address
+
+        return server_port
+
+    @property
+    def remote_host(self) -> str:
+        return self._remote_host
+
+    @property
+    def remote_port(self) -> str:
+        return self._remote_port
