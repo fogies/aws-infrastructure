@@ -54,7 +54,7 @@ def _helmfile_apply(
             })
 
     # Connect via SSH
-    ssh_config = aws_infrastructure.tasks.library.instance_ssh.SSHConfig(ssh_config_path=ssh_config_path)
+    ssh_config = aws_infrastructure.tasks.library.instance_ssh.SSHConfig.load(ssh_config_path=ssh_config_path)
     with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
         # Create a remote staging directory
         ssh_client.exec_command(command=[
