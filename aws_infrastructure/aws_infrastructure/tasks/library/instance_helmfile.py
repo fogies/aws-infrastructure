@@ -4,7 +4,7 @@ from pathlib import Path
 import ruamel.yaml
 from typing import Union
 
-import aws_infrastructure.tasks.library.instance_ssh
+import aws_infrastructure.tasks.ssh
 
 def _helmfile_apply(
     *,
@@ -54,15 +54,15 @@ def _helmfile_apply(
             })
 
     # Connect via SSH
-    ssh_config = aws_infrastructure.tasks.library.instance_ssh.SSHConfig.load(ssh_config_path=ssh_config_path)
-    with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
+    ssh_config = aws_infrastructure.tasks.ssh.SSHConfig.load(ssh_config_path=ssh_config_path)
+    with aws_infrastructure.tasks.ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
         # Create a remote staging directory
         ssh_client.exec_command(command=[
             'rm -rf {}'.format(staging_remote_dir.as_posix()),
             'mkdir -p {}'.format(staging_remote_dir.as_posix()),
         ])
 
-        with aws_infrastructure.tasks.library.instance_ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
+        with aws_infrastructure.tasks.ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
             # FTP within the staging directory
             sftp_client.client.chdir(staging_remote_dir.as_posix())
 
