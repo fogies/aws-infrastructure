@@ -85,6 +85,6 @@ def create_tasks(
     ns = Collection('config')
 
     display = _task_display()
-    ns.add_task(display, display)
+    ns.add_task(display, 'display')
 
     return ns
