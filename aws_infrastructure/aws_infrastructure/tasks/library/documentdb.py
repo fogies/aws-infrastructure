@@ -29,7 +29,9 @@ class DocumentDBConfig:
         self._port = port
 
     @staticmethod
-    def load(documentdb_config_path: Path):
+    def load(documentdb_config_path: Union[Path, str]):
+        documentdb_config_path = Path(documentdb_config_path)
+
         with open(documentdb_config_path) as documentdb_config_file:
             yaml_config = ruamel.yaml.safe_load(documentdb_config_file)
 

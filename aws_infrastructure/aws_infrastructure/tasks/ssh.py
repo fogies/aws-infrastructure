@@ -25,7 +25,9 @@ class SSHConfig:
         self._user = user
 
     @staticmethod
-    def load(ssh_config_path: Path):
+    def load(ssh_config_path: Union[Path, str]):
+        ssh_config_path = Path(ssh_config_path)
+
         with open(ssh_config_path) as ssh_config_file:
             yaml_config = ruamel.yaml.safe_load(ssh_config_file)
 
