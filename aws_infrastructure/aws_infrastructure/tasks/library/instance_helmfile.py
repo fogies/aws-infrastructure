@@ -64,7 +64,7 @@ def _helmfile_apply(
 
         with aws_infrastructure.tasks.ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
             # FTP within the staging directory
-            sftp_client.client.chdir(staging_remote_dir.as_posix())
+            sftp_client.paramiko_sftp_client.chdir(staging_remote_dir.as_posix())
 
             # Upload any dependencies in any provided configuration
             for dependency_current in helmfile_config.get('dependencies', []):
@@ -95,7 +95,7 @@ def _helmfile_apply(
                         ])
 
                     # Upload the dependency file
-                    sftp_client.client.put(
+                    sftp_client.paramiko_sftp_client.put(
                         localpath=str(path_local),
                         remotepath=str(path_remote.as_posix()),
                     )
@@ -105,7 +105,7 @@ def _helmfile_apply(
 
             # Upload the helmfile
             print('Uploading helmfile at: {}'.format(path_helmfile))
-            sftp_client.client.put(
+            sftp_client.paramiko_sftp_client.put(
                 localpath=path_helmfile,
                 remotepath=path_helmfile.name,
             )

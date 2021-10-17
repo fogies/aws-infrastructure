@@ -19,11 +19,14 @@ compose_collection(
     ns,
     ns_eip,
     sub=False,
-    exclude=aws_infrastructure.tasks.library.terraform.exclude_destroy_without_state(
+    exclude=aws_infrastructure.tasks.library.terraform.exclude_without_state(
         terraform_dir=TERRAFORM_DIR,
         exclude=[
             'init',
             'output',
+        ],
+        exclude_without_state=[
+            'destroy'
         ],
     )
 )

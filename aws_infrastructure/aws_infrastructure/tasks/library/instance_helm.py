@@ -85,8 +85,8 @@ def task_helm_install(
 
             # Upload the chart file
             with aws_infrastructure.tasks.library.instance_ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
-                sftp_client.client.chdir(staging_remote_dir.as_posix())
-                sftp_client.client.put(
+                sftp_client.paramiko_sftp_client.chdir(staging_remote_dir.as_posix())
+                sftp_client.paramiko_sftp_client.put(
                     localpath=Path(helm_chart),
                     remotepath=helm_chart_file_name,
                 )

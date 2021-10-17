@@ -55,32 +55,19 @@ class SSHConfig:
         return self._user
 
 
-class SSHClientContextManager:
+class SSHClient:
     """
-    Context manager for connecting, using, and destroying an SSH client.
+    Client for connecting, using, and destroying an SSH connection.
     """
 
     _ssh_config: SSHConfig
-    _client: paramiko.SSHClient
+
+    _paramiko_ssh_client: paramiko.SSHClient
 
     def __init__(self, *, ssh_config: SSHConfig):
         self._ssh_config = ssh_config
-        self._client = None
 
-    def __enter__(self):
-        self._ssh_connect()
-
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._ssh_destroy()
-
-    @property
-    def client(self) -> paramiko.SSHClient:
-        """
-        The SSH client.
-        """
-        return self._client
+        self._paramiko_ssh_client = None
 
     def exec_command(self, *, command: Union[str, List[str]]):
         """
@@ -100,7 +87,7 @@ class SSHClientContextManager:
         else:
             raise ValueError
 
-        stdin, stdout, stderr = self.client.exec_command(
+        stdin, stdout, stderr = self._paramiko_ssh_client.exec_command(
             command=command
         )
 
@@ -118,7 +105,7 @@ class SSHClientContextManager:
                 print('  ' + line.rstrip())
                 line = stderr.readline()
 
-    def _ssh_connect(self):
+    def open(self):
         """
         Connect an SSH client to the instance.
         """
@@ -140,68 +127,104 @@ class SSHClientContextManager:
             pkey=paramiko.rsakey.RSAKey.from_private_key(io.StringIO(self._ssh_config.key))
         )
 
-        self._client = client
+        self._paramiko_ssh_client = client
 
-    def _ssh_destroy(self):
+    def close(self):
         """
-        Destroy an SSH client that is connected to the instance.
+        Destroy the SSH connection.
         """
-        self._client.close()
-        self._client = None
+        self._paramiko_ssh_client.close()
+        self._paramiko_ssh_client = None
+
+    @property
+    def paramiko_ssh_client(self) -> paramiko.SSHClient:
+        return self._paramiko_ssh_client
+
+
+class SSHClientContextManager:
+    """
+    Context manager for connecting, using, and closing an SSH client.
+    """
+
+    _ssh_client: SSHClient
+
+    def __init__(self, *, ssh_config: SSHConfig):
+        self._ssh_client = SSHClient(ssh_config=ssh_config)
+
+    def __enter__(self) -> SSHClient:
+        self._ssh_client.open()
+
+        return self._ssh_client
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._ssh_client.close()
+
+
+class SFTPClient:
+    """
+    Context manager for connecting, using, and destroying an SFTP client.
+    """
+
+    _ssh_client: SSHClient
+    _paramiko_sftp_client: paramiko.SFTPClient
+
+    def __init__(self, *, ssh_client: SSHClient):
+        self._ssh_client = ssh_client
+        self._sftp_client = None
+
+    def open(self):
+        """
+        Open an SFTP connection.
+        """
+        self._paramiko_sftp_client = self._ssh_client.paramiko_ssh_client.open_sftp()
+
+    def close(self):
+        """
+        Close an SFTP connection.
+        """
+        self._paramiko_sftp_client.close()
+        self._paramiko_sftp_client = None
+
+    @property
+    def paramiko_sftp_client(self) -> paramiko.SFTPClient:
+        return self._paramiko_sftp_client
 
 
 class SFTPClientContextManager:
     """
-    Context manager for connecting, using, and destroying an SFTP client.
+    Context manager for connecting, using, and closing an SFTP client.
     """
-    def __init__(self, *, ssh_client):
-        self._ssh_client = ssh_client
-        self._client = None
 
-    def __enter__(self):
-        self._sftp_connect()
+    _sftp_client: SFTPClient
 
-        return self
+    def __init__(self, *, ssh_client: SSHClient):
+        self._sftp_client = SFTPClient(ssh_client=ssh_client)
+
+    def __enter__(self) -> SFTPClient:
+        self._sftp_client.open()
+
+        return self._sftp_client
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._sftp_destroy()
-
-    @property
-    def client(self) -> paramiko.SFTPClient:
-        """
-        The SFTP client.
-        """
-        return self._client
-
-    def _sftp_connect(self):
-        """
-        Obtain an SFTP client to the instance.
-        """
-        self._client = self._ssh_client.client.open_sftp()
-
-    def _sftp_destroy(self):
-        """
-        Destroy an SSH client that is connected to the instance.
-        """
-        self._client.close()
-        self._client = None
+        self._sftp_client.close()
 
 
-class SSHPortForwardContextManager:
+class SSHPortForward:
     """
-    Context manager for forwarding a port through an ssh client.
+    Forward a port through an ssh client.
     """
 
-    _ssh_client: SSHClientContextManager
+    _ssh_client: SSHClient
     _remote_host: str
     _remote_port: int
-    _local_port: int
+    _requested_local_port: int
+
     _server: socketserver.ThreadingTCPServer
 
     def __init__(
         self,
         *,
-        ssh_client: SSHClientContextManager,
+        ssh_client: SSHClient,
         remote_host: str,
         remote_port: int,
         local_port: int = 0,
@@ -209,24 +232,17 @@ class SSHPortForwardContextManager:
         self._ssh_client = ssh_client
         self._remote_host = remote_host
         self._remote_port = remote_port
-        self._local_port = local_port
+        self._requested_local_port = local_port
+
         self._server = None
 
-    def __enter__(self):
-        self._port_forward_start()
-
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._port_forward_destroy()
-
-    def _create_handler(self, ssh_client, remote_host, remote_port):
+    def _create_handler(self, ssh_client: SSHClient, remote_host: int, remote_port: int):
         class Handler(socketserver.BaseRequestHandler):
-            _ssh_client = ssh_client
-            _remote_port = remote_port
+            _ssh_client: SSHClient = ssh_client
+            _remote_port: int = remote_port
 
             def handle(self):
-                channel = self._ssh_client.get_transport().open_channel(
+                channel = self._ssh_client.paramiko_ssh_client.get_transport().open_channel(
                     kind='direct-tcpip',
                     dest_addr=(remote_host, remote_port),
                     src_addr=self.request.getpeername(),
@@ -253,36 +269,28 @@ class SSHPortForwardContextManager:
 
         return Handler
 
-    def forward_forever(self, *, threaded: bool):
+    def serve_forever(self):
         """
-        Handle incoming requests forever.
+        Forward incoming requests forever.
         """
+        self._server.serve_forever()
 
-        def forward_forever_thread():
-            self._server.serve_forever()
-
-        if threaded:
-            threading.Thread(target=forward_forever_thread)
-        else:
-            forward_forever_thread()
-
-
-    def _port_forward_start(self):
+    def open(self):
         """
         Start the port forwarding server.
         """
         self._server = socketserver.ThreadingTCPServer(
-            server_address=('localhost', self._local_port),
-            RequestHandlerClass=self._create_handler(self._ssh_client.client, self._remote_host, self._remote_port),
+            server_address=('localhost', self._requested_local_port),
+            RequestHandlerClass=self._create_handler(self._ssh_client, self._remote_host, self._remote_port),
         )
+
+        threading.Thread(target=self.serve_forever).start()
 
         print('Forwarding local port {} to remote {}:{}'.format(self.local_port, self.remote_host, self.remote_port))
 
-    def _port_forward_destroy(self):
+    def close(self):
         """
         Stop the port forwarding server.
-
-        In practice it will already be stopped, as this code is only reached by a keyboard interrupt.
         """
         self._server.shutdown()
         self._server = None
@@ -302,3 +310,34 @@ class SSHPortForwardContextManager:
     @property
     def remote_port(self) -> str:
         return self._remote_port
+
+
+class SSHPortForwardContextManager:
+    """
+    Context manager for connecting, using, and closing a port forward.
+    """
+
+    _ssh_port_forward: SSHPortForward
+
+    def __init__(
+        self,
+        *,
+        ssh_client: SSHClientContextManager,
+        remote_host: str,
+        remote_port: int,
+        local_port: int = 0,
+    ):
+        self._ssh_port_forward = SSHPortForward(
+            ssh_client=ssh_client,
+            remote_host=remote_host,
+            remote_port=remote_port,
+            local_port=local_port,
+        )
+
+    def __enter__(self):
+        self._ssh_port_forward.open()
+
+        return self._ssh_port_forward
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._ssh_port_forward.close()

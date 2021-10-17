@@ -90,6 +90,6 @@ def task_ssh_port_forward(
                 remote_host=remote_host,
                 remote_port=remote_port
             ) as port_forward:
-                port_forward.forward_forever(threaded=false)
+                port_forward.serve_forever()
 
     return ssh_port_forward
