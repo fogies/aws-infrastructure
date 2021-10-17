@@ -79,7 +79,7 @@ def _destroy_post_exec(
         params,
     ):
         """
-        Delete any instance directories which are effectively empty.
+        Delete the config directory if it is effectively empty.
         """
 
         # Terraform will create directories for created files.
