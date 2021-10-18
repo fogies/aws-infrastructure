@@ -17,11 +17,10 @@ def _helmfile_apply(
     helmfile_values_factories = None, # Dictionary from string to function that returns dictionary
 ):
     # Load any config
+    helmfile_config = {}
     if path_helmfile_config is not None:
         with open(path_helmfile_config) as file_config:
             helmfile_config = ruamel.yaml.safe_load(file_config)
-    else:
-        helmfile_confg = {}
 
     # If we have values_variables, process them
     if helmfile_values_factories:

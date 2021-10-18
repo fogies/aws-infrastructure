@@ -12,7 +12,7 @@ def task_ssh(
     ssh_config_path: Union[Path, str],
 ):
     """
-    Create a task to open an SSH session to the instance.
+    Create a task to open an SSH session.
     """
 
     ssh_config_path = Path(ssh_config_path)
@@ -20,7 +20,7 @@ def task_ssh(
     @task
     def ssh(context):
         """
-        Open an SSH session to the instance.
+        Open an SSH session.
         """
         print('Creating SSH session')
 
@@ -52,7 +52,7 @@ def task_ssh_port_forward(
     ssh_config_path: Union[Path, str],
 ):
     """
-    Create a task to forward a port from the instance.
+    Create a task to forward a port from a remote host.
     """
 
     ssh_config_path = Path(ssh_config_path)
@@ -60,7 +60,7 @@ def task_ssh_port_forward(
     @task
     def ssh_port_forward(context, port, host=None, local_port=None):
         """
-        Forward a port from a remote host accessible by the instance.
+        Forward a port from a remote host.
         """
 
         # Load the SSH config

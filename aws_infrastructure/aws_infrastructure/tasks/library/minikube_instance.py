@@ -6,6 +6,7 @@ from typing import Union
 import aws_infrastructure.tasks.library.instance_helm
 import aws_infrastructure.tasks.library.instance_helmfile
 import aws_infrastructure.tasks.library.instance_ssh
+import aws_infrastructure.tasks.ssh
 
 
 def _task_ip(
@@ -18,7 +19,7 @@ def _task_ip(
         """
         Print the public IP of the instance.
         """
-        print(aws_infrastructure.tasks.library.instance_ssh.SSHConfig(ssh_config_path=ssh_config_path).ip)
+        print(aws_infrastructure.tasks.ssh.SSHConfig.load(ssh_config_path=ssh_config_path).ip)
 
     return ip
 

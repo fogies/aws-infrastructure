@@ -5,6 +5,7 @@ import re
 import semver
 
 import aws_infrastructure.tasks.library.instance_ssh
+import aws_infrastructure.tasks.ssh
 
 def task_helm_install(
     *,
@@ -75,8 +76,8 @@ def task_helm_install(
         helm_chart_name = match.group(1)
 
         # Connect via SSH
-        ssh_config = aws_infrastructure.tasks.library.instance_ssh.SSHConfig(ssh_config_path=ssh_config_path)
-        with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
+        ssh_config = aws_infrastructure.tasks.ssh.SSHConfig.load(ssh_config_path=ssh_config_path)
+        with aws_infrastructure.tasks.ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
             # Create a staging directory
             ssh_client.exec_command(command=[
                 'rm -rf {}'.format(staging_remote_dir.as_posix()),
@@ -84,7 +85,7 @@ def task_helm_install(
             ])
 
             # Upload the chart file
-            with aws_infrastructure.tasks.library.instance_ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
+            with aws_infrastructure.tasks.ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
                 sftp_client.paramiko_sftp_client.chdir(staging_remote_dir.as_posix())
                 sftp_client.paramiko_sftp_client.put(
                     localpath=Path(helm_chart),
