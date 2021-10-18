@@ -16,7 +16,7 @@ class ConfigurationEncoder(json.JSONEncoder):
         return str(obj)
 
 
-def task_display():
+def _task_display():
     """
     Create a task to display the Invoke configuration.
     """
@@ -84,7 +84,7 @@ def create_tasks(
 
     ns = Collection('config')
 
-    display = task_display()
-    ns.add_task(display)
+    display = _task_display()
+    ns.add_task(display, 'display')
 
     return ns

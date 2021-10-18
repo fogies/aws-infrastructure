@@ -11,7 +11,7 @@ locals {
  * Multi-zone VPC in which to create instances.
  */
 module "vpc" {
-  source = "../../terraform_common/vpc_simple"
+  source = "../../terraform_common/vpc"
 
   availability_zones = [
     "us-east-1a",
@@ -33,6 +33,14 @@ resource "aws_eip" "ip_amd64_medium" {
 }
 
 /*
+ * Randomly choose a subnet for amd64-medium.
+ */
+resource "random_shuffle" "subnet_id_amd64_medium" {
+  input = module.vpc.subnet_ids
+  result_count = 1
+}
+
+/*
  * Instance amd64-medium, in us-east-1a.
  */
 module "minikube_instance_amd64_medium" {
@@ -45,7 +53,7 @@ module "minikube_instance_amd64_medium" {
 
   vpc_id = module.vpc.vpc_id
   vpc_default_security_group_id = module.vpc.default_security_group_id
-  subnet_id = module.vpc.subnet_ids["us-east-1a"]
+  subnet_id = one(random_shuffle.subnet_id_amd64_medium.result)
 
   eip_id = aws_eip.ip_amd64_medium.id
   eip_public_ip = aws_eip.ip_amd64_medium.public_ip
@@ -61,6 +69,14 @@ resource "aws_eip" "ip_amd64_large" {
 }
 
 /*
+ * Randomly choose a subnet for amd64-large.
+ */
+resource "random_shuffle" "subnet_id_amd64_large" {
+  input = module.vpc.subnet_ids
+  result_count = 1
+}
+
+/*
  * Instance amd64-large, in us-east-1b.
  */
 module "minikube_instance_amd64_large" {
@@ -73,7 +89,7 @@ module "minikube_instance_amd64_large" {
 
   vpc_id = module.vpc.vpc_id
   vpc_default_security_group_id = module.vpc.default_security_group_id
-  subnet_id = module.vpc.subnet_ids["us-east-1b"]
+  subnet_id = one(random_shuffle.subnet_id_amd64_large.result)
 
   eip_id = aws_eip.ip_amd64_large.id
   eip_public_ip = aws_eip.ip_amd64_large.public_ip

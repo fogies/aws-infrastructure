@@ -10,15 +10,15 @@ from collections import namedtuple
 from invoke import Collection
 
 CONFIG_KEY = 'terraform_vpc_packer'
-BIN_TERRAFORM = './bin/terraform.exe'
-DIR_TERRAFORM = './terraform_vpc_packer'
+TERRAFORM_BIN = './bin/terraform.exe'
+TERRAFORM_DIR = './terraform_vpc_packer'
 
 ns = Collection('vpc-packer')
 
 ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
     config_key=CONFIG_KEY,
-    bin_terraform=BIN_TERRAFORM,
-    dir_terraform=DIR_TERRAFORM,
+    terraform_bin=TERRAFORM_BIN,
+    terraform_dir=TERRAFORM_DIR,
     output_tuple_factory=namedtuple('terraform_vpc_packer', ['subnet_id', 'vpc_id'])
 )
 

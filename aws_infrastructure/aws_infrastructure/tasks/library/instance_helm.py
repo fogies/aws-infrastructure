@@ -5,13 +5,14 @@ import re
 import semver
 
 import aws_infrastructure.tasks.library.instance_ssh
+import aws_infrastructure.tasks.ssh
 
 def task_helm_install(
     *,
     config_key: str,
-    dir_helm_repo: Path,
-    path_ssh_config: Path,
-    dir_staging_remote: Path,
+    helm_repo_dir: Path,
+    ssh_config_path: Path,
+    staging_remote_dir: Path,
 ):
     @task
     def helm_install(context, helm_chart):
@@ -34,11 +35,11 @@ def task_helm_install(
         elif (match := re.match('(.+)-([0-9\\.]+)\\.tgz', helm_chart)) is not None:
             # A file (e.g., 'ingress-0.1.0.tgz').
             # Use it to reference a file in helm_charts_dir.
-            helm_chart = Path(dir_helm_repo, helm_chart)
+            helm_chart = Path(helm_repo_dir, helm_chart)
         elif (match := re.match('(.+)-([0-9\\.]+)', helm_chart)) is not None:
             # A name including a version (e.g., 'ingress-0.1.0').
             # Use it to reference a file in helm_charts_dir.
-            helm_chart = Path(dir_helm_repo, '{}.tgz'.format(helm_chart))
+            helm_chart = Path(helm_repo_dir, '{}.tgz'.format(helm_chart))
         else:
             # A name absent a version (e.g., 'ingress').
             # Find the latest matching chart in helm_charts_dir.
@@ -46,7 +47,7 @@ def task_helm_install(
             # Alternatively, could parse and examine `index.yaml`.
             helm_chart_latest = None
             helm_chart_version_latest = None
-            for root, dirs, files in os.walk(dir_helm_repo):
+            for root, dirs, files in os.walk(helm_repo_dir):
                 for file_current in files:
                     if (match := re.match('(.+)-([0-9\\.]+)\\.tgz', file_current)) is not None:
                         match_chart = match.group(1)
@@ -75,18 +76,18 @@ def task_helm_install(
         helm_chart_name = match.group(1)
 
         # Connect via SSH
-        ssh_config = aws_infrastructure.tasks.library.instance_ssh.SSHConfig(path_ssh_config=path_ssh_config)
-        with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
+        ssh_config = aws_infrastructure.tasks.ssh.SSHConfig.load(ssh_config_path=ssh_config_path)
+        with aws_infrastructure.tasks.ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
             # Create a staging directory
             ssh_client.exec_command(command=[
-                'rm -rf {}'.format(dir_staging_remote.as_posix()),
-                'mkdir -p {}'.format(dir_staging_remote.as_posix()),
+                'rm -rf {}'.format(staging_remote_dir.as_posix()),
+                'mkdir -p {}'.format(staging_remote_dir.as_posix()),
             ])
 
             # Upload the chart file
-            with aws_infrastructure.tasks.library.instance_ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
-                sftp_client.client.chdir(dir_staging_remote.as_posix())
-                sftp_client.client.put(
+            with aws_infrastructure.tasks.ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
+                sftp_client.paramiko_sftp_client.chdir(staging_remote_dir.as_posix())
+                sftp_client.paramiko_sftp_client.put(
                     localpath=Path(helm_chart),
                     remotepath=helm_chart_file_name,
                 )
@@ -99,10 +100,10 @@ def task_helm_install(
                 '--install',
                 '--skip-crds',
                 helm_chart_name,
-                Path(dir_staging_remote, helm_chart_file_name).as_posix(),
+                Path(staging_remote_dir, helm_chart_file_name).as_posix(),
             ]))
 
             # Remove the staging directory
-            ssh_client.exec_command(command='rm -rf {}'.format(dir_staging_remote.as_posix()))
+            ssh_client.exec_command(command='rm -rf {}'.format(staging_remote_dir.as_posix()))
 
     return helm_install

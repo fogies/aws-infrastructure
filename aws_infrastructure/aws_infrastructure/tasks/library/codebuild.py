@@ -14,9 +14,9 @@ from typing import Union
 
 def _apply_pre_exec(
     *,
-    dir_terraform: Path,
+    terraform_dir: Path,
     instances: List[str],
-    codebuild_environment_variables, # Dictionary from string to function that returns dictionary
+    codebuild_environment_variables_factory, # Dictionary from string to function that returns dictionary
 ):
     def apply_pre_exec(
         *,
@@ -29,17 +29,17 @@ def _apply_pre_exec(
 
         # Create an archive of each source that Terraform can upload to S3
         for instance_current in instances:
-            path_source = Path(dir_terraform, instance_current)
-            path_staging = Path(dir_terraform, 'staging', instance_current)
+            path_source = Path(terraform_dir, instance_current)
+            path_staging = Path(terraform_dir, 'staging', instance_current)
 
             # Copy source into a staging directory
             shutil.rmtree(path=path_staging, ignore_errors=True)
             shutil.copytree(src=path_source, dst=path_staging)
 
             # Determine whether we need to update the buildspec.yml with environment variables
-            if codebuild_environment_variables != None and instance_current in codebuild_environment_variables:
+            if codebuild_environment_variables_factory != None and instance_current in codebuild_environment_variables_factory:
                 # Obtain the variables we need to update in the buildspec.yml
-                codebuild_environment_variables_current = codebuild_environment_variables[instance_current](context=context)
+                codebuild_environment_variables_current = codebuild_environment_variables_factory[instance_current](context=context)
 
                 # Use a parsing object for roundtrip
                 yaml_parser = ruamel.yaml.YAML()
@@ -82,7 +82,7 @@ def _apply_pre_exec(
 
 def _destroy_post_exec(
     *,
-    dir_terraform: Path,
+    terraform_dir: Path,
     instances: List[str],
 ):
     def destroy_post_exec(
@@ -96,7 +96,7 @@ def _destroy_post_exec(
 
         # Clean up the archives
         for instance_current in instances:
-            os.remove(Path(dir_terraform, 'staging', instance_current + '.zip'))
+            os.remove(Path(terraform_dir, 'staging', instance_current + '.zip'))
 
     return destroy_post_exec
 
@@ -104,31 +104,31 @@ def _destroy_post_exec(
 def create_tasks(
     *,
     config_key: str,
-    bin_terraform: Union[Path, str],
-    dir_terraform: Union[Path, str],
+    terraform_bin: Union[Path, str],
+    terraform_dir: Union[Path, str],
     instances: List[str],
-    codebuild_environment_variables,
+    codebuild_environment_variables_factory,
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
     """
 
-    bin_terraform = Path(bin_terraform)
-    dir_terraform = Path(dir_terraform)
+    terraform_bin = Path(terraform_bin)
+    terraform_dir = Path(terraform_dir)
 
     ns_codebuild = Collection('codebuild')
 
     ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
         config_key=config_key,
-        bin_terraform=bin_terraform,
-        dir_terraform=dir_terraform,
+        terraform_bin=terraform_bin,
+        terraform_dir=terraform_dir,
         apply_pre_exec=_apply_pre_exec(
-            dir_terraform=dir_terraform,
+            terraform_dir=terraform_dir,
             instances=instances,
-            codebuild_environment_variables=codebuild_environment_variables,
+            codebuild_environment_variables_factory=codebuild_environment_variables_factory,
         ),
         destroy_post_exec=_destroy_post_exec(
-            dir_terraform=dir_terraform,
+            terraform_dir=terraform_dir,
             instances=instances
         ),
     )

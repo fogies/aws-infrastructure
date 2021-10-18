@@ -2,6 +2,7 @@ from invoke import Collection
 
 from aws_infrastructure.tasks import compose_collection
 import examples.codebuild.tasks
+import examples.documentdb.tasks
 import examples.ecr.tasks
 import examples.eip.tasks
 import examples.minikube.tasks
@@ -12,6 +13,9 @@ ns = Collection('examples')
 
 # Compose from codebuild
 compose_collection(ns, examples.codebuild.tasks.ns)
+
+# Compose from documentdb
+compose_collection(ns, examples.documentdb.tasks.ns)
 
 # Compose from ecr
 compose_collection(ns, examples.ecr.tasks.ns)

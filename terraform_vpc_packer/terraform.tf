@@ -18,7 +18,7 @@ locals {
  * Simple VPC with single Subnet in single Availability Zone.
  */
 module "vpc" {
-  source = "../terraform_common/vpc_simple"
+  source = "../terraform_common/vpc"
 
   aws_availability_zone = var.aws_availability_zone
 

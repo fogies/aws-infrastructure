@@ -11,6 +11,7 @@ aws-infrastructure = {editable = true, path = "./aws_infrastructure"}
 
 [dev-packages]
 pipenv = "*"
+pymongo = "*"
 
 [requires]
 python_version = "3.9"

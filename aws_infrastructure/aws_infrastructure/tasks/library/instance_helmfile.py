@@ -4,39 +4,32 @@ from pathlib import Path
 import ruamel.yaml
 from typing import Union
 
-import aws_infrastructure.tasks.library.instance_ssh
-
-DIR_STAGING_REMOTE_HELMFILE = './.staging/helmfile'
+import aws_infrastructure.tasks.ssh
 
 def _helmfile_apply(
     *,
     context,
-    path_ssh_config: Path,
-    dir_staging_local: Path,
-    dir_staging_remote: Path,
+    ssh_config_path: Path,
+    staging_local_dir: Path,
+    staging_remote_dir: Path,
     path_helmfile: Path,
     path_helmfile_config: Path,
-    values_variables = None, # Dictionary from string to function that returns dictionary
+    helmfile_values_factories = None, # Dictionary from string to function that returns dictionary
 ):
-    # Default remote staging directory
-    if dir_staging_remote is None:
-        dir_staging_remote = Path(DIR_STAGING_REMOTE_HELMFILE)
-
     # Load any config
+    helmfile_config = {}
     if path_helmfile_config is not None:
         with open(path_helmfile_config) as file_config:
             helmfile_config = ruamel.yaml.safe_load(file_config)
-    else:
-        helmfile_confg = {}
 
     # If we have values_variables, process them
-    if values_variables:
+    if helmfile_values_factories:
         # Create a local 'values' staging directory
-        dir_staging_values_local = Path(dir_staging_local, 'values')
+        dir_staging_values_local = Path(staging_local_dir, 'values')
         dir_staging_values_local.mkdir(parents=True, exist_ok=True)
 
         # Process each values_variable
-        for values_name_current, values_factory_current in values_variables.items():
+        for values_name_current, values_factory_current in helmfile_values_factories.items():
             # Obtain the values from the factory
             values_current = values_factory_current(context=context)
 
@@ -60,17 +53,17 @@ def _helmfile_apply(
             })
 
     # Connect via SSH
-    ssh_config = aws_infrastructure.tasks.library.instance_ssh.SSHConfig(path_ssh_config=path_ssh_config)
-    with aws_infrastructure.tasks.library.instance_ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
+    ssh_config = aws_infrastructure.tasks.ssh.SSHConfig.load(ssh_config_path=ssh_config_path)
+    with aws_infrastructure.tasks.ssh.SSHClientContextManager(ssh_config=ssh_config) as ssh_client:
         # Create a remote staging directory
         ssh_client.exec_command(command=[
-            'rm -rf {}'.format(dir_staging_remote.as_posix()),
-            'mkdir -p {}'.format(dir_staging_remote.as_posix()),
+            'rm -rf {}'.format(staging_remote_dir.as_posix()),
+            'mkdir -p {}'.format(staging_remote_dir.as_posix()),
         ])
 
-        with aws_infrastructure.tasks.library.instance_ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
+        with aws_infrastructure.tasks.ssh.SFTPClientContextManager(ssh_client=ssh_client) as sftp_client:
             # FTP within the staging directory
-            sftp_client.client.chdir(dir_staging_remote.as_posix())
+            sftp_client.paramiko_sftp_client.chdir(staging_remote_dir.as_posix())
 
             # Upload any dependencies in any provided configuration
             for dependency_current in helmfile_config.get('dependencies', []):
@@ -94,14 +87,14 @@ def _helmfile_apply(
                         ssh_client.exec_command(command=[
                             'mkdir -p {}'.format(
                                 Path(
-                                    dir_staging_remote,
+                                    staging_remote_dir,
                                     path_remote.parent
                                 ).as_posix()
                             )
                         ])
 
                     # Upload the dependency file
-                    sftp_client.client.put(
+                    sftp_client.paramiko_sftp_client.put(
                         localpath=str(path_local),
                         remotepath=str(path_remote.as_posix()),
                     )
@@ -111,7 +104,7 @@ def _helmfile_apply(
 
             # Upload the helmfile
             print('Uploading helmfile at: {}'.format(path_helmfile))
-            sftp_client.client.put(
+            sftp_client.paramiko_sftp_client.put(
                 localpath=path_helmfile,
                 remotepath=path_helmfile.name,
             )
@@ -125,7 +118,7 @@ def _helmfile_apply(
             'helmfile',
             '--file {}'.format(
                 Path(
-                    dir_staging_remote,
+                    staging_remote_dir,
                     path_helmfile.name
                 ).as_posix()
             ),
@@ -134,27 +127,26 @@ def _helmfile_apply(
         ]))
 
         # Remove the staging directory
-        ssh_client.exec_command(command='rm -rf {}'.format(dir_staging_remote.as_posix()))
+        ssh_client.exec_command(command='rm -rf {}'.format(staging_remote_dir.as_posix()))
 
 
 def task_helmfile_apply(
     *,
     config_key: str,
-    path_ssh_config: Union[Path, str],
-    dir_staging_local: Union[Path, str],
-    dir_staging_remote: Union[Path, str] = None,
+    ssh_config_path: Union[Path, str],
+    staging_local_dir: Union[Path, str],
+    staging_remote_dir: Union[Path, str],
     path_helmfile: Union[Path, str],
     path_helmfile_config: Union[Path, str],
-    values_variables, # Dictionary from string to function that returns dictionary
+    helmfile_values_factories, # Dictionary from string to function that returns dictionary
 ):
     """
     Create a task for applying a specified helmfile with any necessary values_variables.
     """
 
-    path_ssh_config = Path(path_ssh_config)
-    dir_staging_local = Path(dir_staging_local)
-    if dir_staging_remote is not None:
-        dir_staging_remote = Path(dir_staging_remote)
+    ssh_config_path = Path(ssh_config_path)
+    staging_local_dir = Path(staging_local_dir)
+    staging_remote_dir = Path(staging_remote_dir)
     path_helmfile = Path(path_helmfile)
     path_helmfile_config = Path(path_helmfile_config)
 
@@ -167,12 +159,12 @@ def task_helmfile_apply(
 
         _helmfile_apply(
             context=context,
-            path_ssh_config=path_ssh_config,
-            dir_staging_local=dir_staging_local,
-            dir_staging_remote=dir_staging_remote,
+            ssh_config_path=ssh_config_path,
+            staging_local_dir=staging_local_dir,
+            staging_remote_dir=staging_remote_dir,
             path_helmfile=path_helmfile,
             path_helmfile_config=path_helmfile_config,
-            values_variables=values_variables,
+            helmfile_values_factories=helmfile_values_factories,
         )
 
     return helmfile_apply
@@ -181,9 +173,9 @@ def task_helmfile_apply(
 def task_helmfile_apply_generic(
     *,
     config_key: str,
-    path_ssh_config: Union[Path, str],
-    dir_staging_local: Union[Path, str],
-    dir_staging_remote: Union[Path, str] = None,
+    ssh_config_path: Union[Path, str],
+    staging_local_dir: Union[Path, str],
+    staging_remote_dir: Union[Path, str],
 ):
     """
     Create a generic task for applying a helmfile specified on the command line.
@@ -191,10 +183,9 @@ def task_helmfile_apply_generic(
     A generic task does not support values_variables.
     """
 
-    path_ssh_config = Path(path_ssh_config)
-    dir_staging_local = Path(dir_staging_local)
-    if dir_staging_remote is not None:
-        dir_staging_remote = Path(dir_staging_remote)
+    ssh_config_path = Path(ssh_config_path)
+    staging_local_dir = Path(staging_local_dir)
+    staging_remote_dir = Path(staging_remote_dir)
 
     @task
     def helmfile_apply(context, helmfile):
@@ -248,9 +239,9 @@ def task_helmfile_apply_generic(
 
         _helmfile_apply(
             context=context,
-            path_ssh_config=path_ssh_config,
-            dir_staging_local=dir_staging_local,
-            dir_staging_remote=dir_staging_remote,
+            ssh_config_path=ssh_config_path,
+            staging_local_dir=staging_local_dir,
+            staging_remote_dir=staging_remote_dir,
             path_helmfile=path_helmfile,
             path_helmfile_config=path_helmfile_config,
         )

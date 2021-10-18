@@ -47,13 +47,10 @@ resource "local_file" "python_config" {
     "ssh_config.yaml"
   )
 
-  content = templatefile(
-    "${path.module}/templates/ssh_config.yaml.tmpl",
-    {
-        ip = local.resolved_public_ip
-        user = "ubuntu"
-        key = tls_private_key.instance_key_pair.private_key_pem
-        key_file = local.instance_key_private_filename
-    }
-  )
+  content = yamlencode({
+    ip = local.resolved_public_ip
+    user = "ubuntu"
+    key = tls_private_key.instance_key_pair.private_key_pem
+    key_file = local.instance_key_private_filename
+  })
 }

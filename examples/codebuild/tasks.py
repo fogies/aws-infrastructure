@@ -10,8 +10,8 @@ import examples.ecr.tasks
 from invoke import Collection
 
 CONFIG_KEY = 'codebuild'
-BIN_TERRAFORM = './bin/terraform.exe'
-DIR_TERRAFORM = './examples/codebuild'
+TERRAFORM_BIN = './bin/terraform.exe'
+TERRAFORM_DIR = './examples/codebuild'
 
 BUILD_TIMESTAMP = datetime.now().strftime('%Y%m%d%H%M')
 
@@ -40,10 +40,10 @@ ns = Collection('codebuild')
 
 ns_terraform = aws_infrastructure.tasks.library.codebuild.create_tasks(
     config_key=CONFIG_KEY,
-    bin_terraform=BIN_TERRAFORM,
-    dir_terraform=DIR_TERRAFORM,
+    terraform_bin=TERRAFORM_BIN,
+    terraform_dir=TERRAFORM_DIR,
     instances=['example_one', 'example_two'],
-    codebuild_environment_variables={
+    codebuild_environment_variables_factory={
         'example_one': codebuild_environment_variables_example_one,
         'example_two': codebuild_environment_variables_example_two,
     }
@@ -53,11 +53,14 @@ compose_collection(
     ns,
     ns_terraform,
     sub=False,
-    exclude=aws_infrastructure.tasks.library.terraform.exclude_destroy_without_state(
-        dir_terraform=DIR_TERRAFORM,
+    exclude=aws_infrastructure.tasks.library.terraform.exclude_without_state(
+        terraform_dir=TERRAFORM_DIR,
         exclude=[
             'init',
             'apply',
+        ],
+        exclude_without_state=[
+            'destroy'
         ],
     )
 )

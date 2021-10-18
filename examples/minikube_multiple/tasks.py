@@ -4,20 +4,24 @@ import aws_infrastructure.tasks.library.terraform
 from invoke import Collection
 
 CONFIG_KEY = 'examples_minikube_multiple'
-BIN_TERRAFORM = './bin/terraform.exe'
-DIR_TERRAFORM = './examples/minikube_multiple'
-DIR_HELM_REPO = './helm_repo'
-DIR_STAGING_LOCAL_HELMFILE = './.staging/helmfile'
+TERRAFORM_BIN = './bin/terraform.exe'
+TERRAFORM_DIR = './examples/minikube_multiple'
+HELM_REPO_DIR = './helm_repo'
+STAGING_LOCAL_HELMFILE_DIR = './.staging/helmfile'
+STAGING_REMOTE_HELM_DIR = './.staging/helm'
+STAGING_REMOTE_HELMFILE_DIR = './.staging/helmfile'
 INSTANCE_NAMES = ['amd64_medium', 'amd64_large']
 
 ns = Collection('minikube-multiple')
 
 ns_minikube = aws_infrastructure.tasks.library.minikube.create_tasks(
     config_key=CONFIG_KEY,
-    bin_terraform=BIN_TERRAFORM,
-    dir_terraform=DIR_TERRAFORM,
-    dir_helm_repo=DIR_HELM_REPO,
-    dir_staging_local_helmfile=DIR_STAGING_LOCAL_HELMFILE,
+    terraform_bin=TERRAFORM_BIN,
+    terraform_dir=TERRAFORM_DIR,
+    helm_repo_dir=HELM_REPO_DIR,
+    staging_local_helmfile_dir=STAGING_LOCAL_HELMFILE_DIR,
+    staging_remote_helm_dir=STAGING_REMOTE_HELM_DIR,
+    staging_remote_helmfile_dir=STAGING_REMOTE_HELMFILE_DIR,
     instance_names=INSTANCE_NAMES,
 )
 
@@ -25,10 +29,13 @@ compose_collection(
     ns,
     ns_minikube,
     sub=False,
-    exclude=aws_infrastructure.tasks.library.terraform.exclude_destroy_without_state(
-        dir_terraform=DIR_TERRAFORM,
+    exclude=aws_infrastructure.tasks.library.terraform.exclude_without_state(
+        terraform_dir=TERRAFORM_DIR,
         exclude=[
             'init',
+        ],
+        exclude_without_state=[
+            'destroy',
         ],
     )
 )
