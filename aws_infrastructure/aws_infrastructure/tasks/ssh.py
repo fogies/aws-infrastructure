@@ -322,7 +322,7 @@ class SSHPortForwardContextManager:
     def __init__(
         self,
         *,
-        ssh_client: SSHClientContextManager,
+        ssh_client: SSHClient,
         remote_host: str,
         remote_port: int,
         local_port: int = 0,
