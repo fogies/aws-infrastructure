@@ -14,6 +14,9 @@ STAGING_REMOTE_HELM_DIR = './.staging/helm'
 STAGING_REMOTE_HELMFILE_DIR = './.staging/helmfile'
 INSTANCE_NAME = 'instance'
 
+NGINX_HELMFILE_PATH = './examples/helmfile_nginx/helmfile.yaml'
+NGINX_HELMFILE_CONFIG_PATH = './examples/helmfile_nginx/helmfile-config.yaml'
+
 ns = Collection('minikube')
 
 ns_minikube = aws_infrastructure.tasks.library.minikube.create_tasks(
@@ -41,8 +44,8 @@ task_helmfile_nginx = aws_infrastructure.tasks.library.instance_helmfile.task_he
     ssh_config_path=ssh_config_path,
     staging_local_dir=STAGING_LOCAL_HELMFILE_DIR,
     staging_remote_dir=STAGING_REMOTE_HELMFILE_DIR,
-    path_helmfile='./examples/helmfile_nginx/helmfile.yaml',
-    path_helmfile_config='./examples/helmfile_nginx/helmfile-config.yaml',
+    helmfile_path=NGINX_HELMFILE_PATH,
+    helmfile_config_path=NGINX_HELMFILE_CONFIG_PATH,
     helmfile_values_factories={
         'examples_nginx': examples_nginx_values_factory
     },
