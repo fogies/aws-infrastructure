@@ -12,14 +12,14 @@ def _helmfile_apply(
     ssh_config_path: Path,
     staging_local_dir: Path,
     staging_remote_dir: Path,
-    path_helmfile: Path,
-    path_helmfile_config: Path,
+    helmfile_path: Path,
+    helmfile_config_path: Path,
     helmfile_values_factories = None, # Dictionary from string to function that returns dictionary
 ):
     # Load any config
     helmfile_config = {}
-    if path_helmfile_config is not None:
-        with open(path_helmfile_config) as file_config:
+    if helmfile_config_path is not None:
+        with open(helmfile_config_path) as file_config:
             helmfile_config = ruamel.yaml.safe_load(file_config)
 
     # If we have values_variables, process them
@@ -48,7 +48,7 @@ def _helmfile_apply(
 
             # Local file path will be interpeted relative to the directory containing the helmfile_config
             helmfile_config['dependencies'].append({
-                'file': os.path.relpath(path_staging_values_local_current, path_helmfile_config.parent),
+                'file': os.path.relpath(path_staging_values_local_current, helmfile_config_path.parent),
                 'destination': path_staging_values_remote_current,
             })
 
@@ -70,7 +70,7 @@ def _helmfile_apply(
                 if 'file' in dependency_current:
                     # Process a file dependency
                     path_local = Path(
-                        path_helmfile_config.parent,
+                        helmfile_config_path.parent,
                         dependency_current['file']
                     )
                     path_remote = Path(
@@ -103,10 +103,10 @@ def _helmfile_apply(
                     return
 
             # Upload the helmfile
-            print('Uploading helmfile at: {}'.format(path_helmfile))
+            print('Uploading helmfile at: {}'.format(helmfile_path))
             sftp_client.paramiko_sftp_client.put(
-                localpath=path_helmfile,
-                remotepath=path_helmfile.name,
+                localpath=helmfile_path,
+                remotepath=helmfile_path.name,
             )
 
         # Apply the helmfile
@@ -119,7 +119,7 @@ def _helmfile_apply(
             '--file {}'.format(
                 Path(
                     staging_remote_dir,
-                    path_helmfile.name
+                    helmfile_path.name
                 ).as_posix()
             ),
             'apply',
@@ -136,8 +136,8 @@ def task_helmfile_apply(
     ssh_config_path: Union[Path, str],
     staging_local_dir: Union[Path, str],
     staging_remote_dir: Union[Path, str],
-    path_helmfile: Union[Path, str],
-    path_helmfile_config: Union[Path, str],
+    helmfile_path: Union[Path, str],
+    helmfile_config_path: Union[Path, str],
     helmfile_values_factories, # Dictionary from string to function that returns dictionary
 ):
     """
@@ -147,8 +147,8 @@ def task_helmfile_apply(
     ssh_config_path = Path(ssh_config_path)
     staging_local_dir = Path(staging_local_dir)
     staging_remote_dir = Path(staging_remote_dir)
-    path_helmfile = Path(path_helmfile)
-    path_helmfile_config = Path(path_helmfile_config)
+    helmfile_path = Path(helmfile_path)
+    helmfile_config_path = Path(helmfile_config_path)
 
     @task
     def helmfile_apply(context):
@@ -162,8 +162,8 @@ def task_helmfile_apply(
             ssh_config_path=ssh_config_path,
             staging_local_dir=staging_local_dir,
             staging_remote_dir=staging_remote_dir,
-            path_helmfile=path_helmfile,
-            path_helmfile_config=path_helmfile_config,
+            helmfile_path=helmfile_path,
+            helmfile_config_path=helmfile_config_path,
             helmfile_values_factories=helmfile_values_factories,
         )
 
@@ -201,40 +201,40 @@ def task_helmfile_apply_generic(
         # - a path to any other file with a '.yaml' extension, in which case attempt to process as a helmfile
 
         if Path(helmfile).is_file() and Path(helmfile).name == 'helmfile-config.yaml':
-            path_helmfile_config = Path(helmfile)
-            path_helmfile = None
+            helmfile_config_path = Path(helmfile)
+            helmfile_path = None
         elif Path(helmfile).is_dir() and Path(helmfile, 'helmfile-config.yaml').is_file():
-            path_helmfile_config = Path(helmfile, 'helmfile-config.yaml')
-            path_helmfile = None
+            helmfile_config_path = Path(helmfile, 'helmfile-config.yaml')
+            helmfile_path = None
         elif Path(helmfile).is_dir() and Path(helmfile, 'helmfile.yaml').is_file():
-            path_helmfile_config = None
-            path_helmfile = Path(helmfile, 'helmfile.yaml')
+            helmfile_config_path = None
+            helmfile_path = Path(helmfile, 'helmfile.yaml')
         elif Path(helmfile).suffix.casefold() == '.yaml' and Path(helmfile).is_file():
-            path_helmfile_config = None
-            path_helmfile = Path(helmfile)
+            helmfile_config_path = None
+            helmfile_path = Path(helmfile)
         else:
             print('No matching helmfile-config.yaml or helmfile found.')
             return
 
-        if path_helmfile_config and path_helmfile_config.is_file():
+        if helmfile_config_path and helmfile_config_path.is_file():
             # Print the specific configuration we will use
-            print('Found matching helmfile-config.yaml at: {}'.format(path_helmfile_config))
+            print('Found matching helmfile-config.yaml at: {}'.format(helmfile_config_path))
 
             # Load the config
-            with open(path_helmfile_config) as file_config:
+            with open(helmfile_config_path) as file_config:
                 helmfile_config = ruamel.yaml.safe_load(file_config)
 
             # Obtain the helmfile from the configuration
-            path_helmfile = Path(
-                path_helmfile_config.parent,
+            helmfile_path = Path(
+                helmfile_config_path.parent,
                 helmfile_config['helmfile']
             )
 
-        if path_helmfile and path_helmfile.is_file():
+        if helmfile_path and helmfile_path.is_file():
             # Print the specific helmfile we will use
-            print('Found matching helmfile at: {}'.format(path_helmfile))
+            print('Found matching helmfile at: {}'.format(helmfile_path))
         else:
-            print('No matching helmfile at: {}'.format(path_helmfile))
+            print('No matching helmfile at: {}'.format(helmfile_path))
             return
 
         _helmfile_apply(
@@ -242,8 +242,8 @@ def task_helmfile_apply_generic(
             ssh_config_path=ssh_config_path,
             staging_local_dir=staging_local_dir,
             staging_remote_dir=staging_remote_dir,
-            path_helmfile=path_helmfile,
-            path_helmfile_config=path_helmfile_config,
+            helmfile_path=helmfile_path,
+            helmfile_config_path=helmfile_config_path,
         )
 
     return helmfile_apply
