@@ -17,7 +17,7 @@ def _task_ip(
     @task
     def ip(context):
         """
-        Print the public IP of the instance.
+        Public IP of the instance.
         """
         print(aws_infrastructure.tasks.ssh.SSHConfig.load(ssh_config_path=ssh_config_path).ip)
 
