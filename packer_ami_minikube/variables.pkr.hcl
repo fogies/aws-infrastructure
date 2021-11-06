@@ -77,6 +77,19 @@ variable "minikube_memory" {
 }
 
 #
+# Variables related to Docker volume.
+#
+
+variable "docker_volume_size" {
+  # Volume size to allocate.
+  # Provided as number of GB to allocate.
+  #
+  # Typical value is 15.
+
+  type = number
+}
+
+#
 # Variables related to versions.
 #
 

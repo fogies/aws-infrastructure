@@ -18,6 +18,8 @@ variable "availability_zones" {
 
 /*
  * Whether to assign a public IP to created instances.
+ *
+ * Used by terraform_vpc_packer.
  */
 variable "map_public_ip_on_launch" {
   type = bool
