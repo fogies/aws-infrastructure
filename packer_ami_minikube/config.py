@@ -1,12 +1,14 @@
 import datetime
 
 #
-# Build date that will be recorded with this build.
+# Build timestamp that will be recorded with this build.
 #
-# A more finegrained timestamp would be '%Y%m%d-%H%M%S'.
-#
-BUILD_TIMESTAMP = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
+BUILD_TIMESTAMP = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
+#
+# Build timestamp of the source Ubuntu AMI for this build.
+#
+SOURCE_BUILD_TIMESTAMP = '20211021'
 
 #
 # Simple configuration fields that are shared across all builds.
@@ -48,17 +50,19 @@ BUILD_CONFIG_SHARED = {
 # Keys specified here will become part of AMI names. Prefer `-` separators.
 #
 BUILD_CONFIG_INSTANCES = {
-    'amd64-medium': {
+    # docker_volume_size will be part of key
+    'amd64-medium-{}gb': {
         # Type of instance in which to build the image.
         'aws_instance_architecture': 'amd64',
         # Architecture of instance in which to build the image.
         'aws_instance_type': 't3.medium',
 
         # Filter applied to name of the source AMI.
-        'source_ami_filter_name': 'ubuntu/images/hvm-ssd/ubuntu-{}-{}-{}-server-*'.format(
+        'source_ami_filter_name': 'ubuntu/images/hvm-ssd/ubuntu-{}-{}-{}-server-{}'.format(
             BUILD_CONFIG_SHARED['version_ubuntu_name'],
             BUILD_CONFIG_SHARED['version_ubuntu_number'],
             'amd64',
+            SOURCE_BUILD_TIMESTAMP,
         ),
 
         # Memory to allocate to Minikube.
@@ -66,17 +70,19 @@ BUILD_CONFIG_INSTANCES = {
         # Storage to allocate to Docker.
         'docker_volume_size': '20',
     },
-    'amd64-large': {
+    # docker_volume_size will be part of key
+    'amd64-large-{}gb': {
         # Type of instance in which to build the image.
         'aws_instance_architecture': 'amd64',
         # Architecture of instance in which to build the image.
         'aws_instance_type': 't3.large',
 
         # Filter applied to name of the source AMI.
-        'source_ami_filter_name': 'ubuntu/images/hvm-ssd/ubuntu-{}-{}-{}-server-*'.format(
+        'source_ami_filter_name': 'ubuntu/images/hvm-ssd/ubuntu-{}-{}-{}-server-{}'.format(
             BUILD_CONFIG_SHARED['version_ubuntu_name'],
             BUILD_CONFIG_SHARED['version_ubuntu_number'],
             'amd64',
+            SOURCE_BUILD_TIMESTAMP,
         ),
 
         # Memory to allocate to Minikube.
@@ -117,10 +123,14 @@ BUILD_CONFIG = {
 # Add additional fields that are computed based on a specified build configuration.
 #
 BUILD_CONFIG = {
-    build_config_key: build_config | {
+    build_config_key.format(
+        build_config['docker_volume_size'],
+    ): build_config | {
         # Name to assign the build AMI.
         'build_ami_name': 'minikube-{}-{}'.format(
-            build_config_key,
+            build_config_key.format(
+                build_config['docker_volume_size'],
+            ),
             BUILD_TIMESTAMP,
         ),
     }
