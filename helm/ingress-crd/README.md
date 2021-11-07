@@ -18,7 +18,7 @@ Only one release may be installed, because this creates global resources that ma
 
 ### 0.5.0
 
-- Increment dependency versions, cert-manager to 1.5.3.
+- Increment dependency versions, cert-manager to 1.6.1 and Traefik to 10.6.1.
 
 ### 0.1.0
 

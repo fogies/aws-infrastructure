@@ -11,10 +11,5 @@ dependencies:
   # Traefik for ingress
   - name: traefik
     # Specify an exact version for safety
-    version: 9.12.3
+    version: 10.6.1
     repository: https://helm.traefik.io/traefik
-  # cert-manager for certificates
-  - name: cert-manager
-    # Specify an exact version for safety
-    version: 1.5.3
-    repository: https://charts.jetstack.io
