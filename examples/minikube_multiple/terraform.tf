@@ -41,6 +41,18 @@ resource "random_shuffle" "subnet_id_amd64_medium" {
 }
 
 /*
+ * Minikube AMI for amd64-medium.
+ */
+module "minikube_ami_amd64_medium" {
+  source = "../../terraform_common/minikube_ami"
+
+  owner_id = "732463742817"
+  instance_type = "t3.medium"
+  docker_volume_size = "20"
+  build_timestamp = "20211107142725"
+}
+
+/*
  * Instance amd64-medium, in us-east-1a.
  */
 module "minikube_instance_amd64_medium" {
@@ -48,7 +60,7 @@ module "minikube_instance_amd64_medium" {
 
   name = "amd64_medium"
 
-  ami_configuration = "amd64-medium"
+  ami_id = module.minikube_ami_amd64_medium.id
   aws_instance_type = "t3.medium"
 
   vpc_id = module.vpc.vpc_id
@@ -77,6 +89,18 @@ resource "random_shuffle" "subnet_id_amd64_large" {
 }
 
 /*
+ * Minikube AMI for amd64-large.
+ */
+module "minikube_ami_amd64_large" {
+  source = "../../terraform_common/minikube_ami"
+
+  owner_id = "732463742817"
+  instance_type = "t3.large"
+  docker_volume_size = "20"
+  build_timestamp = "20211107142725"
+}
+
+/*
  * Instance amd64-large, in us-east-1b.
  */
 module "minikube_instance_amd64_large" {
@@ -84,7 +108,7 @@ module "minikube_instance_amd64_large" {
 
   name = "amd64_large"
 
-  ami_configuration = "amd64-large"
+  ami_id = module.minikube_ami_amd64_large.id
   aws_instance_type = "t3.large"
 
   vpc_id = module.vpc.vpc_id

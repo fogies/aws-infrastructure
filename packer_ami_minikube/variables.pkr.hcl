@@ -84,7 +84,7 @@ variable "docker_volume_size" {
   # Volume size to allocate.
   # Provided as number of GB to allocate.
   #
-  # Typical value is 15.
+  # Typical value is 20.
 
   type = number
 }

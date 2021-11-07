@@ -10,7 +10,7 @@ import tasks.terraform_vpc_packer
 
 from packer_ami_minikube.config import BUILD_CONFIG
 
-CONFIG_KEY = 'ami_minikube'
+CONFIG_KEY = 'minikube_ami'
 BIN_PACKER = './bin/packer.exe'
 DIR_PACKER = './packer_ami_minikube'
 

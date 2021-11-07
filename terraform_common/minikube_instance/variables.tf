@@ -5,12 +5,8 @@ variable "name" {
   type = string
 }
 
-variable "ami_configuration" {
-  # Configuration of ami_minikube to use.
-  #
-  # Valid values are enumerated in ami_minikube.
-  #
-  # A corresponding value must be set for "aws_instance_type".
+variable "ami_id" {
+  # ID of the Minikube AMI.
 
   type = string
 }
@@ -18,7 +14,7 @@ variable "ami_configuration" {
 variable "aws_instance_type" {
   # Instance type in which to run ami_minikube.
   #
-  # Typical values are "t3.medium" (amd64) or larger.
+  # Typical values are "t3.medium" (amd64) or "t3.large" (amd64).
   #
   # A corresponding value must be set for "ami_configuration".
 
