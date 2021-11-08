@@ -14,6 +14,12 @@ Assumes prior installation of ingress-crd.
 
 ## Versions
 
+### 0.6.0
+
+- Remove explicit namespaces from resources.
+  This should instead be managed via Helmfile.
+- Enable allowCrossNamespace.
+
 ### 0.5.0
 
 - Remove cert-manager as dependency. 
