@@ -10,34 +10,32 @@ import tasks.terraform_vpc_packer
 
 from packer_ami_minikube.config import BUILD_CONFIG
 
-CONFIG_KEY = 'ami_minikube'
-BIN_PACKER = './bin/packer.exe'
-DIR_PACKER = './packer_ami_minikube'
+CONFIG_KEY = 'minikube_ami'
+PACKER_BIN = './bin/packer.exe'
+PACKER_DIR = './packer_ami_minikube'
+
+AWS_CREDENTIALS_PATH = './secrets/aws/aws-infrastructure.credentials'
 
 ns = Collection('ami-minikube')
 
 
-# Define and import tasks
 @task
 def build(context):
     """
     Build the Minikube AMI.
     """
 
-    bin_packer = BIN_PACKER
-    dir_packer = DIR_PACKER
-
     with tasks.terraform_vpc_packer.vpc_packer(context=context) as vpc_packer:
         vpc_packer_output = vpc_packer.output
 
-        with context.cd(dir_packer):
+        with context.cd(PACKER_DIR):
             print('Building AMI Minikube')
 
             # Build each configuration in BUILD_CONFIG
             for build_config_name, build_config in BUILD_CONFIG.items():
                 context.run(
                     command=' '.join([
-                        os.path.relpath(bin_packer, dir_packer),
+                        os.path.relpath(PACKER_BIN, PACKER_DIR),
                         'build',
                         '-color=false',
                         '-var vpc_packer_vpc_id={}'.format(vpc_packer_output.vpc_id),
@@ -49,6 +47,9 @@ def build(context):
                         ]),
                         '.'
                     ]),
+                    env={
+                        'AWS_SHARED_CREDENTIALS_FILE': os.path.relpath(AWS_CREDENTIALS_PATH, PACKER_DIR),
+                    },
                 )
 
 

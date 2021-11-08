@@ -1,13 +1,4 @@
 /*
- * ID of the AMI we want.
- */
-module "ami_minikube" {
-  source = "../ami_minikube"
-
-  configuration = var.ami_configuration
-}
-
-/*
  * Security groups for our instance.
  */
 module "instance_security_groups" {
@@ -26,7 +17,7 @@ module "instance_security_groups" {
  * The actual instance.
  */
 resource "aws_instance" "minikube" {
-  ami = module.ami_minikube.id
+  ami = var.ami_id
   instance_type = var.aws_instance_type
 
   subnet_id         = local.resolved_subnet_id

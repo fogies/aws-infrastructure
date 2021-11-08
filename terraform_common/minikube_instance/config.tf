@@ -40,7 +40,7 @@ resource "local_file" "instance_key_private" {
 /*
  * A configuration file to be loaded by Python tasks.
  */
-resource "local_file" "python_config" {
+resource "local_file" "ssh_config" {
   filename = format(
     "%s/%s",
     var.name,

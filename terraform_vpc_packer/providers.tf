@@ -2,6 +2,8 @@
  * AWS Configuration.
  */
 provider "aws" {
-  profile = "default"
+  profile = "aws-infrastructure"
+  shared_credentials_file = "../secrets/aws/aws-infrastructure.credentials"
+
   region  = "us-east-1"
 }

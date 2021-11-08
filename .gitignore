@@ -17,3 +17,10 @@ terraform.tfstate.lock.info
 # Temporary Files for Communicating State
 /packer_ami_minikube/manifest.json
 /packer_ami_minikube/manifest.json.lock
+
+# Secrets, defined using /** so we can also define exceptions
+/secrets/**
+
+# Exception to create /secrets/server/prod
+!/secrets/aws
+!/secrets/aws/.gitignore

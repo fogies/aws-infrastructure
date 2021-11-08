@@ -2,6 +2,9 @@
  * Configuration of the AWS context and source AMI.
  */
 source "amazon-ebs" "minikube" {
+  # AWS credentials profile
+  profile = "aws-infrastructure"
+
   # Name of the output AMI
   ami_name = var.build_ami_name
 
@@ -29,7 +32,7 @@ source "amazon-ebs" "minikube" {
     # - Would probably need to move creation of the device into a provisioner
     device_name = "/dev/sdf"
 
-    volume_size = 15
+    volume_size = var.docker_volume_size
     volume_type = "gp3"
     iops = 3000
     delete_on_termination = true

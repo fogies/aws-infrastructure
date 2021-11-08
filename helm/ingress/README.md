@@ -2,10 +2,6 @@
 
 Configures a basic ingress environment:
 
-- Configures cert-manager using its chart:
-
-  <https://github.com/jetstack/cert-manager/tree/master/deploy/charts/cert-manager>
-  
 - Configures Traefik using its chart:
 
   <https://github.com/traefik/traefik-helm-chart/tree/master/traefik>
@@ -17,6 +13,12 @@ Only one release may be installed, because this creates global resources that ma
 Assumes prior installation of ingress-crd.
 
 ## Versions
+
+### 0.5.0
+
+- Remove cert-manager as dependency. 
+  It should instead be managed via Helmfile.
+- Increment dependency versions, Traefik to 10.6.1.
 
 ### 0.4.0
 
