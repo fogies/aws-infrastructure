@@ -16,6 +16,12 @@ Only one release may be installed, because this creates global resources that ma
 
 ## Versions
 
+### 0.6.0
+
+- Remove explicit namespaces from resources.
+  This should instead be managed via Helmfile.
+- Enable allowCrossNamespace.
+
 ### 0.5.0
 
 - Increment dependency versions, cert-manager to 1.6.1 and Traefik to 10.6.1.
