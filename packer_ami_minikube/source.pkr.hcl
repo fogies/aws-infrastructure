@@ -2,6 +2,9 @@
  * Configuration of the AWS context and source AMI.
  */
 source "amazon-ebs" "minikube" {
+  # AWS credentials profile
+  profile = "aws-infrastructure"
+
   # Name of the output AMI
   ami_name = var.build_ami_name
 
