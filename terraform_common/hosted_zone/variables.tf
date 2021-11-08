@@ -16,3 +16,18 @@ variable "address_records" {
     })
   )
 }
+
+/*
+ * AWS provider information.
+ *
+ * Used by the module for CLI access in maintaining the hosted zone.
+ */
+variable "aws_provider" {
+  type = object({
+    profile = string
+    shared_credentials_file = string
+    region = string
+  })
+
+  default = null
+}
