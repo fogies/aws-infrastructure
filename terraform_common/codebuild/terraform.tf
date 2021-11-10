@@ -10,10 +10,10 @@ resource "aws_s3_bucket" "codebuild_source_bucket" {
 resource "aws_s3_bucket_object"  "codebuild_source_object" {
   bucket = aws_s3_bucket.codebuild_source_bucket.id
   key = "${var.name}.zip"
-  source = "staging/${var.name}.zip"
+  source = var.source_archive
 
   # etag triggers upload when file changes
-  etag = filemd5("staging/${var.name}.zip")
+  etag = filemd5(var.source_archive)
 }
 
 /*
@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "policy_document_assume" {
  * Policy document for the CodeBuild role.
  */
 data "aws_iam_policy_document" "policy_document_codebuild" {
-  # Core CodeBuild policy for permissive access to logging
+  # CodeBuild policy for permissive access to logging
   statement {
     actions = [
       "logs:CreateLogGroup",
@@ -51,7 +51,7 @@ data "aws_iam_policy_document" "policy_document_codebuild" {
     ]
   }
 
-  # Core CodeBuild policy for permissive access to S3
+  # CodeBuild policy for permissive access to S3
   statement {
     actions = [
       "s3:GetBucketAcl",
@@ -66,7 +66,7 @@ data "aws_iam_policy_document" "policy_document_codebuild" {
     ]
   }
 
-  # Additional policy for permissive access to ECR
+  # CodeBuild policy for permissive access to ECR
   statement {
     actions = [
       "ecr:BatchCheckLayerAvailability",
@@ -94,7 +94,7 @@ resource "aws_iam_policy" "policy_codebuild" {
  * Role that defines access policies for project.
  */
 resource "aws_iam_role" "codebuild_project_role" {
-  name = "${var.name}_role"
+  name = "codebuild_role_${var.name}"
 
   assume_role_policy = data.aws_iam_policy_document.policy_document_assume.json
   managed_policy_arns = [
