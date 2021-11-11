@@ -23,6 +23,7 @@ phases:
            --password-stdin
            $REGISTRY_URL
         '
+
   build:
     on-failure: "ABORT"
     commands:
