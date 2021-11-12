@@ -96,7 +96,7 @@ def _task_execute_build(
         boto_session = boto3.Session(botocore_session=botocore.session.Session(
             session_vars= {
                 'profile': (None, None, aws_profile, None),
-                'config_file': (None, None, aws_shared_credentials_path, None),
+                'credentials_file': (None, None, aws_shared_credentials_path, None),
             }
         ))
         boto_cloudwatchlogs = boto_session.client('logs')
