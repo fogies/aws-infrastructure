@@ -14,7 +14,7 @@ TERRAFORM_BIN = './bin/terraform.exe'
 TERRAFORM_DIR = './examples/codebuild/terraform'
 STAGING_LOCAL_DIR = './.staging/codebuild/example_codebuild'
 AWS_PROFILE = 'aws-infrastructure'
-AWS_SHARED_CREDENTIALS_PATH = './secrets/aws/aws-infrastructure.config'
+AWS_SHARED_CREDENTIALS_PATH = './secrets/aws/aws-infrastructure.credentials'
 
 SOURCE_DIR = './examples/docker/example_codebuild'
 CODEBUILD_PROJECT_NAME = 'aws_infrastructure_example_codebuild'
