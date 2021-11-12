@@ -32,10 +32,10 @@ def _pipfile_sync(*, context, dependency_dir: Path):
         # which would likely cause failure in production where those are missing.
 
         context.run(
-            command='pipenv clean',
+            command='pipenv sync --dev',
         )
         context.run(
-            command='pipenv sync --dev',
+            command='pipenv clean',
         )
 
 

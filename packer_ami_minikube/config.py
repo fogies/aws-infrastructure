@@ -15,6 +15,7 @@ SOURCE_BUILD_TIMESTAMP = '20211021'
 #
 BUILD_CONFIG_SHARED = {
     # Region in which to build the image.
+    # Must be specified, is not taken from AWS configuration.
     'aws_region': 'us-east-1',
 
     # List of allowable owner IDs of the source AMI.

@@ -1,104 +1,156 @@
 from aws_infrastructure.tasks import compose_collection
-import aws_infrastructure.tasks.library.codebuild_instance
 import aws_infrastructure.tasks.library.terraform
+import boto3
+import botocore.session
 from collections import namedtuple
 from invoke import Collection
 from invoke import task
 import os
+import os.path
 from pathlib import Path
 import ruamel.yaml
 import shutil
+import time
 from typing import List
 from typing import Union
 
 
-def _apply_pre_exec(
+def _task_create_build_archive(
     *,
+    config_key: str,
     terraform_dir: Path,
-    instances: List[str],
-    codebuild_environment_variables_factory, # Dictionary from string to function that returns dictionary
+    staging_local_dir: Path,
+    staging_local_source_dir: Path,
+    staging_local_archive_path: Path,
+    source_dir: Path,
+    codebuild_environment_variables_factory, # Function that returns dictionary
 ):
-    def apply_pre_exec(
-        *,
-        context,
-        params,
-    ):
+    @task
+    def create_build_archive(context):
         """
-        Prepare CodeBuild archives that Terraform can upload.
+        Prepare the CodeBuild archive for Terraform to upload.
         """
 
-        # Create an archive of each source that Terraform can upload to S3
-        for instance_current in instances:
-            path_source = Path(terraform_dir, instance_current)
-            path_staging = Path(terraform_dir, 'staging', instance_current)
+        # Remove any prior staging
+        shutil.rmtree(path=staging_local_dir, ignore_errors=True)
 
-            # Copy source into a staging directory
-            shutil.rmtree(path=path_staging, ignore_errors=True)
-            shutil.copytree(src=path_source, dst=path_staging)
+        # Copy source into a staging directory
+        shutil.copytree(src=source_dir, dst=staging_local_source_dir)
 
-            # Determine whether we need to update the buildspec.yml with environment variables
-            if codebuild_environment_variables_factory != None and instance_current in codebuild_environment_variables_factory:
-                # Obtain the variables we need to update in the buildspec.yml
-                codebuild_environment_variables_current = codebuild_environment_variables_factory[instance_current](context=context)
+        # Determine whether we need to update the buildspec.yml with environment variables
+        if codebuild_environment_variables_factory != None:
+            # Obtain the variables we need to update in the buildspec.yml
+            codebuild_environment_variables = codebuild_environment_variables_factory(context=context)
 
-                # Use a parsing object for roundtrip
-                yaml_parser = ruamel.yaml.YAML()
-                path_buildspec = Path(path_staging, 'buildspec.yml')
+            # Prefer buildspec.yaml, allow buildspec.yml
+            buildspec_path = Path(staging_local_source_dir, 'buildspec.yaml')
+            if not buildspec_path.exists():
+                buildspec_path = Path(staging_local_source_dir, 'buildspec.yml')
 
-                # Update the buildspec to add provided environment variables
-                with open(path_buildspec) as file_buildspec:
-                    yaml_buildspec = yaml_parser.load(file_buildspec)
+            # Use a parsing object for roundtrip
+            # Invoking a parse without keeping the object will not maintain state for round trip
+            yaml_parser = ruamel.yaml.YAML()
 
-                # Ensure the buildspec provides for environment variables
-                if 'env' not in yaml_buildspec:
-                    yaml_buildspec['env'] = {}
-                if 'variables' not in yaml_buildspec['env']:
-                    yaml_buildspec['env']['variables'] = {}
+            # Update the buildspec to add provided environment variables
+            with open(buildspec_path) as file_buildspec:
+                yaml_buildspec = yaml_parser.load(file_buildspec)
 
-                # Add the variables
-                for key_current, value_current in codebuild_environment_variables_current.items():
-                    yaml_buildspec['env']['variables'][key_current] = value_current
+            # Ensure the buildspec provides for environment variables
+            if 'env' not in yaml_buildspec:
+                yaml_buildspec['env'] = {}
+            if 'variables' not in yaml_buildspec['env']:
+                yaml_buildspec['env']['variables'] = {}
 
-                # Replace the buildspec
-                os.remove(path_buildspec)
-                with open(path_buildspec, mode='w') as file_buildspec:
-                    yaml_parser.dump(yaml_buildspec, file_buildspec)
+            # Add the variables
+            for key_current, value_current in codebuild_environment_variables.items():
+                yaml_buildspec['env']['variables'][key_current] = value_current
 
-            # Make the archive
-            shutil.make_archive(
-                base_name=path_staging,
-                format='zip',
-                root_dir=path_staging
-            )
+            # Replace the buildspec
+            os.remove(buildspec_path)
+            with open(buildspec_path, mode='w') as file_buildspec:
+                yaml_parser.dump(yaml_buildspec, file_buildspec)
 
-            # Remove the staged source directory
-            shutil.rmtree(
-                path=path_staging,
-                ignore_errors=True
-            )
+        # Make the archive
+        shutil.make_archive(
+            # Remove the zip suffix because make_archive will also apply that suffix
+            base_name=Path(staging_local_archive_path.parent, staging_local_archive_path.stem),
+            format='zip',
+            root_dir=staging_local_source_dir
+        )
 
-    return apply_pre_exec
+    return create_build_archive
 
 
-def _destroy_post_exec(
+def _task_execute_build(
     *,
-    terraform_dir: Path,
-    instances: List[str],
+    config_key: str,
+    aws_profile: str,
+    aws_shared_credentials_path: Path,
+    aws_config_path: Path,
+    codebuild_project_name: str,
 ):
-    def destroy_post_exec(
-        *,
-        context,
-        params,
-    ):
+    @task
+    def execute_build(context):
         """
-        Remove CodeBuild archives.
+        Execute the build and print any output.
         """
 
-        # Clean up the archives
-        for instance_current in instances:
-            os.remove(Path(terraform_dir, 'staging', instance_current + '.zip'))
+        # boto already checked the environment variables, so setting them now has no effect on the default session.
+        # Creating a new session prompts boto to check again.
+        # We could set/unset the environment variables, but instead configure directly within the boto session.
+        boto_session = boto3.Session(botocore_session=botocore.session.Session(
+            session_vars= {
+                'profile': (None, None, aws_profile, None),
+                'credentials_file': (None, None, aws_shared_credentials_path, None),
+                'config_file': (None, None, aws_config_path, None),
+            }
+        ))
+        boto_cloudwatchlogs = boto_session.client('logs')
+        boto_codebuild = boto_session.client('codebuild')
 
-    return destroy_post_exec
+        # Start the build
+        response = boto_codebuild.start_build(projectName=codebuild_project_name)
+        build_id = response['build']['id']
+
+        # Loop on the build until logs become available
+        in_progress = True
+        logs_next_token = None
+        while in_progress:
+            # Determine whether the build is still executing
+            response_build = boto_codebuild.batch_get_builds(ids=[build_id])['builds'][0]
+            in_progress = response_build['buildStatus'] == 'IN_PROGRESS'
+
+            # If the logs have been created
+            events_available = False
+            if 'groupName' in response_build['logs'] and 'streamName' in response_build['logs']:
+                # Print any logs that are currently available
+                events_available = True
+                while events_available:
+                    if logs_next_token is None:
+                        response_logs = boto_cloudwatchlogs.get_log_events(
+                            logGroupName=response_build['logs']['groupName'],
+                            logStreamName=response_build['logs']['streamName'],
+                            startFromHead=True
+                        )
+                    else:
+                        response_logs = boto_cloudwatchlogs.get_log_events(
+                            logGroupName=response_build['logs']['groupName'],
+                            logStreamName=response_build['logs']['streamName'],
+                            nextToken=logs_next_token,
+                            startFromHead=True
+                        )
+
+                    for event_current in response_logs['events']:
+                        print(event_current['message'], end='', flush=True)
+
+                    events_available = response_logs['nextForwardToken'] != logs_next_token
+                    logs_next_token = response_logs['nextForwardToken']
+
+            if in_progress:
+                # Any faster will likely encounter rate limiting
+                time.sleep(.5)
+
+    return execute_build
 
 
 def create_tasks(
@@ -106,7 +158,12 @@ def create_tasks(
     config_key: str,
     terraform_bin: Union[Path, str],
     terraform_dir: Union[Path, str],
-    instances: List[str],
+    staging_local_dir: Union[Path, str],
+    aws_profile: str,
+    aws_shared_credentials_path: Union[Path, str],
+    aws_config_path: Union[Path, str],
+    source_dir: Union[Path, str],
+    codebuild_project_name: str,
     codebuild_environment_variables_factory,
 ):
     """
@@ -115,6 +172,19 @@ def create_tasks(
 
     terraform_bin = Path(terraform_bin)
     terraform_dir = Path(terraform_dir)
+    staging_local_dir = Path(staging_local_dir)
+    aws_shared_credentials_path = Path(aws_shared_credentials_path)
+    aws_config_path = Path(aws_config_path)
+    source_dir = Path(source_dir)
+
+    staging_local_source_dir = Path(staging_local_dir, 'source')
+    staging_local_archive_path = Path(staging_local_dir, 'archive.zip')
+    terraform_variables_path = Path(terraform_dir, 'variables.generated.tfvars')
+
+    def terraform_variables_factory(*, context):
+        return {
+            'source_archive': os.path.relpath(staging_local_archive_path,terraform_dir)
+        }
 
     ns_codebuild = Collection('codebuild')
 
@@ -122,31 +192,47 @@ def create_tasks(
         config_key=config_key,
         terraform_bin=terraform_bin,
         terraform_dir=terraform_dir,
-        apply_pre_exec=_apply_pre_exec(
-            terraform_dir=terraform_dir,
-            instances=instances,
-            codebuild_environment_variables_factory=codebuild_environment_variables_factory,
-        ),
-        destroy_post_exec=_destroy_post_exec(
-            terraform_dir=terraform_dir,
-            instances=instances
-        ),
+        terraform_variables_factory=terraform_variables_factory,
+        terraform_variables_path=terraform_variables_path,
     )
 
+    create_build_archive = _task_create_build_archive(
+        config_key=config_key,
+        terraform_dir=terraform_dir,
+        staging_local_dir=staging_local_dir,
+        staging_local_source_dir=staging_local_source_dir,
+        staging_local_archive_path=staging_local_archive_path,
+        source_dir=source_dir,
+        codebuild_environment_variables_factory=codebuild_environment_variables_factory,
+    )
+
+    execute_build = _task_execute_build(
+        config_key=config_key,
+        aws_profile=aws_profile,
+        aws_shared_credentials_path=aws_shared_credentials_path,
+        aws_config_path=aws_config_path,
+        codebuild_project_name=codebuild_project_name,
+    )
+
+
+    @task(pre=[create_build_archive, ns_terraform.tasks['apply'], execute_build])
+    def build(context):
+        """
+        Build the Docker image.
+
+        The actual build happens in the sequence of pre-requisite tasks
+        """
+        pass
+
+
+    ns_codebuild.add_task(build, name="build")
     compose_collection(
         ns_codebuild,
         ns_terraform,
         sub=False,
+        include=[
+            'destroy',
+        ],
     )
-
-    # Create tasks associated with our instances
-    for instance_current in instances:
-        ns_instance = aws_infrastructure.tasks.library.codebuild_instance.create_tasks(
-            config_key='{}.{}'.format(config_key, instance_current),
-            task_apply=ns_codebuild.tasks['apply'],
-            instance=instance_current,
-        )
-
-        compose_collection(ns_codebuild, ns_instance)
 
     return ns_codebuild

@@ -11,28 +11,25 @@ from invoke import Collection
 
 CONFIG_KEY = 'codebuild'
 TERRAFORM_BIN = './bin/terraform.exe'
-TERRAFORM_DIR = './examples/codebuild'
+TERRAFORM_DIR = './examples/codebuild/terraform'
+STAGING_LOCAL_DIR = './.staging/codebuild/example_codebuild'
+AWS_PROFILE = 'aws-infrastructure'
+AWS_SHARED_CREDENTIALS_PATH = './secrets/aws/aws-infrastructure.credentials'
+AWS_CONFIG_PATH = './secrets/aws/aws-infrastructure.config'
+
+SOURCE_DIR = './examples/docker/example_codebuild'
+CODEBUILD_PROJECT_NAME = 'aws_infrastructure_example_codebuild'
 
 BUILD_TIMESTAMP = datetime.now().strftime('%Y%m%d%H%M')
 
 
-def codebuild_environment_variables_example_one(*, context):
+def codebuild_environment_variables_factory(*, context):
     with examples.ecr.tasks.ecr_read_only(context=context) as ecr:
         return {
             'REGISTRY_URL': ecr.output.registry_url,
-            'REPOSITORY': 'aws_infrastructure/example_one',
-            'REPOSITORY_URL': ecr.output.repository_urls['aws_infrastructure/example_one'],
-            'REPOSITORY_TAGS': 'testing latest {}'.format(BUILD_TIMESTAMP)
-        }
-
-
-def codebuild_environment_variables_example_two(*, context):
-    with examples.ecr.tasks.ecr_read_only(context=context) as ecr:
-        return {
-            'REGISTRY_URL': ecr.output.registry_url,
-            'REPOSITORY': 'aws_infrastructure/example_two',
-            'REPOSITORY_URL': ecr.output.repository_urls['aws_infrastructure/example_two'],
-            'REPOSITORY_TAGS': 'testing latest {}'.format(BUILD_TIMESTAMP)
+            'REPOSITORY': 'aws_infrastructure/example_codebuild',
+            'REPOSITORY_URL': ecr.output.repository_urls['aws_infrastructure/example_codebuild'],
+            'REPOSITORY_TAGS': 'latest {}'.format(BUILD_TIMESTAMP)
         }
 
 
@@ -42,11 +39,13 @@ ns_terraform = aws_infrastructure.tasks.library.codebuild.create_tasks(
     config_key=CONFIG_KEY,
     terraform_bin=TERRAFORM_BIN,
     terraform_dir=TERRAFORM_DIR,
-    instances=['example_one', 'example_two'],
-    codebuild_environment_variables_factory={
-        'example_one': codebuild_environment_variables_example_one,
-        'example_two': codebuild_environment_variables_example_two,
-    }
+    staging_local_dir=STAGING_LOCAL_DIR,
+    aws_profile=AWS_PROFILE,
+    aws_shared_credentials_path=AWS_SHARED_CREDENTIALS_PATH,
+    aws_config_path=AWS_CONFIG_PATH,
+    source_dir=SOURCE_DIR,
+    codebuild_project_name=CODEBUILD_PROJECT_NAME,
+    codebuild_environment_variables_factory=codebuild_environment_variables_factory,
 )
 
 compose_collection(
@@ -56,8 +55,6 @@ compose_collection(
     exclude=aws_infrastructure.tasks.library.terraform.exclude_without_state(
         terraform_dir=TERRAFORM_DIR,
         exclude=[
-            'init',
-            'apply',
         ],
         exclude_without_state=[
             'destroy'

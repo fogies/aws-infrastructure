@@ -8,7 +8,7 @@ build_time = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
 setuptools.setup(
     name='aws_infrastructure',
     # Should follow Semantic Versioning <https://semver.org/>
-    version='0.1.0-dev{}'.format(build_time),
+    version='0.0.1',
     # author='',
     # author_email='',
     packages=setuptools.find_packages(),
