@@ -4,6 +4,6 @@
 module "example_codebuild" {
   source = "../../../terraform_common/codebuild"
 
-  name = "example_codebuild"
+  name = "aws_infrastructure_example_codebuild"
   source_archive = var.source_archive
 }

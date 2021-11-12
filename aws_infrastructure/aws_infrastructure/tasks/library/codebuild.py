@@ -1,6 +1,7 @@
 from aws_infrastructure.tasks import compose_collection
 import aws_infrastructure.tasks.library.terraform
 import boto3
+import botocore.session
 from collections import namedtuple
 from invoke import Collection
 from invoke import task
@@ -79,6 +80,8 @@ def _task_create_build_archive(
 def _task_execute_build(
     *,
     config_key: str,
+    aws_profile: str,
+    aws_shared_credentials_path: Path,
     codebuild_project_name: str,
 ):
     @task
@@ -87,8 +90,17 @@ def _task_execute_build(
         Execute the build and print any output.
         """
 
-        boto_cloudwatchlogs = boto3.client('logs')
-        boto_codebuild = boto3.client('codebuild')
+        # boto already checked the environment variables, so setting them now has no effect on the default session.
+        # Creating a new session prompts boto to check again.
+        # We could set/unset the environment variables, but instead configure directly within the boto session.
+        boto_session = boto3.Session(botocore_session=botocore.session.Session(
+            session_vars= {
+                'profile': (None, None, aws_profile, None),
+                'config_file': (None, None, aws_shared_credentials_path, None),
+            }
+        ))
+        boto_cloudwatchlogs = boto_session.client('logs')
+        boto_codebuild = boto_session.client('codebuild')
 
         # Start the build
         response = boto_codebuild.start_build(projectName=codebuild_project_name)
@@ -141,6 +153,8 @@ def create_tasks(
     terraform_bin: Union[Path, str],
     terraform_dir: Union[Path, str],
     staging_local_dir: Union[Path, str],
+    aws_profile: str,
+    aws_shared_credentials_path: Union[Path, str],
     source_dir: Union[Path, str],
     codebuild_project_name: str,
     codebuild_environment_variables_factory,
@@ -152,6 +166,7 @@ def create_tasks(
     terraform_bin = Path(terraform_bin)
     terraform_dir = Path(terraform_dir)
     staging_local_dir = Path(staging_local_dir)
+    aws_shared_credentials_path = Path(aws_shared_credentials_path)
     source_dir = Path(source_dir)
 
     staging_local_source_dir = Path(staging_local_dir, 'source')
@@ -185,6 +200,8 @@ def create_tasks(
 
     execute_build = _task_execute_build(
         config_key=config_key,
+        aws_profile=aws_profile,
+        aws_shared_credentials_path=aws_shared_credentials_path,
         codebuild_project_name=codebuild_project_name,
     )
 

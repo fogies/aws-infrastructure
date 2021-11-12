@@ -14,7 +14,8 @@ CONFIG_KEY = 'minikube_ami'
 PACKER_BIN = './bin/packer.exe'
 PACKER_DIR = './packer_ami_minikube'
 
-AWS_CREDENTIALS_PATH = './secrets/aws/aws-infrastructure.credentials'
+AWS_PROFILE = 'aws-infrastructure'
+AWS_SHARED_CREDENTIALS_PATH = './secrets/aws/aws-infrastructure.credentials'
 
 ns = Collection('ami-minikube')
 
@@ -48,7 +49,8 @@ def build(context):
                         '.'
                     ]),
                     env={
-                        'AWS_SHARED_CREDENTIALS_FILE': os.path.relpath(AWS_CREDENTIALS_PATH, PACKER_DIR),
+                        'AWS_PROFILE': AWS_PROFILE,
+                        'AWS_SHARED_CREDENTIALS_FILE': os.path.relpath(AWS_SHARED_CREDENTIALS_PATH, PACKER_DIR),
                     },
                 )
 

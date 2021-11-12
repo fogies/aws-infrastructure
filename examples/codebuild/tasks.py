@@ -13,9 +13,11 @@ CONFIG_KEY = 'codebuild'
 TERRAFORM_BIN = './bin/terraform.exe'
 TERRAFORM_DIR = './examples/codebuild/terraform'
 STAGING_LOCAL_DIR = './.staging/codebuild/example_codebuild'
-SOURCE_DIR = './examples/docker/example_codebuild'
+AWS_PROFILE = 'aws-infrastructure'
+AWS_SHARED_CREDENTIALS_PATH = './secrets/aws/aws-infrastructure.config'
 
-CODEBUILD_PROJECT_NAME = 'example_codebuild'
+SOURCE_DIR = './examples/docker/example_codebuild'
+CODEBUILD_PROJECT_NAME = 'aws_infrastructure_example_codebuild'
 
 BUILD_TIMESTAMP = datetime.now().strftime('%Y%m%d%H%M')
 
@@ -37,6 +39,8 @@ ns_terraform = aws_infrastructure.tasks.library.codebuild.create_tasks(
     terraform_bin=TERRAFORM_BIN,
     terraform_dir=TERRAFORM_DIR,
     staging_local_dir=STAGING_LOCAL_DIR,
+    aws_profile=AWS_PROFILE,
+    aws_shared_credentials_path=AWS_SHARED_CREDENTIALS_PATH,
     source_dir=SOURCE_DIR,
     codebuild_project_name=CODEBUILD_PROJECT_NAME,
     codebuild_environment_variables_factory=codebuild_environment_variables_factory,
