@@ -42,10 +42,14 @@ def _task_create_build_archive(
             # Obtain the variables we need to update in the buildspec.yml
             codebuild_environment_variables = codebuild_environment_variables_factory(context=context)
 
+            # Prefer buildspec.yaml, allow buildspec.yml
+            buildspec_path = Path(staging_local_source_dir, 'buildspec.yaml')
+            if not buildspec_path.exists():
+                buildspec_path = Path(staging_local_source_dir, 'buildspec.yml')
+
             # Use a parsing object for roundtrip
             # Invoking a parse without keeping the object will not maintain state for round trip
             yaml_parser = ruamel.yaml.YAML()
-            buildspec_path = Path(staging_local_source_dir, 'buildspec.yml')
 
             # Update the buildspec to add provided environment variables
             with open(buildspec_path) as file_buildspec:
@@ -82,6 +86,7 @@ def _task_execute_build(
     config_key: str,
     aws_profile: str,
     aws_shared_credentials_path: Path,
+    aws_config_path: Path,
     codebuild_project_name: str,
 ):
     @task
@@ -97,6 +102,7 @@ def _task_execute_build(
             session_vars= {
                 'profile': (None, None, aws_profile, None),
                 'credentials_file': (None, None, aws_shared_credentials_path, None),
+                'config_file': (None, None, aws_config_path, None),
             }
         ))
         boto_cloudwatchlogs = boto_session.client('logs')
@@ -155,6 +161,7 @@ def create_tasks(
     staging_local_dir: Union[Path, str],
     aws_profile: str,
     aws_shared_credentials_path: Union[Path, str],
+    aws_config_path: Union[Path, str],
     source_dir: Union[Path, str],
     codebuild_project_name: str,
     codebuild_environment_variables_factory,
@@ -167,6 +174,7 @@ def create_tasks(
     terraform_dir = Path(terraform_dir)
     staging_local_dir = Path(staging_local_dir)
     aws_shared_credentials_path = Path(aws_shared_credentials_path)
+    aws_config_path = Path(aws_config_path)
     source_dir = Path(source_dir)
 
     staging_local_source_dir = Path(staging_local_dir, 'source')
@@ -202,6 +210,7 @@ def create_tasks(
         config_key=config_key,
         aws_profile=aws_profile,
         aws_shared_credentials_path=aws_shared_credentials_path,
+        aws_config_path=aws_config_path,
         codebuild_project_name=codebuild_project_name,
     )
 
