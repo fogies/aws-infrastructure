@@ -1,12 +1,12 @@
-# Python Cache and Packaging
-*.egg-info/
-**/__pycache__/
-
 # IDE Configuration
 /.idea/
 
 # Binaries (e.g., Helm, Packer, Terraform)
 /bin/
+
+# Python Cache and Packaging
+*.egg-info/
+**/__pycache__/
 
 # Terraform Local State
 .terraform
