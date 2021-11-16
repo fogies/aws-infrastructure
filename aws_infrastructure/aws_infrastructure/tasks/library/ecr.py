@@ -37,7 +37,7 @@ def _output_enhance(
                 'config_file': (None, None, aws_config_path, None),
             }
         ))
-        boto_ecr = boto3.client('ecr')
+        boto_ecr = boto_session.client('ecr')
         token = boto_ecr.get_authorization_token()['authorizationData'][0]['authorizationToken']
 
         # Token is base64 encoded, contents are 'user:password'
