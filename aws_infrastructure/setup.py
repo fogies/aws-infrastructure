@@ -1,9 +1,4 @@
-import datetime
 import setuptools
-
-# Semantic Versioning does not allow leading zeroes in dot-separated identifiers,
-# this datetime format will increment but is intentionally not dot-separated
-build_time = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
 setuptools.setup(
     name='aws_infrastructure',
