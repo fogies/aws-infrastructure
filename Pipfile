@@ -7,7 +7,7 @@ name = "pypi"
 #
 # Packages needed by aws-infrastructure should be added to `aws_infrastructure/setup.py`.
 #
-aws-infrastructure = {editable = true, path = "./aws_infrastructure"}
+aws_infrastructure = {editable = true, path = "./aws_infrastructure"}
 
 [dev-packages]
 pipenv = "*"
