@@ -19,7 +19,7 @@ def _pipenv_pytest(*, context, test_dir: Path):
 
     with context.cd(test_dir):
         context.run(
-            command='pipenv run pytest --color=yes',
+            command='pipenv run pytest',
         )
 
 
