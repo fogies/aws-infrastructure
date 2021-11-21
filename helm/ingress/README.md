@@ -14,6 +14,13 @@ Assumes prior installation of ingress-crd.
 
 ## Versions
 
+### 0.7.0
+
+- For use via Helmfile with ingress-crd 0.5.0 and cert-manager 1.6.1.
+- Remove class filters from LetsEncrypt solvers.
+  Traefik was not detecting Ingress created by cert-manager.
+- Remove abandoned references to cert-manager in values.yaml.
+
 ### 0.6.0
 
 - Remove explicit namespaces from resources.

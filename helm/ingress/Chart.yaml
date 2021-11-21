@@ -2,10 +2,11 @@ apiVersion: v2
 type: application
 
 name: ingress
-description: Basic environment for ingress, including cert-manager and Traefik.
+description: Basic environment for ingress, including Traefik.
+             Intended to be used together with cert-manager via Helmfile.
 
 # Chart version, expected to follow Semantic Versioning <https://semver.org/>
-version: 0.6.0
+version: 0.7.0
 
 dependencies:
   # Traefik for ingress

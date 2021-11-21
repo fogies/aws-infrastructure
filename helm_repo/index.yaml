@@ -26,6 +26,20 @@ entries:
     version: 1.6.1
   ingress:
   - apiVersion: v2
+    created: "2021-11-22T09:00:38.4300918-08:00"
+    dependencies:
+    - name: traefik
+      repository: https://helm.traefik.io/traefik
+      version: 10.6.1
+    description: Basic environment for ingress, including Traefik. Intended to be
+      used together with cert-manager via Helmfile.
+    digest: 130c19232e20419088ff729172cc7df58ee039bb04edafce417db8aaf1b33771
+    name: ingress
+    type: application
+    urls:
+    - ingress-0.7.0.tgz
+    version: 0.7.0
+  - apiVersion: v2
     created: "2021-11-08T07:09:06.8827151-08:00"
     dependencies:
     - name: traefik
@@ -144,4 +158,4 @@ entries:
     urls:
     - registry-0.1.0.tgz
     version: 0.1.0
-generated: "2021-11-08T07:09:06.8797011-08:00"
+generated: "2021-11-22T09:00:38.4270702-08:00"
