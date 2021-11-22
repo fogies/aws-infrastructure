@@ -16,5 +16,8 @@ spec:
     # Add a single HTTP01 challenge solver
     solvers:
     - http01:
-        ingress:
-          class: traefik
+        # Do not provide a class filter to the solver.
+        # We only have one ingress executing in our cluster, so it handles the ingress.
+        # Previously had problems where providing any value for ingress class resulted
+        # in Traefik not picking up the Ingress needed for the solver.
+        ingress: {}
