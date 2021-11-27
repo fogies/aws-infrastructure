@@ -2,21 +2,14 @@ from aws_infrastructure.tasks import compose_collection
 import aws_infrastructure.tasks.library.terraform
 import base64
 import boto3
-import botocore
 from collections import namedtuple
 from invoke import Collection
 from pathlib import Path
 import re
-from typing import List
 from typing import Union
 
 
-def _output_enhance(
-    *,
-    aws_profile: str,
-    aws_shared_credentials_path: Path,
-    aws_config_path: Path,
-):
+def _output_enhance():
     def output_enhance(
         *,
         context,
@@ -26,17 +19,10 @@ def _output_enhance(
         Enhance the Terraform output with registry authentication information.
         """
 
-        # Obtain an authorization token
-        # boto already checked the environment variables, so setting them now has no effect on the default session.
-        # Creating a new session prompts boto to check again.
-        # We could set/unset the environment variables, but instead configure directly within the boto session.
-        boto_session = boto3.Session(botocore_session=botocore.session.Session(
-            session_vars={
-                'profile': (None, None, aws_profile, None),
-                'credentials_file': (None, None, aws_shared_credentials_path, None),
-                'config_file': (None, None, aws_config_path, None),
-            }
-        ))
+        # Obtain an authorization token.
+        # boto will obtain AWS context from environment variables, but will have obtained those at an unknown time.
+        # Creating a boto session ensures it uses the current value of AWS configuration environment variables.
+        boto_session = boto3.Session()
         boto_ecr = boto_session.client('ecr')
         token = boto_ecr.get_authorization_token()['authorizationData'][0]['authorizationToken']
 
@@ -71,9 +57,6 @@ def create_tasks(
     config_key: str,
     terraform_bin: Union[Path, str],
     terraform_dir: Union[Path, str],
-    aws_profile: str,
-    aws_shared_credentials_path: Union[Path, str],
-    aws_config_path: Union[Path, str],
 ):
     """
     Create all of the tasks, re-using and passing parameters appropriately.
@@ -81,8 +64,6 @@ def create_tasks(
 
     terraform_bin = Path(terraform_bin)
     terraform_dir = Path(terraform_dir)
-    aws_shared_credentials_path = Path(aws_shared_credentials_path)
-    aws_config_path = Path(aws_config_path)
 
     ns_ecr = Collection('ecr')
 
@@ -97,11 +78,7 @@ def create_tasks(
                 'repository_urls'
             ]
         ),
-        output_enhance=_output_enhance(
-            aws_profile=aws_profile,
-            aws_shared_credentials_path=aws_shared_credentials_path,
-            aws_config_path=aws_config_path,
-        ),
+        output_enhance=_output_enhance(),
     )
 
     compose_collection(
