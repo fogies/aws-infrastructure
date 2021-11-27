@@ -2,14 +2,18 @@
 Tasks for executing tests within appropriate environments.
 """
 
-from aws_infrastructure.tasks import compose_collection
-from collections import namedtuple
+from dataclasses import dataclass
 from invoke import Collection
 from invoke import task
 from pathlib import Path
 from typing import Dict
+from typing import List
+from typing import Union
 
-Test = namedtuple('Test', ['pipenv_pytest_dirs'])
+
+@dataclass(frozen=True)
+class Test:
+    pipenv_pytest_dirs: List[Union[Path, str]]
 
 
 def _pipenv_pytest(*, context, test_dir: Path):
@@ -25,7 +29,7 @@ def _pipenv_pytest(*, context, test_dir: Path):
 
 def _task_test(*, test_name: str, test: Test):
     @task
-    def install(context):
+    def test(context):
         """
         Execute {} tests.
         """
@@ -33,9 +37,9 @@ def _task_test(*, test_name: str, test: Test):
             for test_dir in test.pipenv_pytest_dirs:
                 _pipenv_pytest(context=context, test_dir=test_dir)
 
-    install.__doc__ = install.__doc__.format(test_name)
+    test.__doc__ = test.__doc__.format(test_name)
 
-    return install
+    return test
 
 
 def create_tasks(
