@@ -52,7 +52,6 @@ def _task_init(
                 command=' '.join([
                     os.path.relpath(terraform_bin, terraform_dir),
                     'init',
-                    '-no-color',
                 ]),
             )
             context.run(
@@ -60,7 +59,6 @@ def _task_init(
                     os.path.relpath(terraform_bin, terraform_dir),
                     'get',
                     '-update',
-                    '-no-color',
                 ]),
             )
 
@@ -125,7 +123,6 @@ def _task_apply(
                         os.path.relpath(terraform_variables_path, terraform_dir)
                     ) if terraform_variables_factory else None,
                     '-auto-approve',
-                    '-no-color',
                 ])),
                 echo=True
             )
@@ -202,7 +199,6 @@ def _task_destroy(
                         os.path.relpath(terraform_variables_path, terraform_dir)
                     ) if terraform_variables_factory else None,
                     '-auto-approve',
-                    '-no-color',
                 ])),
             )
 
@@ -250,7 +246,6 @@ def _task_output(
                     os.path.relpath(terraform_bin, terraform_dir),
                     'output',
                     '-json',
-                    '-no-color',
                 ]),
             )
 
@@ -272,7 +267,7 @@ def create_tasks(
     terraform_bin: Union[Path, str],
     terraform_dir: Union[Path, str],
 
-    terraform_variables_factory = None,
+    terraform_variables_factory=None,
     terraform_variables_path: Union[Path, str] = None,
     apply_pre_invoke: List[task] = None,
     apply_post_invoke: List[task] = None,
@@ -282,7 +277,7 @@ def create_tasks(
     destroy_post_invoke: List[task] = None,
     destroy_pre_exec=None,
     destroy_post_exec=None,
-    output_tuple_factory = None,
+    output_tuple_factory=None,
     output_enhance=None,
 ):
     """
