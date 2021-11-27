@@ -20,11 +20,6 @@ resource "null_resource" "zone_nameservers" {
 
   provisioner "local-exec" {
     command = "aws route53domains update-domain-nameservers --domain-name ${var.name} --nameservers ${join(" ",formatlist(" Name=%s",sort(aws_route53_zone.zone.name_servers)))}"
-    environment = {
-      AWS_PROFILE = var.aws_provider.profile
-      AWS_SHARED_CREDENTIALS_FILE = var.aws_provider.shared_credentials_file
-      AWS_DEFAULT_REGION = var.aws_provider.region
-    }
   }
 }
 
