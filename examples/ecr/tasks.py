@@ -6,9 +6,6 @@ from invoke import Collection
 CONFIG_KEY = 'examples_ecr'
 TERRAFORM_BIN = './bin/terraform.exe'
 TERRAFORM_DIR = './examples/ecr'
-AWS_PROFILE = 'aws-infrastructure'
-AWS_SHARED_CREDENTIALS_PATH = './secrets/aws/aws-infrastructure.credentials'
-AWS_CONFIG_PATH = './secrets/aws/aws-infrastructure.config'
 
 ns = Collection('ecr')
 
@@ -16,9 +13,6 @@ ns_ecr = aws_infrastructure.tasks.library.ecr.create_tasks(
     config_key=CONFIG_KEY,
     terraform_bin=TERRAFORM_BIN,
     terraform_dir=TERRAFORM_DIR,
-    aws_profile=AWS_PROFILE,
-    aws_shared_credentials_path=AWS_SHARED_CREDENTIALS_PATH,
-    aws_config_path=AWS_CONFIG_PATH,
 )
 
 compose_collection(
