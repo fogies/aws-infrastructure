@@ -88,7 +88,7 @@ def create_tasks(
     return ns
 
 
-def apply_awsenv(
+def apply_aws_env(
     *,
     aws_env_path: Union[Path, str],
 ):

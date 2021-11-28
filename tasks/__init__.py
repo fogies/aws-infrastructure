@@ -13,7 +13,7 @@ import tasks.terraform_vpc_packer
 # Enable color
 aws_infrastructure.tasks.library.color.enable_color()
 # Apply the current AWS configuration
-aws_infrastructure.tasks.library.aws_configure.apply_awsenv(aws_env_path=tasks.aws.AWS_ENV_PATH)
+aws_infrastructure.tasks.library.aws_configure.apply_aws_env(aws_env_path=tasks.aws.AWS_ENV_PATH)
 
 # Build our task collection
 ns = Collection()
