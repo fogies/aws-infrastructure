@@ -27,9 +27,9 @@ class AWSConfig:
 
 def _task_configure(
     *,
-    awsenv_path: Path,
-    awsconfig: AWSConfig,
-    awsconfig_name: str,
+    aws_env_path: Path,
+    aws_config: AWSConfig,
+    aws_config_name: str,
 ):
     @task
     def configure(context):
@@ -38,15 +38,15 @@ def _task_configure(
         """
 
         config = configparser.SafeConfigParser()
-        config.read(awsconfig.aws_config_path)
+        config.read(aws_config.aws_config_path)
 
-        config_profile = config['profile {}'.format(awsconfig.profile)]
+        config_profile = config['profile {}'.format(aws_config.profile)]
 
-        with open(awsenv_path, mode='w') as awsenv_file:
+        with open(aws_env_path, mode='w') as awsenv_file:
             awsenv_file.writelines(['\n'.join([
                 '# Generated from:',
-                '#   config: {}'.format(awsconfig.aws_config_path),
-                '#   profile: {}'.format(awsconfig.profile),
+                '#   config: {}'.format(aws_config.aws_config_path),
+                '#   profile: {}'.format(aws_config.profile),
                 '',
                 '{}={}'.format(
                     'AWS_ACCESS_KEY_ID',
@@ -62,7 +62,7 @@ def _task_configure(
                 ),
             ])])
 
-    configure.__doc__ = configure.__doc__.format(awsconfig_name)
+    configure.__doc__ = configure.__doc__.format(aws_config_name)
 
     return configure
 
@@ -70,19 +70,19 @@ def _task_configure(
 def create_tasks(
     *,
     config_key: str,
-    awsenv_path: Union[Path, str],
-    awsconfigs: Dict[str, AWSConfig],
+    aws_env_path: Union[Path, str],
+    aws_configs: Dict[str, AWSConfig],
 ):
     ns = Collection('configure')
 
-    for (awsconfig_name_current, awsconfig_current) in awsconfigs.items():
+    for (aws_config_name, aws_config_current) in aws_configs.items():
         ns.add_task(
             _task_configure(
-                awsenv_path=awsenv_path,
-                awsconfig=awsconfig_current,
-                awsconfig_name=awsconfig_name_current,
+                aws_env_path=aws_env_path,
+                aws_config=aws_config_current,
+                aws_config_name=aws_config_name,
             ),
-            name=awsconfig_name_current,
+            name=aws_config_name,
         )
 
     return ns
@@ -90,10 +90,10 @@ def create_tasks(
 
 def apply_awsenv(
     *,
-    awsenv_path: Union[Path, str],
+    aws_env_path: Union[Path, str],
 ):
     """
     Apply the environment at the provided path, created by a prior configure task.
     """
-    if Path(awsenv_path).exists():
-        dotenv.load_dotenv(dotenv_path=awsenv_path, override=True, verbose=True)
+    if Path(aws_env_path).exists():
+        dotenv.load_dotenv(dotenv_path=aws_env_path, override=True, verbose=True)
