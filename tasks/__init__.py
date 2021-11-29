@@ -1,11 +1,19 @@
 from aws_infrastructure.tasks import compose_collection
+import aws_infrastructure.tasks.library.aws_configure
+import aws_infrastructure.tasks.library.color
 import aws_infrastructure.tasks.library.config
 from invoke import Collection
 
 import examples.tasks
+import tasks.aws
 import tasks.helm
 import tasks.packer_ami_minikube
 import tasks.terraform_vpc_packer
+
+# Enable color
+aws_infrastructure.tasks.library.color.enable_color()
+# Apply the current AWS configuration
+aws_infrastructure.tasks.library.aws_configure.apply_aws_env(aws_env_path=tasks.aws.AWS_ENV_PATH)
 
 # Build our task collection
 ns = Collection()
@@ -16,6 +24,9 @@ compose_collection(
     aws_infrastructure.tasks.library.config.create_tasks(),
     name='config'
 )
+
+# Compose from aws.py
+compose_collection(ns, tasks.aws.ns, name='aws')
 
 # Compose from helm.py
 compose_collection(ns, tasks.helm.ns, name='helm')
