@@ -1,8 +1,6 @@
 from aws_infrastructure.tasks import compose_collection
 import aws_infrastructure.tasks.library.terraform
 import boto3
-import botocore.session
-from collections import namedtuple
 from invoke import Collection
 from invoke import task
 import os
@@ -11,14 +9,12 @@ from pathlib import Path
 import ruamel.yaml
 import shutil
 import time
-from typing import List
 from typing import Union
 
 
 def _task_create_build_archive(
     *,
     config_key: str,
-    terraform_dir: Path,
     staging_local_dir: Path,
     staging_local_source_dir: Path,
     staging_local_archive_path: Path,
@@ -38,7 +34,7 @@ def _task_create_build_archive(
         shutil.copytree(src=source_dir, dst=staging_local_source_dir)
 
         # Determine whether we need to update the buildspec.yml with environment variables
-        if codebuild_environment_variables_factory != None:
+        if codebuild_environment_variables_factory is not None:
             # Obtain the variables we need to update in the buildspec.yml
             codebuild_environment_variables = codebuild_environment_variables_factory(context=context)
 
@@ -73,7 +69,7 @@ def _task_create_build_archive(
         # Make the archive
         shutil.make_archive(
             # Remove the zip suffix because make_archive will also apply that suffix
-            base_name=Path(staging_local_archive_path.parent, staging_local_archive_path.stem),
+            base_name=str(Path(staging_local_archive_path.parent, staging_local_archive_path.stem)),
             format='zip',
             root_dir=staging_local_source_dir
         )
@@ -84,9 +80,6 @@ def _task_create_build_archive(
 def _task_execute_build(
     *,
     config_key: str,
-    aws_profile: str,
-    aws_shared_credentials_path: Path,
-    aws_config_path: Path,
     codebuild_project_name: str,
 ):
     @task
@@ -95,16 +88,10 @@ def _task_execute_build(
         Execute the build and print any output.
         """
 
-        # boto already checked the environment variables, so setting them now has no effect on the default session.
-        # Creating a new session prompts boto to check again.
-        # We could set/unset the environment variables, but instead configure directly within the boto session.
-        boto_session = boto3.Session(botocore_session=botocore.session.Session(
-            session_vars= {
-                'profile': (None, None, aws_profile, None),
-                'credentials_file': (None, None, aws_shared_credentials_path, None),
-                'config_file': (None, None, aws_config_path, None),
-            }
-        ))
+        # Obtain an authorization token.
+        # boto will obtain AWS context from environment variables, but will have obtained those at an unknown time.
+        # Creating a boto session ensures it uses the current value of AWS configuration environment variables.
+        boto_session = boto3.Session()
         boto_cloudwatchlogs = boto_session.client('logs')
         boto_codebuild = boto_session.client('codebuild')
 
@@ -159,9 +146,6 @@ def create_tasks(
     terraform_bin: Union[Path, str],
     terraform_dir: Union[Path, str],
     staging_local_dir: Union[Path, str],
-    aws_profile: str,
-    aws_shared_credentials_path: Union[Path, str],
-    aws_config_path: Union[Path, str],
     source_dir: Union[Path, str],
     codebuild_project_name: str,
     codebuild_environment_variables_factory,
@@ -173,8 +157,6 @@ def create_tasks(
     terraform_bin = Path(terraform_bin)
     terraform_dir = Path(terraform_dir)
     staging_local_dir = Path(staging_local_dir)
-    aws_shared_credentials_path = Path(aws_shared_credentials_path)
-    aws_config_path = Path(aws_config_path)
     source_dir = Path(source_dir)
 
     staging_local_source_dir = Path(staging_local_dir, 'source')
@@ -183,7 +165,7 @@ def create_tasks(
 
     def terraform_variables_factory(*, context):
         return {
-            'source_archive': os.path.relpath(staging_local_archive_path,terraform_dir)
+            'source_archive': os.path.relpath(staging_local_archive_path, terraform_dir)
         }
 
     ns_codebuild = Collection('codebuild')
@@ -198,7 +180,6 @@ def create_tasks(
 
     create_build_archive = _task_create_build_archive(
         config_key=config_key,
-        terraform_dir=terraform_dir,
         staging_local_dir=staging_local_dir,
         staging_local_source_dir=staging_local_source_dir,
         staging_local_archive_path=staging_local_archive_path,
@@ -208,12 +189,8 @@ def create_tasks(
 
     execute_build = _task_execute_build(
         config_key=config_key,
-        aws_profile=aws_profile,
-        aws_shared_credentials_path=aws_shared_credentials_path,
-        aws_config_path=aws_config_path,
         codebuild_project_name=codebuild_project_name,
     )
-
 
     @task(pre=[create_build_archive, ns_terraform.tasks['apply'], execute_build])
     def build(context):
@@ -223,7 +200,6 @@ def create_tasks(
         The actual build happens in the sequence of pre-requisite tasks
         """
         pass
-
 
     ns_codebuild.add_task(build, name="build")
     compose_collection(
