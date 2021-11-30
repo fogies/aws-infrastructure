@@ -12,7 +12,7 @@ from typing import Union
 
 
 @dataclass(frozen=True)
-class Test:
+class TestConfig:
     pipenv_pytest_dirs: List[Union[Path, str]]
 
 
@@ -27,14 +27,14 @@ def _pipenv_pytest(*, context, test_dir: Path):
         )
 
 
-def _task_test(*, test_name: str, test: Test):
+def _task_test(*, test_name: str, test_config: TestConfig):
     @task
     def test(context):
         """
         Execute {} tests.
         """
-        if test.pipenv_pytest_dirs:
-            for test_dir in test.pipenv_pytest_dirs:
+        if test_config.pipenv_pytest_dirs:
+            for test_dir in test_config.pipenv_pytest_dirs:
                 _pipenv_pytest(context=context, test_dir=test_dir)
 
     test.__doc__ = test.__doc__.format(test_name)
@@ -45,13 +45,13 @@ def _task_test(*, test_name: str, test: Test):
 def create_tasks(
     *,
     config_key: str,
-    tests: Dict[str, Test],
+    test_configs: Dict[str, TestConfig],
 ):
     ns = Collection('test')
 
-    for (test_name_current, test_current) in tests.items():
+    for (test_name_current, test_config_current) in test_configs.items():
         ns.add_task(
-            _task_test(test_name=test_name_current, test=test_current),
+            _task_test(test_name=test_name_current, test_config=test_config_current),
             name=test_name_current,
         )
 
