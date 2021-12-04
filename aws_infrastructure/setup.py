@@ -13,12 +13,13 @@ setuptools.setup(
     # long_description='',
     python_requires='>=3',
     install_requires=[
-        'boto3>=1,<2',
-        'colorama>=0.4.4,<0.5',
-        'invoke>=1,<2',
-        'paramiko>=2,<3',
-        'python-dotenv>=0.19,<0.20',
-        'ruamel.yaml>=0.17,<0.18',
-        'semver>=2,<3'
+        'boto3',
+        'colorama',
+        'invoke',
+        'paramiko',
+        'pipenv',
+        'python-dotenv',
+        'ruamel.yaml',
+        'semver'
     ],
 )
