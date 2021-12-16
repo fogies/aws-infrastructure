@@ -23,7 +23,7 @@ def _pipenv_pytest(*, context, test_dir: Path):
 
     with context.cd(test_dir):
         context.run(
-            command='pipenv run pytest',
+            command="pipenv run pytest -v",
         )
 
 
@@ -47,7 +47,7 @@ def create_tasks(
     config_key: str,
     test_configs: Dict[str, TestConfig],
 ):
-    ns = Collection('test')
+    ns = Collection("test")
 
     for (test_name_current, test_config_current) in test_configs.items():
         ns.add_task(

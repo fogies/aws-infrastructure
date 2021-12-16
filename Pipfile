@@ -10,8 +10,8 @@ name = "pypi"
 aws_infrastructure = {editable = true, path = "./aws_infrastructure"}
 
 [dev-packages]
+black = "*"
 pipenv = "*"
-pymongo = "*"
 
 [requires]
 python_version = "3.9"
