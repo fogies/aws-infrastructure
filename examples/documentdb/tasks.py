@@ -6,7 +6,6 @@ import aws_infrastructure.tasks.ssh
 from invoke import Collection
 from invoke import task
 from pathlib import Path
-from pymongo import MongoClient
 
 CONFIG_KEY = 'examples_documentdb'
 TERRAFORM_BIN = './bin/terraform.exe'
@@ -103,40 +102,6 @@ compose_collection(
     ],
 )
 
-
-@task
-def ping(context):
-    """
-    Open a client and ping the database.
-    """
-
-    ssh_config = aws_infrastructure.tasks.ssh.SSHConfig.load(SSH_CONFIG_PATH)
-    documentdb_config = aws_infrastructure.tasks.library.documentdb.DocumentDBConfig.load(DOCUMENTDB_CONFIG_PATH)
-
-    with aws_infrastructure.tasks.ssh.SSHClientContextManager(
-        ssh_config=ssh_config,
-    ) as ssh_client:
-        with aws_infrastructure.tasks.ssh.SSHPortForwardContextManager(
-                ssh_client=ssh_client,
-                remote_host=documentdb_config.endpoint,
-                remote_port=documentdb_config.port,
-        ) as ssh_port_forward:
-            client = MongoClient(
-                host=[
-                    'localhost'
-                ],
-                port=ssh_port_forward.local_port,
-                connect=True,
-                username=documentdb_config.admin_user,
-                password=documentdb_config.admin_password,
-                tls=True,
-                tlsInsecure=True,
-            )
-
-            print(client.admin.command('ping'))
-
-
-ns_combined.add_task(ping, 'ping')
 
 # Compose our actual collection from the combined collection
 compose_collection(
