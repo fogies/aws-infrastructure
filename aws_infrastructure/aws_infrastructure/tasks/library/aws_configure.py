@@ -40,27 +40,31 @@ def _task_configure(
         config = configparser.SafeConfigParser()
         config.read(aws_config.aws_config_path)
 
-        config_profile = config['profile {}'.format(aws_config.profile)]
+        config_profile = config["profile {}".format(aws_config.profile)]
 
-        with open(aws_env_path, mode='w') as awsenv_file:
-            awsenv_file.writelines(['\n'.join([
-                '# Generated from:',
-                '#   config: {}'.format(aws_config.aws_config_path),
-                '#   profile: {}'.format(aws_config.profile),
-                '',
-                '{}={}'.format(
-                    'AWS_ACCESS_KEY_ID',
-                    config_profile['aws_access_key_id'],
-                ),
-                '{}={}'.format(
-                    'AWS_SECRET_ACCESS_KEY',
-                    config_profile['aws_secret_access_key'],
-                ),
-                '{}={}'.format(
-                    'AWS_DEFAULT_REGION',
-                    config_profile['region'],
-                ),
-            ])])
+        lines = [
+            "# Generated from:",
+            "#   config: {}".format(aws_config.aws_config_path),
+            "#   profile: {}".format(aws_config.profile),
+            "",
+            "{}={}".format(
+                "AWS_ACCESS_KEY_ID",
+                config_profile["aws_access_key_id"],
+            ),
+            "{}={}".format(
+                "AWS_SECRET_ACCESS_KEY",
+                config_profile["aws_secret_access_key"],
+            ),
+            "{}={}".format(
+                "AWS_DEFAULT_REGION",
+                config_profile["region"],
+            ),
+        ]
+
+        with open(aws_env_path, mode="w") as awsenv_file:
+            awsenv_file.writelines(
+                "{}\n".format(line_current) for line_current in lines
+            )
 
     configure.__doc__ = configure.__doc__.format(aws_config_name)
 
@@ -73,7 +77,7 @@ def create_tasks(
     aws_env_path: Union[Path, str],
     aws_configs: Dict[str, AWSConfig],
 ):
-    ns = Collection('configure')
+    ns = Collection("configure")
 
     for (aws_config_name, aws_config_current) in aws_configs.items():
         ns.add_task(
