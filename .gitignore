@@ -5,7 +5,6 @@
 /bin/
 
 # Python Cache and Packaging
-*.egg-info/
 **/__pycache__/
 
 # Terraform Local State
