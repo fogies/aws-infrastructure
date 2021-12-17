@@ -92,6 +92,7 @@ def _task_update(*, dependency_name: str, dependency: Dependency):
         if dependency.yarn_dirs:
             for dependency_dir in dependency.yarn_dirs:
                 _yarn_upgrade(context=context, dependency_dir=Path(dependency_dir))
+                _yarn_install_frozen(context=context, dependency_dir=Path(dependency_dir))
 
     update.__doc__ = update.__doc__.format(dependency_name)
 

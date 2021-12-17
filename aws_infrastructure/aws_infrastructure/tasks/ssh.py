@@ -258,13 +258,15 @@ class SSHPortForward:
                         if len(data) == 0:
                             break
                         channel.send(data)
-                        print('{} bytes sent'.format(len(data)))
+                        # TODO: Enable verbose mode
+                        # print('{} bytes sent'.format(len(data)))
                     if channel in r:
                         data = channel.recv(1024 * 1024)
                         if len(data) == 0:
                             break
                         self.request.send(data)
-                        print('{} bytes received'.format(len(data)))
+                        # TODO: Enable verbose mode
+                        # print('{} bytes received'.format(len(data)))
 
                 channel.close()
                 self.request.close()
