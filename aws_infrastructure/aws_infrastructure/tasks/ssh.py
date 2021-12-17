@@ -26,16 +26,18 @@ class SSHConfig:
 
     @staticmethod
     def load(ssh_config_path: Union[Path, str]):
-        ssh_config_path = Path(ssh_config_path)
+        # TODO: rename parameter to config_path for consistency
+        config_path = Path(ssh_config_path)
 
-        with open(ssh_config_path) as ssh_config_file:
-            yaml_config = ruamel.yaml.safe_load(ssh_config_file)
+        with open(config_path) as config_file:
+            yaml = ruamel.yaml.YAML(typ="safe", pure=True)
+            config_dict = yaml.load(config_file)
 
         return SSHConfig(
-            ip = yaml_config['ip'],
-            key = yaml_config['key'],
-            key_file = yaml_config['key_file'],
-            user = yaml_config['user'],
+            ip=config_dict['ip'],
+            key=config_dict['key'],
+            key_file=config_dict['key_file'],
+            user=config_dict['user'],
         )
 
     @property
