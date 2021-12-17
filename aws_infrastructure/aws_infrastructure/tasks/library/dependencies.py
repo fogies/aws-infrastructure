@@ -88,6 +88,7 @@ def _task_update(*, dependency_name: str, dependency: Dependency):
         if dependency.pipfile_dirs:
             for dependency_dir in dependency.pipfile_dirs:
                 _pipfile_lock(context=context, dependency_dir=Path(dependency_dir))
+                _pipfile_sync(context=context, dependency_dir=Path(dependency_dir))
         if dependency.yarn_dirs:
             for dependency_dir in dependency.yarn_dirs:
                 _yarn_upgrade(context=context, dependency_dir=Path(dependency_dir))
