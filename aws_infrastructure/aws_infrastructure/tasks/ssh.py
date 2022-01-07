@@ -6,6 +6,7 @@ import select
 import socketserver
 import threading
 from typing import List
+from typing import Optional
 from typing import Union
 
 class SSHConfig:
@@ -221,7 +222,7 @@ class SSHPortForward:
     _remote_port: int
     _requested_local_port: int
 
-    _server: socketserver.ThreadingTCPServer
+    _server: Optional[socketserver.ThreadingTCPServer]
 
     def __init__(
         self,
@@ -238,7 +239,7 @@ class SSHPortForward:
 
         self._server = None
 
-    def _create_handler(self, ssh_client: SSHClient, remote_host: int, remote_port: int):
+    def _create_handler(self, ssh_client: SSHClient, remote_host: str, remote_port: int):
         class Handler(socketserver.BaseRequestHandler):
             _ssh_client: SSHClient = ssh_client
             _remote_port: int = remote_port
@@ -258,15 +259,11 @@ class SSHPortForward:
                         if len(data) == 0:
                             break
                         channel.send(data)
-                        # TODO: Enable verbose mode
-                        # print('{} bytes sent'.format(len(data)))
                     if channel in r:
                         data = channel.recv(1024 * 1024)
                         if len(data) == 0:
                             break
                         self.request.send(data)
-                        # TODO: Enable verbose mode
-                        # print('{} bytes received'.format(len(data)))
 
                 channel.close()
                 self.request.close()
@@ -300,7 +297,7 @@ class SSHPortForward:
         self._server = None
 
     @property
-    def local_port(self) -> str:
+    def local_port(self) -> int:
         # Obtain the port from the server,
         # so that providing local port of 0 allows automatically choosing an open port
         (server_host, server_port) = self._server.server_address
@@ -312,7 +309,7 @@ class SSHPortForward:
         return self._remote_host
 
     @property
-    def remote_port(self) -> str:
+    def remote_port(self) -> int:
         return self._remote_port
 
 
