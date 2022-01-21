@@ -23,7 +23,7 @@ def _pipenv_pytest(*, context, test_dir: Path):
 
     with context.cd(test_dir):
         context.run(
-            command="pipenv run pytest -v",
+            command="pipenv run pytest -vv -rsx",
             # If multiple test sessions are to be executed,
             # continue despite a failure in this test session
             warn=True,
