@@ -252,15 +252,15 @@ class SSHPortForward:
                 )
 
                 while True:
-                    # If either direction has data available, forward that data
+                    # If either direction has data available, forward that data.
                     r, w, x = select.select([self.request, channel], [], [])
                     if self.request in r:
-                        data = self.request.recv(1024 * 1024)
+                        data = self.request.recv(1024)
                         if len(data) == 0:
                             break
                         channel.send(data)
                     if channel in r:
-                        data = channel.recv(1024 * 1024)
+                        data = channel.recv(1024)
                         if len(data) == 0:
                             break
                         self.request.send(data)
