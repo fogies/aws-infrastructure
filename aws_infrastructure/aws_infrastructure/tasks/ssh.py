@@ -253,6 +253,9 @@ class SSHPortForward:
 
                 while True:
                     # If either direction has data available, forward that data.
+                    # Important to read small amounts of data on each recv,
+                    # as a large read from recv can cause failures
+                    # (perhaps related to underlying Transport window_size).
                     r, w, x = select.select([self.request, channel], [], [])
                     if self.request in r:
                         data = self.request.recv(1024)
