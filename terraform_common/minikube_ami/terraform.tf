@@ -5,11 +5,13 @@ locals {
   architecture = {
     "t3.medium"="amd64",
     "t3.large"="amd64",
+    "t3.xlarge"="amd64",
   }[var.instance_type]
 
   instance_size = {
     "t3.medium"="medium",
     "t3.large"="large",
+    "t3.xlarge"="xlarge",
   }[var.instance_type]
 
   # Name by which to identify the AMI

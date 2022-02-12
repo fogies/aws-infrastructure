@@ -8,7 +8,7 @@ BUILD_TIMESTAMP = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
 #
 # Build timestamp of the source Ubuntu AMI for this build.
 #
-SOURCE_BUILD_TIMESTAMP = '20211021'
+SOURCE_BUILD_TIMESTAMP = '20220131'
 
 #
 # Simple configuration fields that are shared across all builds.
@@ -92,6 +92,26 @@ BUILD_CONFIG_INSTANCES = {
         'minikube_memory': '6g',
         # Storage to allocate to Docker.
         'docker_volume_size': '20',
+    },
+    # docker_volume_size will be part of key
+    'amd64-xlarge-{}gb': {
+        # Type of instance in which to build the image.
+        'aws_instance_architecture': 'amd64',
+        # Architecture of instance in which to build the image.
+        'aws_instance_type': 't3.xlarge',
+
+        # Filter applied to name of the source AMI.
+        'source_ami_filter_name': 'ubuntu/images/hvm-ssd/ubuntu-{}-{}-{}-server-{}'.format(
+            BUILD_CONFIG_SHARED['version_ubuntu_name'],
+            BUILD_CONFIG_SHARED['version_ubuntu_number'],
+            'amd64',
+            SOURCE_BUILD_TIMESTAMP,
+        ),
+
+        # Memory to allocate to Minikube.
+        'minikube_memory': '14g',
+        # Storage to allocate to Docker.
+        'docker_volume_size': '40',
     },
     # TODO: arm64 fails due to lack of arm64 support in helmdiff installation
     #

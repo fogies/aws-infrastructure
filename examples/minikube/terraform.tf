@@ -14,9 +14,9 @@ module "minikube_ami" {
   source = "../../terraform_common/minikube_ami"
 
   owner_id = "732463742817"
-  instance_type = "t3.medium"
-  docker_volume_size = "20"
-  build_timestamp = "20211107142725"
+  instance_type = "t3.xlarge"
+  docker_volume_size = "40"
+  build_timestamp = "20220212164105"
 }
 
 /*
@@ -28,7 +28,7 @@ module "minikube_instance" {
   name = "instance"
 
   ami_id = module.minikube_ami.id
-  aws_instance_type = "t3.medium"
+  aws_instance_type = "t3.xlarge"
 
   create_vpc = true
   availability_zone = "us-east-1a"
