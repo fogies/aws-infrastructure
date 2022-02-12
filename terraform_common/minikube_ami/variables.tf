@@ -9,10 +9,11 @@ variable "instance_type" {
   # Valid values are:
   # - "t3.medium"
   # - "t3.large"
+  # - "t3.xlarge"
 
   type = string
   validation {
-    condition = contains(["t3.medium", "t3.large"], var.instance_type)
+    condition = contains(["t3.medium", "t3.large", "t3.xlarge"], var.instance_type)
     error_message = "Invalid or unsupported instance_type."
   }
 }
