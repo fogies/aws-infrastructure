@@ -99,16 +99,6 @@ build {
   }
 
   /*
-   * Configure Minikube for running a Docker registry at registry.local.
-   */
-  provisioner "ansible-local" {
-    playbook_file = "../ansible/ansible_minikube_registry.yaml"
-
-    command = local.ansible_command
-    extra_arguments = local.ansible_extra_arguments
-  }
-
-  /*
    * Install Helm
    */
   provisioner "ansible-local" {
