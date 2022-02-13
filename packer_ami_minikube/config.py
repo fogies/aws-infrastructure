@@ -34,10 +34,10 @@ BUILD_CONFIG_SHARED = {
     'version_helmfile': 'v0.142.0',
 
     # Version of Kubernetes to install.
-    'version_kubernetes': 'v1.22.1',
+    'version_kubernetes': 'v1.23.3',
 
     # Version of minikube to install.
-    'version_minikube': 'v1.24.0',
+    'version_minikube': 'v1.25.1',
 
     # Version name of Ubuntu.
     'version_ubuntu_name': 'focal',
@@ -71,7 +71,7 @@ BUILD_CONFIG_INSTANCES = {
         # Memory to allocate to Minikube.
         'minikube_memory': '2g',
         # Storage to allocate to Docker.
-        'docker_volume_size': '20',
+        'docker_volume_size': '25',
     },
     # docker_volume_size will be part of key
     'amd64-large-{}gb': {
@@ -91,7 +91,7 @@ BUILD_CONFIG_INSTANCES = {
         # Memory to allocate to Minikube.
         'minikube_memory': '6g',
         # Storage to allocate to Docker.
-        'docker_volume_size': '20',
+        'docker_volume_size': '25',
     },
     # docker_volume_size will be part of key
     'amd64-xlarge-{}gb': {
@@ -111,7 +111,7 @@ BUILD_CONFIG_INSTANCES = {
         # Memory to allocate to Minikube.
         'minikube_memory': '14g',
         # Storage to allocate to Docker.
-        'docker_volume_size': '40',
+        'docker_volume_size': '50',
     },
     # TODO: arm64 fails due to lack of arm64 support in helmdiff installation
     #
