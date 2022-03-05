@@ -41,8 +41,12 @@ module "documentdb" {
 
   name = "examples-documentdb"
 
+  apply_immediately = true
+
   admin_user = "examples_documentdb_admin"
   admin_password = random_password.admin_password.result
+
+  deletion_protection = false
 
   instance_count = 1
   instance_class = "db.t3.medium"

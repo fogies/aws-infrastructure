@@ -53,46 +53,48 @@ BUILD_CONFIG_SHARED = {
 # Keys specified here will become part of AMI names. Prefer `-` separators.
 #
 BUILD_CONFIG_INSTANCES = {
-    # docker_volume_size will be part of key
-    'amd64-medium-{}gb': {
-        # Type of instance in which to build the image.
-        'aws_instance_architecture': 'amd64',
-        # Architecture of instance in which to build the image.
-        'aws_instance_type': 't3.medium',
+    # # docker_volume_size will be part of key
+    # 'amd64-medium-{}gb': {
+    #     # Type of instance in which to build the image.
+    #     'aws_instance_architecture': 'amd64',
+    #     # Architecture of instance in which to build the image.
+    #     'aws_instance_type': 't3.medium',
+    #
+    #     # Filter applied to name of the source AMI.
+    #     'source_ami_filter_name': 'ubuntu/images/hvm-ssd/ubuntu-{}-{}-{}-server-{}'.format(
+    #         BUILD_CONFIG_SHARED['version_ubuntu_name'],
+    #         BUILD_CONFIG_SHARED['version_ubuntu_number'],
+    #         'amd64',
+    #         SOURCE_BUILD_TIMESTAMP,
+    #     ),
+    #
+    #     # Memory to allocate to Minikube.
+    #     'minikube_memory': '2g',
+    #     # Storage to allocate to Docker.
+    #     'docker_volume_size': '25',
+    # },
 
-        # Filter applied to name of the source AMI.
-        'source_ami_filter_name': 'ubuntu/images/hvm-ssd/ubuntu-{}-{}-{}-server-{}'.format(
-            BUILD_CONFIG_SHARED['version_ubuntu_name'],
-            BUILD_CONFIG_SHARED['version_ubuntu_number'],
-            'amd64',
-            SOURCE_BUILD_TIMESTAMP,
-        ),
+    # # docker_volume_size will be part of key
+    # 'amd64-large-{}gb': {
+    #     # Type of instance in which to build the image.
+    #     'aws_instance_architecture': 'amd64',
+    #     # Architecture of instance in which to build the image.
+    #     'aws_instance_type': 't3.large',
+    #
+    #     # Filter applied to name of the source AMI.
+    #     'source_ami_filter_name': 'ubuntu/images/hvm-ssd/ubuntu-{}-{}-{}-server-{}'.format(
+    #         BUILD_CONFIG_SHARED['version_ubuntu_name'],
+    #         BUILD_CONFIG_SHARED['version_ubuntu_number'],
+    #         'amd64',
+    #         SOURCE_BUILD_TIMESTAMP,
+    #     ),
+    #
+    #     # Memory to allocate to Minikube.
+    #     'minikube_memory': '6g',
+    #     # Storage to allocate to Docker.
+    #     'docker_volume_size': '25',
+    # },
 
-        # Memory to allocate to Minikube.
-        'minikube_memory': '2g',
-        # Storage to allocate to Docker.
-        'docker_volume_size': '25',
-    },
-    # docker_volume_size will be part of key
-    'amd64-large-{}gb': {
-        # Type of instance in which to build the image.
-        'aws_instance_architecture': 'amd64',
-        # Architecture of instance in which to build the image.
-        'aws_instance_type': 't3.large',
-
-        # Filter applied to name of the source AMI.
-        'source_ami_filter_name': 'ubuntu/images/hvm-ssd/ubuntu-{}-{}-{}-server-{}'.format(
-            BUILD_CONFIG_SHARED['version_ubuntu_name'],
-            BUILD_CONFIG_SHARED['version_ubuntu_number'],
-            'amd64',
-            SOURCE_BUILD_TIMESTAMP,
-        ),
-
-        # Memory to allocate to Minikube.
-        'minikube_memory': '6g',
-        # Storage to allocate to Docker.
-        'docker_volume_size': '25',
-    },
     # docker_volume_size will be part of key
     'amd64-xlarge-{}gb': {
         # Type of instance in which to build the image.
@@ -113,6 +115,7 @@ BUILD_CONFIG_INSTANCES = {
         # Storage to allocate to Docker.
         'docker_volume_size': '50',
     },
+
     # TODO: arm64 fails due to lack of arm64 support in helmdiff installation
     #
     # 'arm64': {
