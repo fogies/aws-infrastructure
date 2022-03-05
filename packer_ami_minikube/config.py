@@ -115,7 +115,7 @@ BUILD_CONFIG_INSTANCES = {
         # Storage to allocate to Docker.
         'docker_volume_size': '50',
     },
-    
+
     # TODO: arm64 fails due to lack of arm64 support in helmdiff installation
     #
     # 'arm64': {

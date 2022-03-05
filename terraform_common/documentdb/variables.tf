@@ -20,6 +20,22 @@ variable "admin_password" {
 }
 
 /*
+ * Apply immediately.
+ */
+variable "apply_immediately" {
+  type = bool
+  default = false
+}
+
+/*
+ * Deletion protection.
+ */
+variable "deletion_protection" {
+  type = bool
+  default = true
+}
+
+/*
  * Type of instance to use for powering the database.
  */
 variable "instance_class" {

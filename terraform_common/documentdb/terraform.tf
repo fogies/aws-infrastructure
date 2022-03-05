@@ -11,7 +11,22 @@ resource "aws_docdb_subnet_group" "subnets" {
 }
 
 /*
- * The actual DocumentDB.
+ * Paramters for the DocumentDB cluster.
+ */
+resource "aws_docdb_cluster_parameter_group" "docdb_parameters" {
+  family = "docdb4.0"
+  name = "${var.name}-docdb-parameters"
+
+  parameter {
+    name = "audit_logs"
+    value = "enabled"
+  }
+
+  tags = local.module_tags
+}
+
+/*
+ * The actual DocumentDB cluster.
  */
 resource "aws_docdb_cluster" "docdb" {
   cluster_identifier      = "${var.name}-docdb"
@@ -20,15 +35,16 @@ resource "aws_docdb_cluster" "docdb" {
   master_username         = var.admin_user
   master_password         = var.admin_password
 
-  # TODO: make these configurable
-  backup_retention_period = 7
-  preferred_backup_window = "01:00-04:00"
+  apply_immediately = var.apply_immediately
+  deletion_protection = var.deletion_protection
 
-  # TODO: enable encryption
-  # storage_encrypted = true
-  # TODO: determine how to store and manage snapshots
-  skip_final_snapshot     = true
+  backup_retention_period = 35
+  enabled_cloudwatch_logs_exports = ["audit"]
+  final_snapshot_identifier = "${var.name}-docdb-final-snapshot"
+  preferred_backup_window = "00:00-03:00"
+  storage_encrypted = true
 
+  db_cluster_parameter_group_name = aws_docdb_cluster_parameter_group.docdb_parameters.name
   db_subnet_group_name = aws_docdb_subnet_group.subnets.id
 
   tags = local.module_tags
