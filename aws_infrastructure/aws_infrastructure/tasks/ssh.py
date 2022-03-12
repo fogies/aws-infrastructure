@@ -284,7 +284,7 @@ class SSHPortForward:
         Start the port forwarding server.
         """
         self._server = socketserver.ThreadingTCPServer(
-            server_address=('localhost', self._requested_local_port),
+            server_address=('127.0.0.1', self._requested_local_port),
             RequestHandlerClass=self._create_handler(self._ssh_client, self._remote_host, self._remote_port),
         )
 
