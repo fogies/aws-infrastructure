@@ -101,3 +101,5 @@ def apply_aws_env(
     """
     if Path(aws_env_path).exists():
         dotenv.load_dotenv(dotenv_path=aws_env_path, override=True, verbose=True)
+    else:
+        print('Expected AWS environment configuration not found at "{}"'.format(aws_env_path))
