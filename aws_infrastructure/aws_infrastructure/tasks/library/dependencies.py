@@ -56,6 +56,11 @@ def _yarn_upgrade(*, context, dependency_dir: Path):
     """
 
     with context.cd(dependency_dir):
+        # If package.json has changed, an install is necessary
+        context.run(
+            command='yarn upgrade',
+        )
+        # If package.json has not changed, an upgrade is necessary
         context.run(
             command='yarn upgrade',
         )
