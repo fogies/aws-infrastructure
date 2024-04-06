@@ -25,6 +25,7 @@ def create_tasks(
         config_key=config_key,
         terraform_bin=terraform_bin,
         terraform_dir=terraform_dir,
+        auto_approve=False,
         output_tuple_factory=namedtuple('eip', ['id', 'public_ip']),
     )
 

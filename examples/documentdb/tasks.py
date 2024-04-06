@@ -67,6 +67,7 @@ ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
     config_key=CONFIG_KEY,
     terraform_bin=TERRAFORM_BIN,
     terraform_dir=TERRAFORM_DIR,
+    auto_approve=False,
 
     destroy_post_exec=destroy_post_exec_combined
 )
