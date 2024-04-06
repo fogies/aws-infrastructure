@@ -70,6 +70,7 @@ def _task_apply(
     config_key: str,
     terraform_bin: Path,
     terraform_dir: Path,
+    auto_approve: bool,
     terraform_variables_factory,
     terraform_variables_path: Path,
     init: task,
@@ -122,7 +123,7 @@ def _task_apply(
                     '-var-file="{}"'.format(
                         os.path.relpath(terraform_variables_path, terraform_dir)
                     ) if terraform_variables_factory else None,
-                    '-auto-approve',
+                    '-auto-approve' if auto_approve else None,
                 ])),
                 echo=True
             )
@@ -198,7 +199,6 @@ def _task_destroy(
                     '-var-file="{}"'.format(
                         os.path.relpath(terraform_variables_path, terraform_dir)
                     ) if terraform_variables_factory else None,
-                    '-auto-approve',
                 ])),
             )
 
@@ -266,6 +266,7 @@ def create_tasks(
     config_key: str,
     terraform_bin: Union[Path, str],
     terraform_dir: Union[Path, str],
+    auto_approve: bool,
 
     terraform_variables_factory=None,
     terraform_variables_path: Union[Path, str] = None,
@@ -305,6 +306,7 @@ def create_tasks(
         config_key=config_key,
         terraform_bin=terraform_bin,
         terraform_dir=terraform_dir,
+        auto_approve=auto_approve,
         terraform_variables_factory=terraform_variables_factory,
         terraform_variables_path=terraform_variables_path,
         init=init,

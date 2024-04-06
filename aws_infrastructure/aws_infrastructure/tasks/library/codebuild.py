@@ -174,6 +174,7 @@ def create_tasks(
         config_key=config_key,
         terraform_bin=terraform_bin,
         terraform_dir=terraform_dir,
+        auto_approve=True,
         terraform_variables_factory=terraform_variables_factory,
         terraform_variables_path=terraform_variables_path,
     )

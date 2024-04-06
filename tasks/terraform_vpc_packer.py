@@ -19,6 +19,7 @@ ns_terraform = aws_infrastructure.tasks.library.terraform.create_tasks(
     config_key=CONFIG_KEY,
     terraform_bin=TERRAFORM_BIN,
     terraform_dir=TERRAFORM_DIR,
+    auto_approve=True,
     output_tuple_factory=namedtuple('terraform_vpc_packer', ['subnet_id', 'vpc_id'])
 )
 
